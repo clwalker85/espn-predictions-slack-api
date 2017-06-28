@@ -5,7 +5,7 @@ from flask.ext.pymongo import PyMongo
 from flask import make_response
 from bson.json_util import dumps
 
-MONGO_URL = os.environ.get('MONGO_URL')
+MONGO_URL = os.environ.get('MONGODB_URI')
 if not MONGO_URL:
     MONGO_URL = "mongodb://localhost:27017/rest";
 
