@@ -19,12 +19,12 @@ def post_to_slack(text):
 
 class Root(restful.Resource):
     def get(self):
-        league = League(LEAGUE_ID, 2016),
+        #league = League(LEAGUE_ID, 2016),
         return {
             'status': 'OK',
             'mongo': str(mongo.db),
-            'league': league,
-            'scoreboard': league.scoreboard(week=1)
+            #'league': league,
+            #'scoreboard': league.scoreboard(week=1)
         }
 
 class Scoreboard(restful.Resource):
