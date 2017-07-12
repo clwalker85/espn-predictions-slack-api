@@ -65,7 +65,7 @@ class SendPredictionForm(restful.Resource):
             'text': 'Make your predictions for this week''s matchups below:',
             'attachments': []
         }
-        for index, matchup in FAKE_MATCHUPS:
+        for index, matchup in enumerate(FAKE_MATCHUPS):
             message.attachments.append({
                 'text': matchup[0],
                 'attachment_type': 'default',
