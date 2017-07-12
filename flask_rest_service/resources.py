@@ -94,6 +94,8 @@ class SendPredictionForm(restful.Resource):
                     'text': 'Pick a matchup...',
                     'type': 'select',
                     'options': []
+                }
+            ]
         }
         for matchup in FAKE_MATCHUPS:
             blowout_dropdown.actions[0].options.append({
@@ -111,6 +113,8 @@ class SendPredictionForm(restful.Resource):
                     'text': 'Pick a matchup...',
                     'type': 'select',
                     'options': []
+                }
+            ]
         }
         for matchup in FAKE_MATCHUPS:
             closest_dropdown.actions[0].options.append({
@@ -128,10 +132,12 @@ class SendPredictionForm(restful.Resource):
                     'text': 'Pick a team...',
                     'type': 'select',
                     'options': []
+                }
+            ]
         }
         for team in LEAGUE_MEMBERS:
             highest_dropdown.actions[0].options.append({
-                'text': team
+                'text': team,
                 'value': team
             })
         message.attachments.append(highest_dropdown)
@@ -145,10 +151,12 @@ class SendPredictionForm(restful.Resource):
                     'text': 'Pick a team...',
                     'type': 'select',
                     'options': []
+                }
+            ]
         }
         for team in LEAGUE_MEMBERS:
             lowest_dropdown.actions[0].options.append({
-                'text': team
+                'text': team,
                 'value': team
             })
         message.attachments.append(lowest_dropdown)
