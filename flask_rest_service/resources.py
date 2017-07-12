@@ -9,6 +9,16 @@ from espnff import League
 
 LEAGUE_ID = 367562
 WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+FAKE_MATCHUPS = [
+    ('Freddy versus Joel', 'Freddy', 'Joel'),
+    ('Tom versus Alexis', 'Tom', 'Alexis'),
+    ('Kevin versus Stan', 'Kevin', 'Stan'),
+    ('Todd versus James', 'Todd', 'James'),
+    ('Justin versus Mike', 'Justin', 'Mike'),
+    ('Renato versus Bryant', 'Renato', 'Bryant'),
+    ('Walker versus Cathy', 'Walker', 'Cathy'),
+]
+LEAGUE_MEMBERS = ['Freddy', 'Joel', 'Tom', 'Alexis', 'Kevin', 'Stan', 'Todd', 'James', 'Justin', 'Mike', 'Renato', 'Bryant', 'Walker', 'Cathy']
 
 def post_to_slack(payload):
     headers = { 'content-type': 'application/json' }
@@ -43,360 +53,109 @@ class Scoreboard(restful.Resource):
 
         post_text_to_slack(league.scoreboard(week=week))
 
+class Prediction(restful.Resource):
+    def post(self):
+        args = self.parser.parse_args()
+
+        post_text_to_slack(args)
+
 class SendPredictionForm(restful.Resource):
     def post(self):
-        post_to_slack({
+        message = {
             'text': 'Make your predictions for this week''s matchups below:',
-            'attachments': [
+            'attachments': []
+        }
+        for index, matchup in FAKE_MATCHUPS:
+            message.attachments.append({
+                'text': matchup[0],
+                'attachment_type': 'default',
+                'actions': [
+                    {
+                        'name': 'winner' + index,
+                        'text': matchup[1],
+                        'type': 'button',
+                        'value': matchup[1]
+                    },
+                    {
+                        'name': 'winner' + index,
+                        'text': matchup[2],
+                        'type': 'button',
+                        'value': matchup[2]
+                    }
+                ]
+            })
+
+        blowout_dropdown = {
+            'text': 'Which matchup will have the biggest blowout?',
+            'attachment_type': 'default',
+            'actions': [
                 {
-                    'text': 'Freddy versus Joel',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g1winner',
-                            'text': 'Freddy',
-                            'type': 'button',
-                            'value': 'Freddy'
-                        },
-                        {
-                            'name': 'g1winner',
-                            'text': 'Joel',
-                            'type': 'button',
-                            'value': 'Joel'
-                        },
-                    ]
-                },
+                    'name': 'blowout',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+        }
+        for matchup in FAKE_MATCHUPS:
+            blowout_dropdown.actions[0].options.append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message.attachments.append(blowout_dropdown)
+
+        closest_dropdown = {
+            'text': 'Which matchup will have the closest score?',
+            'attachment_type': 'default',
+            'actions': [
                 {
-                    'text': 'Tom versus Alexis',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g2winner',
-                            'text': 'Tom',
-                            'type': 'button',
-                            'value': 'Tom'
-                        },
-                        {
-                            'name': 'g2winner',
-                            'text': 'Alexis',
-                            'type': 'button',
-                            'value': 'Alexis'
-                        },
-                    ]
-                },
+                    'name': 'closest',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+        }
+        for matchup in FAKE_MATCHUPS:
+            closest_dropdown.actions[0].options.append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message.attachments.append(closest_dropdown)
+
+        highest_dropdown = {
+            'text': 'Who will be the highest scorer?',
+            'attachment_type': 'default',
+            'actions': [
                 {
-                    'text': 'Kevin versus Stan',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g3winner',
-                            'text': 'Kevin',
-                            'type': 'button',
-                            'value': 'Kevin'
-                        },
-                        {
-                            'name': 'g3winner',
-                            'text': 'Stan',
-                            'type': 'button',
-                            'value': 'Stan'
-                        },
-                    ]
-                },
+                    'name': 'lowest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+        }
+        for team in LEAGUE_MEMBERS:
+            highest_dropdown.actions[0].options.append({
+                'text': team
+                'value': team
+            })
+        message.attachments.append(highest_dropdown)
+
+        lowest_dropdown = {
+            'text': 'Who will be the lowest scorer?',
+            'attachment_type': 'default',
+            'actions': [
                 {
-                    'text': 'Todd versus James',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g4winner',
-                            'text': 'Todd',
-                            'type': 'button',
-                            'value': 'Todd'
-                        },
-                        {
-                            'name': 'g4winner',
-                            'text': 'James',
-                            'type': 'button',
-                            'value': 'James'
-                        },
-                    ]
-                },
-                {
-                    'text': 'Justin versus Mike',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g5winner',
-                            'text': 'Justin',
-                            'type': 'button',
-                            'value': 'Justin'
-                        },
-                        {
-                            'name': 'g5winner',
-                            'text': 'Mike',
-                            'type': 'button',
-                            'value': 'Mike'
-                        },
-                    ]
-                },
-                {
-                    'text': 'Renato versus Bryant',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g6winner',
-                            'text': 'Renato',
-                            'type': 'button',
-                            'value': 'Renato'
-                        },
-                        {
-                            'name': 'g6winner',
-                            'text': 'Bryant',
-                            'type': 'button',
-                            'value': 'Bryant'
-                        },
-                    ]
-                },
-                {
-                    'text': 'Walker versus Cathy',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'g7winner',
-                            'text': 'Walker',
-                            'type': 'button',
-                            'value': 'Walker'
-                        },
-                        {
-                            'name': 'g7winner',
-                            'text': 'Cathy',
-                            'type': 'button',
-                            'value': 'Cathy'
-                        },
-                    ]
-                },
-                {
-                    'text': 'Which matchup will have the biggest blowout?',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'blowout',
-                            'text': 'Pick a matchup...',
-                            'type': 'select',
-                            'options': [
-                                {
-                                    'text': 'Freddy versus Joel',
-                                    'value': 'Freddy versus Joel'
-                                },
-                                {
-                                    'text': 'Tom versus Alexis',
-                                    'value': 'Tom versus Alexis'
-                                },
-                                {
-                                    'text': 'Kevin versus Stan',
-                                    'value': 'Kevin versus Stan'
-                                },
-                                {
-                                    'text': 'Todd versus James',
-                                    'value': 'Todd versus James'
-                                },
-                                {
-                                    'text': 'Justin versus Mike',
-                                    'value': 'Justin versus Mike'
-                                },
-                                {
-                                    'text': 'Renato versus Bryant',
-                                    'value': 'Renato versus Bryant'
-                                },
-                                {
-                                    'text': 'Walker versus Cathy',
-                                    'value': 'Walker versus Cathy'
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    'text': 'Which matchup will have the closest score?',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'closest',
-                            'text': 'Pick a matchup...',
-                            'type': 'select',
-                            'options': [
-                                {
-                                    'text': 'Freddy versus Joel',
-                                    'value': 'Freddy versus Joel'
-                                },
-                                {
-                                    'text': 'Tom versus Alexis',
-                                    'value': 'Tom versus Alexis'
-                                },
-                                {
-                                    'text': 'Kevin versus Stan',
-                                    'value': 'Kevin versus Stan'
-                                },
-                                {
-                                    'text': 'Todd versus James',
-                                    'value': 'Todd versus James'
-                                },
-                                {
-                                    'text': 'Justin versus Mike',
-                                    'value': 'Justin versus Mike'
-                                },
-                                {
-                                    'text': 'Renato versus Bryant',
-                                    'value': 'Renato versus Bryant'
-                                },
-                                {
-                                    'text': 'Walker versus Cathy',
-                                    'value': 'Walker versus Cathy'
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    'text': 'Who will be the highest scorer?',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'lowest',
-                            'text': 'Pick a team...',
-                            'type': 'select',
-                            'options': [
-                                {
-                                    'text': 'Freddy',
-                                    'value': 'Freddy'
-                                },
-                                {
-                                    'text': 'Joel',
-                                    'value': 'Joel'
-                                },
-                                {
-                                    'text': 'Alexis',
-                                    'value': 'Alexis'
-                                },
-                                {
-                                    'text': 'Tom',
-                                    'value': 'Tom'
-                                },
-                                {
-                                    'text': 'Stan',
-                                    'value': 'Stan'
-                                },
-                                {
-                                    'text': 'Kevin',
-                                    'value': 'Kevin'
-                                },
-                                {
-                                    'text': 'Todd',
-                                    'value': 'Todd'
-                                },
-                                {
-                                    'text': 'James',
-                                    'value': 'James'
-                                },
-                                {
-                                    'text': 'Mike',
-                                    'value': 'Mike'
-                                },
-                                {
-                                    'text': 'Justin',
-                                    'value': 'Justin'
-                                },
-                                {
-                                    'text': 'Bryant',
-                                    'value': 'Bryant'
-                                },
-                                {
-                                    'text': 'Renato',
-                                    'value': 'Renato'
-                                },
-                                {
-                                    'text': 'Cathy',
-                                    'value': 'Cathy'
-                                },
-                                {
-                                    'text': 'Walker',
-                                    'value': 'Walker'
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    'text': 'Who will be the lowest scorer?',
-                    'attachment_type': 'default',
-                    'actions': [
-                        {
-                            'name': 'lowest',
-                            'text': 'Pick a team...',
-                            'type': 'select',
-                            'options': [
-                                {
-                                    'text': 'Freddy',
-                                    'value': 'Freddy'
-                                },
-                                {
-                                    'text': 'Joel',
-                                    'value': 'Joel'
-                                },
-                                {
-                                    'text': 'Alexis',
-                                    'value': 'Alexis'
-                                },
-                                {
-                                    'text': 'Tom',
-                                    'value': 'Tom'
-                                },
-                                {
-                                    'text': 'Stan',
-                                    'value': 'Stan'
-                                },
-                                {
-                                    'text': 'Kevin',
-                                    'value': 'Kevin'
-                                },
-                                {
-                                    'text': 'Todd',
-                                    'value': 'Todd'
-                                },
-                                {
-                                    'text': 'James',
-                                    'value': 'James'
-                                },
-                                {
-                                    'text': 'Mike',
-                                    'value': 'Mike'
-                                },
-                                {
-                                    'text': 'Justin',
-                                    'value': 'Justin'
-                                },
-                                {
-                                    'text': 'Bryant',
-                                    'value': 'Bryant'
-                                },
-                                {
-                                    'text': 'Renato',
-                                    'value': 'Renato'
-                                },
-                                {
-                                    'text': 'Cathy',
-                                    'value': 'Cathy'
-                                },
-                                {
-                                    'text': 'Walker',
-                                    'value': 'Walker'
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        })
+                    'name': 'lowest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+        }
+        for team in LEAGUE_MEMBERS:
+            lowest_dropdown.actions[0].options.append({
+                'text': team
+                'value': team
+            })
+        message.attachments.append(lowest_dropdown)
+
+        post_to_slack(message)
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
+api.add_resource(Prediction, '/prediction/')
 api.add_resource(SendPredictionForm, '/prediction/form/')
