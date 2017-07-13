@@ -175,6 +175,8 @@ class SendPredictionForm(restful.Resource):
             })
         message.attachments.append(lowest_dropdown)
 
+        print(message)
+
         post_to_slack(message)
 
 api.add_resource(Root, '/')
