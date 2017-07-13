@@ -55,7 +55,7 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        print(request.json)
+        post_text_to_slack(str(request.json))
 
 class SendPredictionForm(restful.Resource):
     def post(self):
