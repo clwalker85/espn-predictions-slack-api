@@ -178,15 +178,8 @@ class SendPredictionForm(restful.Resource):
 
         post_to_slack(message)
     def get(self):
-        args = self.parser.parse_args()
         year = 2017
         week = 1
-
-        if args['year']:
-            year = args['year']
-
-        if args['week']:
-            week = args['week']
 
         message = {
             'text': 'Make your predictions for this week''s matchups below:',
