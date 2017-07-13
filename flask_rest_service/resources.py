@@ -61,6 +61,15 @@ class Prediction(restful.Resource):
 
 class SendPredictionForm(restful.Resource):
     def post(self):
+        year = 2017
+        week = 1
+
+        if args['year']:
+            year = args['year']
+
+        if args['week']:
+            week = args['week']
+
         message = {
             'text': 'Make your predictions for this week''s matchups below:',
             'attachments': []
@@ -69,6 +78,7 @@ class SendPredictionForm(restful.Resource):
             message.attachments.append({
                 'text': matchup[0],
                 'attachment_type': 'default',
+                'callback_id': year + '-' + week,
                 'actions': [
                     {
                         'name': 'winner' + index,
@@ -88,6 +98,7 @@ class SendPredictionForm(restful.Resource):
         blowout_dropdown = {
             'text': 'Which matchup will have the biggest blowout?',
             'attachment_type': 'default',
+            'callback_id': year + '-' + week,
             'actions': [
                 {
                     'name': 'blowout',
@@ -107,6 +118,7 @@ class SendPredictionForm(restful.Resource):
         closest_dropdown = {
             'text': 'Which matchup will have the closest score?',
             'attachment_type': 'default',
+            'callback_id': year + '-' + week,
             'actions': [
                 {
                     'name': 'closest',
@@ -126,6 +138,7 @@ class SendPredictionForm(restful.Resource):
         highest_dropdown = {
             'text': 'Who will be the highest scorer?',
             'attachment_type': 'default',
+            'callback_id': year + '-' + week,
             'actions': [
                 {
                     'name': 'lowest',
@@ -145,6 +158,7 @@ class SendPredictionForm(restful.Resource):
         lowest_dropdown = {
             'text': 'Who will be the lowest scorer?',
             'attachment_type': 'default',
+            'callback_id': year + '-' + week,
             'actions': [
                 {
                     'name': 'lowest',
