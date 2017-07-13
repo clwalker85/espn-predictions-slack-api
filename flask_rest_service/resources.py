@@ -189,16 +189,16 @@ class SendPredictionForm(restful.Resource):
             message['attachments'].append({
                 'text': matchup[0],
                 'attachment_type': 'default',
-                'callback_id': year + '-' + week,
+                'callback_id': `year` + '-' + `week`,
                 'actions': [
                     {
-                        'name': 'winner' + index,
+                        'name': 'winner' + `index`,
                         'text': matchup[1],
                         'type': 'button',
                         'value': matchup[1]
                     },
                     {
-                        'name': 'winner' + index,
+                        'name': 'winner' + `index`,
                         'text': matchup[2],
                         'type': 'button',
                         'value': matchup[2]
