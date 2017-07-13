@@ -185,26 +185,6 @@ class SendPredictionForm(restful.Resource):
             'text': 'Make your predictions for this week''s matchups below:',
             'attachments': []
         }
-        for index, matchup in enumerate(FAKE_MATCHUPS):
-            message.attachments.append({
-                'text': matchup[0],
-                'attachment_type': 'default',
-                'callback_id': year + '-' + week,
-                'actions': [
-                    {
-                        'name': 'winner' + index,
-                        'text': matchup[1],
-                        'type': 'button',
-                        'value': matchup[1]
-                    },
-                    {
-                        'name': 'winner' + index,
-                        'text': matchup[2],
-                        'type': 'button',
-                        'value': matchup[2]
-                    }
-                ]
-            })
 
         return message
 
