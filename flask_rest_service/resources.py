@@ -192,13 +192,13 @@ class SendPredictionForm(restful.Resource):
                 'callback_id': year + '-' + week,
                 'actions': [
                     {
-                        'name': 'winner' + index,
+                        'name': 'winner' + str(index),
                         'text': matchup[1],
                         'type': 'button',
                         'value': matchup[1]
                     },
                     {
-                        'name': 'winner' + index,
+                        'name': 'winner' + str(index),
                         'text': matchup[2],
                         'type': 'button',
                         'value': matchup[2]
