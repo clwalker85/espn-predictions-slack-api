@@ -175,9 +175,123 @@ class SendPredictionForm(restful.Resource):
             })
         message.attachments.append(lowest_dropdown)
 
-        print(message)
-
         post_to_slack(message)
+    def get(self):
+        year = 2017
+        week = 1
+
+        if args['year']:
+            year = args['year']
+
+        if args['week']:
+            week = args['week']
+
+        message = {
+            'text': 'Make your predictions for this week''s matchups below:',
+            'attachments': []
+        }
+        for index, matchup in enumerate(FAKE_MATCHUPS):
+            message.attachments.append({
+                'text': matchup[0],
+                'attachment_type': 'default',
+                'callback_id': year + '-' + week,
+                'actions': [
+                    {
+                        'name': 'winner' + index,
+                        'text': matchup[1],
+                        'type': 'button',
+                        'value': matchup[1]
+                    },
+                    {
+                        'name': 'winner' + index,
+                        'text': matchup[2],
+                        'type': 'button',
+                        'value': matchup[2]
+                    }
+                ]
+            })
+
+        blowout_dropdown = {
+            'text': 'Which matchup will have the biggest blowout?',
+            'attachment_type': 'default',
+            'callback_id': year + '-' + week,
+            'actions': [
+                {
+                    'name': 'blowout',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for matchup in FAKE_MATCHUPS:
+            blowout_dropdown.actions[0].options.append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message.attachments.append(blowout_dropdown)
+
+        closest_dropdown = {
+            'text': 'Which matchup will have the closest score?',
+            'attachment_type': 'default',
+            'callback_id': year + '-' + week,
+            'actions': [
+                {
+                    'name': 'closest',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for matchup in FAKE_MATCHUPS:
+            closest_dropdown.actions[0].options.append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message.attachments.append(closest_dropdown)
+
+        highest_dropdown = {
+            'text': 'Who will be the highest scorer?',
+            'attachment_type': 'default',
+            'callback_id': year + '-' + week,
+            'actions': [
+                {
+                    'name': 'lowest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for team in LEAGUE_MEMBERS:
+            highest_dropdown.actions[0].options.append({
+                'text': team,
+                'value': team
+            })
+        message.attachments.append(highest_dropdown)
+
+        lowest_dropdown = {
+            'text': 'Who will be the lowest scorer?',
+            'attachment_type': 'default',
+            'callback_id': year + '-' + week,
+            'actions': [
+                {
+                    'name': 'lowest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for team in LEAGUE_MEMBERS:
+            lowest_dropdown.actions[0].options.append({
+                'text': team,
+                'value': team
+            })
+        message.attachments.append(lowest_dropdown)
+
+        return message
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
