@@ -1,5 +1,5 @@
 import json
-from flask import request, abort
+from flask import request, abort, Response
 from flask.ext import restful
 from flask.ext.restful import reqparse
 from flask_rest_service import app, api, mongo
@@ -55,8 +55,9 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
+        actions = request.form.get('actions')
         return {
-            'text': str(request)
+            'text': str(actions)
         }
 
 class SendPredictionForm(restful.Resource):
