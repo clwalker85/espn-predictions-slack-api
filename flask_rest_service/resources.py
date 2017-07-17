@@ -5,6 +5,7 @@ from flask.ext.restful import reqparse
 from flask_rest_service import app, api, mongo
 from bson.objectid import ObjectId
 import requests
+from pprint import pprint
 from espnff import League
 
 LEAGUE_ID = 367562
@@ -57,7 +58,7 @@ class Prediction(restful.Resource):
     def post(self):
         actions = request.form.get('actions')
         return {
-            'text': str(actions)
+            'text': pprint(actions)
         }
 
 class SendPredictionForm(restful.Resource):
@@ -170,7 +171,9 @@ class SendPredictionForm(restful.Resource):
             })
         message['attachments'].append(lowest_dropdown)
 
-        return message
+        post_to_slack(message)
+
+        return;
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
