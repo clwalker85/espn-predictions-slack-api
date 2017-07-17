@@ -56,9 +56,9 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        actions = request.form.get('actions')
+        dump = request.headers
         return {
-            'text': pprint(actions)
+            'text': pprint(dump)
         }
 
 class SendPredictionForm(restful.Resource):
@@ -173,7 +173,7 @@ class SendPredictionForm(restful.Resource):
 
         post_to_slack(message)
 
-        return;
+        return Response(), 200;
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
