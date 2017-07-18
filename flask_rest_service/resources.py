@@ -5,7 +5,6 @@ from flask.ext.restful import reqparse
 from flask_rest_service import app, api, mongo
 from bson.objectid import ObjectId
 import requests
-from pprint import pprint
 from espnff import League
 
 LEAGUE_ID = 367562
@@ -58,7 +57,7 @@ class Prediction(restful.Resource):
     def post(self):
         dump = request.headers
         return {
-            'text': pprint(dump)
+            'text': vars(dump)
         }
 
 class SendPredictionForm(restful.Resource):
