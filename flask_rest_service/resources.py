@@ -172,7 +172,7 @@ class SendPredictionForm(restful.Resource):
 
         post_to_slack(message)
 
-        return Response(), 200;
+        return '';
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
