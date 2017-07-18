@@ -57,7 +57,7 @@ class Prediction(restful.Resource):
     def post(self):
         dump = request.headers
         return {
-            'text': vars(dump)
+            'text': str(vars(dump))
         }
 
 class SendPredictionForm(restful.Resource):
