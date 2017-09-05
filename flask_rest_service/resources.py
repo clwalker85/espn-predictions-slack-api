@@ -61,10 +61,9 @@ class Prediction(restful.Resource):
         #    'text': str(vars(dump)),
         #    'channel': '#test_messages'
         #})
-        return Response({
-            'status': 'OK',
+        return {
             'replace_original': false
-        }, status=200, mimetype='application/json')
+        }, 200
 
 class SendPredictionForm(restful.Resource):
     def get(self):
