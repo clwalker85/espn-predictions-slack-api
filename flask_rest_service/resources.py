@@ -63,6 +63,7 @@ class Prediction(restful.Resource):
         #})
         return {
             'status': 'OK',
+            'text': 'Test CLW',
             'token': SLACK_VERIFICATION_TOKEN,
             'replace_original': false
         }
