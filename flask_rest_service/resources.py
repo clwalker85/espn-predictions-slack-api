@@ -1,4 +1,5 @@
 import json
+import pprint
 from flask import request, abort, Response
 from flask.ext import restful
 from flask.ext.restful import reqparse
@@ -57,7 +58,7 @@ class Scoreboard(restful.Resource):
 class Prediction(restful.Resource):
     def post(self):
         post_to_slack({
-            'text': request.get_json(),
+            'text': pprint.pformat(request.values, depth=5),
             'channel': '#test_messages'
         })
         return Response()
