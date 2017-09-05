@@ -61,7 +61,7 @@ class Prediction(restful.Resource):
         }
 
 class SendPredictionForm(restful.Resource):
-    def post(self):
+    def get(self):
         year = '2017'
         week = '1'
 
