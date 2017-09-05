@@ -66,7 +66,8 @@ class Prediction(restful.Resource):
         }, 200, None)
     def get(self):
         return {
-            'replace_original': false
+            'status': 'OK',
+            'replace_original': 'false'
         }
 
 class SendPredictionForm(restful.Resource):
