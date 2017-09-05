@@ -65,14 +65,9 @@ class Prediction(restful.Resource):
             'replace_original': false
         }, 200, None)
     def get(self):
-        #dump = request.headers
-        #post_to_slack({
-        #    'text': str(vars(dump)),
-        #    'channel': '#test_messages'
-        #})
-        return ({
+        return {
             'replace_original': false
-        }, 200, None)
+        }
 
 class SendPredictionForm(restful.Resource):
     def get(self):
