@@ -8,7 +8,7 @@ import requests
 from espnff import League
 
 LEAGUE_ID = 367562
-WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 FAKE_MATCHUPS = [
     ('Freddy versus Joel', 'Freddy', 'Joel'),
     ('Tom versus Alexis', 'Tom', 'Alexis'),
@@ -67,7 +67,7 @@ class SendPredictionForm(restful.Resource):
 
         message = {
             'text': 'Make your predictions for this week''s matchups below:',
-            'channel': '@clwalker',
+            'channel': '#test_messages',
             'attachments': []
         }
         for index, matchup in enumerate(FAKE_MATCHUPS):
