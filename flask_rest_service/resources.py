@@ -67,6 +67,7 @@ class SendPredictionForm(restful.Resource):
 
         message = {
             'text': 'Make your predictions for this week''s matchups below:',
+            'channel': '@clwalker',
             'attachments': []
         }
         for index, matchup in enumerate(FAKE_MATCHUPS):
