@@ -70,7 +70,9 @@ class Prediction(restful.Resource):
         #    'text': str(vars(dump)),
         #    'channel': '#test_messages'
         #})
-        return ('', 200, None)
+        return {
+            'replace_original': False
+        }
 
 class SendPredictionForm(restful.Resource):
     def get(self):
