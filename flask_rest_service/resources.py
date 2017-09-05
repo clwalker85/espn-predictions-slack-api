@@ -64,7 +64,7 @@ class Prediction(restful.Resource):
         return Response({
             'status': 'OK',
             'replace_original': false
-        }, status=200, mimetype='application/json
+        }, status=200, mimetype='application/json')
 
 class SendPredictionForm(restful.Resource):
     def get(self):
