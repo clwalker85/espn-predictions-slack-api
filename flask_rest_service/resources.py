@@ -56,9 +56,8 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        dump = json.loads(request.data)
         post_to_slack({
-            'text': dump,
+            'text': 'Test CLW',
             'channel': '#test_messages'
         })
         return Response()
