@@ -58,7 +58,7 @@ class Prediction(restful.Resource):
     def post(self):
         dump = request.data
         post_to_slack({
-            'text': str(vars(dump)),
+            'text': dump,
             'channel': '#test_messages'
         })
         return Response()
