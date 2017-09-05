@@ -8,6 +8,7 @@ import requests
 from espnff import League
 
 LEAGUE_ID = 367562
+SLACK_VERIFICATION_TOKEN = 'pCwsld7vulxe1ZlYyMmzYpba'
 WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 FAKE_MATCHUPS = [
     ('Freddy versus Joel', 'Freddy', 'Joel'),
@@ -62,6 +63,7 @@ class Prediction(restful.Resource):
         #})
         return {
             'status': 'OK',
+            'token': SLACK_VERIFICATION_TOKEN,
             'replace_original': false
         }
 
