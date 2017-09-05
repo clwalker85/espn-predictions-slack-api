@@ -61,11 +61,10 @@ class Prediction(restful.Resource):
         #    'text': str(vars(dump)),
         #    'channel': '#test_messages'
         #})
-        return {
+        return Response({
             'status': 'OK',
-            'token': SLACK_VERIFICATION_TOKEN,
             'replace_original': false
-        }
+        }, status=200, mimetype='application/json
 
 class SendPredictionForm(restful.Resource):
     def get(self):
