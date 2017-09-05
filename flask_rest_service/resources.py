@@ -61,7 +61,7 @@ class Prediction(restful.Resource):
         #    'text': str(vars(dump)),
         #    'channel': '#test_messages'
         #})
-        return 200
+        return (Response(), 200, None)
     def get(self):
         return {
             'replace_original': False
