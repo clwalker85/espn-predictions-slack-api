@@ -12,8 +12,8 @@ WEBHOOK_URL = 'https://hooks.slack.com/services/T3P5XT2R2/B6Z62CEUU/Zxe31ZDUrpqI
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
-DEADLINE_STRING = 'Sep 07 2017 08:25PM EST'
-DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '+%b %d %Y %I:%M%p %Z')
+DEADLINE_STRING = 'September 07 2017 08:25PM EST'
+DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '%B %d %Y %I:%M%p %Z')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
