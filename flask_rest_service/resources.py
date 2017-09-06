@@ -67,7 +67,11 @@ class Prediction(restful.Resource):
 
                     if element['type'] == 'select' and action['name'] == element['name']:
                         attachment['color'] = 'good'
-                        element['selected_options'] = action['selected_options']
+                        element['selected_options'] = []
+                        for selected in action['selected_options']:
+                            for option in element['options']:
+                                if option['value'] == selected['value']:
+                                    element['selected_options'].append(option)
 
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
