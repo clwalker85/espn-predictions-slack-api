@@ -13,7 +13,7 @@ LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel',
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
 DEADLINE_STRING = 'Sep 07 2017 08:25PM EST'
-DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '%b %d %Y  %I:%M%p %Z')
+DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '%b %d %Y %I:%M%p %Z')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
