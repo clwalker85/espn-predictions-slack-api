@@ -1,15 +1,12 @@
 import json
 import pprint
-from flask import request, abort, Response
-from flask.ext import restful
-from flask.ext.restful import reqparse
-from flask_rest_service import app, api, mongo
-from bson.objectid import ObjectId
 import requests
 from espnff import League
+from flask import request, abort, Response
+from flask.ext import restful
+from flask_rest_service import app, api, mongo
 
 LEAGUE_ID = 367562
-SLACK_VERIFICATION_TOKEN = 'xoxp-125201920852-124479890432-236526482357-4675020c52bc75a98a164e0cd903a683'
 WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_YEAR = '2017'
