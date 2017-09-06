@@ -59,6 +59,7 @@ class Prediction(restful.Resource):
             for action in actions:
                 for element in attachment['actions']:
                     if element['type'] == 'button' and action['name'] == element['name'] and action['value'] == element['value']:
+                        attachment['color'] = 'blue'
                         element['style'] = 'primary'
 
                     if element['type'] == 'button' and action['name'] == element['name'] and action['value'] != element['value']:
