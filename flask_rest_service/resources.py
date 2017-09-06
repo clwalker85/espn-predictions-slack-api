@@ -75,7 +75,8 @@ class Prediction(restful.Resource):
                                     element['selected_options'].append(option)
 
         mongo.db.predictions.update(database_key, {
-            'message': message
+            '$set': { 'message': message },
+            '$setOnInsert': database_key
         }, { upsert: True })
 
         print(message)
