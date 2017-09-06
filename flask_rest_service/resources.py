@@ -73,7 +73,7 @@ class Prediction(restful.Resource):
 
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
-        print message
+        print(message)
         return message
 
 class SendPredictionForm(restful.Resource):
