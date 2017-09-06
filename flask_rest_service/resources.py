@@ -2,7 +2,7 @@ import json
 import pprint
 import requests
 from espnff import League
-from datetime import datetime
+#from datetime import datetime
 from flask import request, abort, Response
 from flask.ext import restful
 from flask_rest_service import app, api, mongo
@@ -13,7 +13,7 @@ LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel',
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
 DEADLINE_STRING = 'Sep 7 2017 8:25PM EST'
-DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '%b %d %Y %I:%M%p %Z')
+#DEADLINE_TIME = datetime.strptime(DEADLINE_STRING, '%b %d %Y %I:%M%p %Z')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
@@ -48,8 +48,8 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        if datetime.now() > DEADLINE_TIME:
-            return Response()
+        #if datetime.now() > DEADLINE_TIME:
+        #    return Response()
 
         payload = json.loads(request.form.get('payload', None))
 
@@ -91,7 +91,7 @@ class Prediction(restful.Resource):
 class SendPredictionForm(restful.Resource):
     def get(self):
         message = {
-            'text': 'Make your predictions for this week''s matchups below:',
+            'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
             'attachments': []
         }
         for index, matchup in enumerate(MATCHUPS):
