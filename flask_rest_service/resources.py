@@ -10,7 +10,7 @@ from espnff import League
 
 LEAGUE_ID = 367562
 SLACK_VERIFICATION_TOKEN = 'xoxp-125201920852-124479890432-236526482357-4675020c52bc75a98a164e0cd903a683'
-WEBHOOK_URL = 'https://hooks.slack.com/services/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'
+WEBHOOK_URL = 'https://hooks.slack.com/services/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'
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
@@ -52,6 +52,7 @@ class Prediction(restful.Resource):
 
         username = payload['user']['name']
         year_and_week = payload['callback_id']
+        database_key = { 'username': username, 'year_and_week': year_and_week }
         message = payload['original_message']
         actions = payload['actions']
 
@@ -73,16 +74,19 @@ class Prediction(restful.Resource):
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
 
+        mongo.db.predictions.update(database_key, {
+            'message': message
+        }, { upsert: True })
+
+        print(message)
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
-        print(message)
         return message
 
 class SendPredictionForm(restful.Resource):
     def get(self):
         message = {
             'text': 'Make your predictions for this week''s matchups below:',
-            'channel': '#test_messages',
             'attachments': []
         }
         for index, matchup in enumerate(MATCHUPS):
