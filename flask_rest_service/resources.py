@@ -152,7 +152,7 @@ class SendPredictionForm(restful.Resource):
             'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
             'actions': [
                 {
-                    'name': 'lowest',
+                    'name': 'highest',
                     'text': 'Pick a team...',
                     'type': 'select',
                     'options': []
