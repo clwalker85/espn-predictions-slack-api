@@ -69,7 +69,7 @@ class Prediction(restful.Resource):
                             if option['value'] == action['selected_options'][0]['value']:
                                 option['selected'] = True
                             else:
-                                option['selected'] = False
+                                option['selected'] = None
 
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
