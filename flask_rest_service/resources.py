@@ -59,7 +59,7 @@ class Scoreboard(restful.Resource):
 class Prediction(restful.Resource):
     def post(self):
         post_to_slack({
-            'text': request.form.get('token', None),
+            'text': request.form.get('payload', None),
             'channel': '#test_messages'
         })
         return Response()
