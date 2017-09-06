@@ -59,14 +59,14 @@ class Prediction(restful.Resource):
             for action in actions:
                 for element in attachment['actions']:
                     if element['type'] == 'button' and action['name'] == element['name'] and action['value'] == element['value']:
-                        attachment['color'] = 'blue'
+                        attachment['color'] = 'good'
                         element['style'] = 'primary'
 
                     if element['type'] == 'button' and action['name'] == element['name'] and action['value'] != element['value']:
                         element['style'] = None
 
                     if element['type'] == 'select' and action['name'] == element['name']:
-                        attachment['color'] = 'blue'
+                        attachment['color'] = 'good'
                         element['selected_options'] = action['selected_options']
 
         ## Slack replaces old prediction form with any immediate response,
