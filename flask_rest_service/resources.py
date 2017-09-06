@@ -48,8 +48,8 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        if datetime.now() > DEADLINE_TIME:
-            return Response()
+        #if datetime.now() > DEADLINE_TIME:
+        #    return Response()
 
         payload = json.loads(request.form.get('payload', None))
 
