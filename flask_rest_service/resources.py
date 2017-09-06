@@ -54,11 +54,12 @@ class Scoreboard(restful.Resource):
         league = League(LEAGUE_ID, year)
 
         post_text_to_slack(league.scoreboard(week=week))
+        return Response()
 
 class Prediction(restful.Resource):
     def post(self):
         post_to_slack({
-            'text': pprint.pformat(request.values, depth=5),
+            'text': request.get_data(),
             'channel': '#test_messages'
         })
         return Response()
@@ -176,7 +177,7 @@ class SendPredictionForm(restful.Resource):
 
         post_to_slack(message)
 
-        return '';
+        return Response()
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
