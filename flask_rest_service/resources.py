@@ -61,12 +61,7 @@ class ScorePrediction(restful.Resource):
 
         return Response()
     def get(self):
-        if datetime.now() > DEADLINE_TIME:
-            return Response()
-
-        payload = json.loads(request.form.get('payload', None))
-
-        return payload
+        return json.loads(request.form.get('payload', None))
 
 class Prediction(restful.Resource):
     def post(self):
