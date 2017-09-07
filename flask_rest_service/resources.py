@@ -46,8 +46,13 @@ class Scoreboard(restful.Resource):
         return Response()
 
 class ScorePrediction(restful.Resource):
-    def get(self):
-        return request.data
+    def post(self):
+        payload = json.loads(request.data)
+
+        if 'challenge' in payload:
+            return payload['challenge']
+
+        return Response()
 
 class Prediction(restful.Resource):
     def post(self):
