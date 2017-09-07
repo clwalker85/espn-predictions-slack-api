@@ -48,7 +48,7 @@ class Scoreboard(restful.Resource):
 
 class ScorePrediction(restful.Resource):
     def post(self):
-        payload = json.loads(request.form.get('payload', None))
+        payload = json.loads(request.form.get('text', None))
         return payload
 
         #username = payload['user_name']
