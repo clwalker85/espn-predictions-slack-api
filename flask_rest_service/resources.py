@@ -48,8 +48,8 @@ class Scoreboard(restful.Resource):
 
 class ScorePrediction(restful.Resource):
     def post(self):
-        payload = json.loads(request.data)
-        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.' + request.data
+        #payload = json.loads(request.data)
+        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
 
         #username = payload['user_name']
         #year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
