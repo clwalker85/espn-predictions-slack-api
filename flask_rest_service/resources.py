@@ -9,24 +9,9 @@ from flask_rest_service import app, api, mongo
 
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
-# webhooks listed in order above
 WEBHOOK_URLS = [
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    'https://hooks.slack.com/services/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',
-    # This one is for Chris Caviedes
-    'https://hooks.slack.com/services/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'
+    # Walker
+    'https://hooks.slack.com/services/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'
 ]
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
@@ -106,6 +91,7 @@ class SendPredictionForm(restful.Resource):
     def get(self):
         message = {
             'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
+            'channel': '#test_messages',
             'attachments': []
         }
         for index, matchup in enumerate(MATCHUPS):
