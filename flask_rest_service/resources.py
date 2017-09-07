@@ -1,8 +1,9 @@
 import json
 import pprint
 import requests
-from espnff import League
+from decimal import Decimal
 from datetime import datetime
+from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 from flask_rest_service import app, api, mongo
@@ -49,10 +50,30 @@ class ScorePrediction(restful.Resource):
     def post(self):
         payload = json.loads(request.data)
 
-        if 'challenge' in payload:
-            return payload['challenge']
+        username = payload['user_name']
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        database_key = { 'username': username, 'year_and_week': year_and_week }
+        text = payload['text']
+        param = text.split()
 
-        return Response()
+        if len(param) < 2:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
+
+        try:
+            first_score = Decimal(param[0])
+            second_score = Decimal(param[1])
+            high_score = param[0]
+            low_score = param[1]
+
+            if first_score < second_score
+                high_score = param[1]
+                low_score = param[0]
+
+            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
+        except ValueError:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
+
+        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
 
 class Prediction(restful.Resource):
     def post(self):
