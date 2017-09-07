@@ -10,31 +10,13 @@ from flask_rest_service import app, api, mongo
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 WEBHOOK_URLS = [
-    # Caviedes
-    'https://hooks.slack.com/services/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',
-    # Alexis
-    'https://hooks.slack.com/services/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',
     # Freddy
-    'https://hooks.slack.com/services/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',
-    # James
-    'https://hooks.slack.com/services/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',
-    # Joel
-    'https://hooks.slack.com/services/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',
-    # Kevin
-    'https://hooks.slack.com/services/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',
-    # Mike
-    'https://hooks.slack.com/services/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',
-    # Renato
-    'https://hooks.slack.com/services/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',
-    # Todd
-    'https://hooks.slack.com/services/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',
-    # Tom
-    'https://hooks.slack.com/services/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'
+    'https://hooks.slack.com/services/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'
 ]
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
-DEADLINE_STRING = 'September 7th, 2017, at 08:25PM'
-DEADLINE_TIME = datetime.strptime('September 08 2017 12:25AM', '%B %d %Y %I:%M%p')
+DEADLINE_STRING = 'September 7th, 2017, at 08:30PM'
+DEADLINE_TIME = datetime.strptime('September 08 2017 12:30AM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
