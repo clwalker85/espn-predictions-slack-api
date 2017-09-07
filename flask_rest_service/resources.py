@@ -52,6 +52,8 @@ class ScorePrediction(restful.Resource):
 
         payload = json.loads(request.form.get('payload', None))
 
+        return payload
+
         if payload['challenge']:
             return { 'challenge': payload['challenge'] }
 
