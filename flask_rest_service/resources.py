@@ -233,5 +233,5 @@ class SendPredictionForm(restful.Resource):
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
 api.add_resource(Prediction, '/prediction/')
-api.add_resource(ScorePrediction, '/prediction/text/')
+api.add_resource(ScorePrediction, '/prediction/score/')
 api.add_resource(SendPredictionForm, '/prediction/form/')
