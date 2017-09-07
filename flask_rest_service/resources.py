@@ -42,13 +42,10 @@ MATCHUPS = [
     ('Cathy versus Joel', 'Cathy', 'Joel'),
 ]
 
-def post_to_slack(payload):
+def post_to_slack(url, payload):
     headers = { 'content-type': 'application/json' }
     payload = json.dumps(payload)
-    return requests.post(WEBHOOK_URL, headers=headers, data=payload)
-
-def post_text_to_slack(text):
-    return post_to_slack({'text': text})
+    return requests.post(url, headers=headers, data=payload)
 
 class Root(restful.Resource):
     def get(self):
@@ -60,8 +57,7 @@ class Root(restful.Resource):
 class Scoreboard(restful.Resource):
     def post(self):
         #league = League(LEAGUE_ID, year)
-
-        #post_text_to_slack(league.scoreboard(week=week))
+        #league.scoreboard(week=week)
         return Response()
 
 class Prediction(restful.Resource):
@@ -213,7 +209,8 @@ class SendPredictionForm(restful.Resource):
             })
         message['attachments'].append(lowest_dropdown)
 
-        post_to_slack(message)
+        for url in WEBHOOK_URLS:
+            post_to_slack(url, message)
 
         return Response()
 
