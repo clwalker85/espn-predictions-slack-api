@@ -10,8 +10,7 @@ from flask_rest_service import app, api, mongo
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 WEBHOOK_URLS = [
-    # Walker
-    'https://hooks.slack.com/services/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'
+    'https://hooks.slack.com/services/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'
 ]
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
@@ -43,6 +42,22 @@ class Scoreboard(restful.Resource):
     def post(self):
         #league = League(LEAGUE_ID, year)
         #league.scoreboard(week=week)
+        return Response()
+
+class ScorePrediction(restful.Resource):
+    def post(self):
+        if datetime.now() > DEADLINE_TIME:
+            return Response()
+
+        payload = json.loads(request.form.get('payload', None))
+
+        if payload['challenge']:
+            return payload['challenge']
+
+        username = payload['user']['name']
+        year_and_week = payload['callback_id']
+        database_key = { 'username': username, 'year_and_week': year_and_week }
+
         return Response()
 
 class Prediction(restful.Resource):
@@ -91,7 +106,6 @@ class SendPredictionForm(restful.Resource):
     def get(self):
         message = {
             'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
-            'channel': '#test_messages',
             'attachments': []
         }
         for index, matchup in enumerate(MATCHUPS):
@@ -203,4 +217,5 @@ class SendPredictionForm(restful.Resource):
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
 api.add_resource(Prediction, '/prediction/')
+api.add_resource(ScorePrediction, '/prediction/text/')
 api.add_resource(SendPredictionForm, '/prediction/form/')
