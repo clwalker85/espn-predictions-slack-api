@@ -47,7 +47,7 @@ class Scoreboard(restful.Resource):
 
 class ScorePrediction(restful.Resource):
     def get(self):
-        return request.form.get('challenge', None)
+        return request.form.get('payload', None)
 
 class Prediction(restful.Resource):
     def post(self):
