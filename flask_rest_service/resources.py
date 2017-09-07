@@ -13,9 +13,8 @@ WEBHOOK_URL = 'https://hooks.slack.com/services/T3P5XT2R2/B6Z62CEUU/Zxe31ZDUrpqI
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
-DEADLINE_STRING = 'September 07 2017 08:25PM'
-EST = pytz.timezone('US/Eastern')
-DEADLINE_TIME = EST.localize(datetime.strptime(DEADLINE_STRING, '%B %d %Y %I:%M%p'))
+DEADLINE_STRING = 'September 7th, 2017, at 08:25PM'
+DEADLINE_TIME = datetime.strptime('September 08 2017 12:25AM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
@@ -50,7 +49,7 @@ class Scoreboard(restful.Resource):
 
 class Prediction(restful.Resource):
     def post(self):
-        if EST.localize(datetime.now()) > DEADLINE_TIME:
+        if datetime.now() > DEADLINE_TIME:
             return Response()
 
         payload = json.loads(request.form.get('payload', None))
