@@ -70,7 +70,8 @@ class PredictionSubmissions(restful.Resource):
                         winners_string += action['text'] + ', '
                     if action['type'] == 'select' and action['selected_options']:
                         for selected in action['selected_options']:
-#                            matchups_string += attachment['text'] + ': ' + selected['text'] + '\n'
+                            pprint.pformat(selected)
+                            matchups_string += attachment['text'] + ': ' + selected['text'] + '\n'
 
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
 
