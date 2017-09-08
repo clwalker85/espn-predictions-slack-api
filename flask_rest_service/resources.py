@@ -46,6 +46,40 @@ class Scoreboard(restful.Resource):
         #league.scoreboard(week=week)
         return Response()
 
+class PredictionSubmissions(restful.Resource):
+    def post(self):
+        if datetime.now() < DEADLINE_TIME:
+            return Response()
+
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        prediction_summary = ''
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Predictions submitted for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'attachments': []
+        }
+
+        score_predictions = mongo.db.score_predictions.find({ 'year_and_week': year_and_week })
+        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
+            prediction_string = prediction['username'] + ' Winners: '
+
+            for attachment in prediction['message']['attachments']:
+                for action in actions:
+                    if action['type'] == 'button' and action['style'] == 'primary':
+                        prediction_string += action['text'] + ', '
+
+                prediction_string = prediction_string.rstrip(',') + '\n'
+
+                for action in actions:
+                    if action['type'] == 'select' and action['selected_options']:
+                        for selected in action['selected_options']:
+                            prediction_string += attachment['text'] + ': ' + selected['text'] + '\n'
+                
+
+            message['attachments'].append({ 'text': prediction_string })
+
+        return message
+
 class ScorePrediction(restful.Resource):
     def post(self):
         if datetime.now() > DEADLINE_TIME:
@@ -120,7 +154,6 @@ class Prediction(restful.Resource):
             },
         }, upsert=True, multi=False)
 
-        print(pprint.pformat(message))
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
         return message
@@ -242,3 +275,4 @@ api.add_resource(Scoreboard, '/scoreboard/')
 api.add_resource(Prediction, '/prediction/')
 api.add_resource(ScorePrediction, '/prediction/score/')
 api.add_resource(SendPredictionForm, '/prediction/form/')
+api.add_resource(PredictionSubmissions, '/prediction/submissions/')
