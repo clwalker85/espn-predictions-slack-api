@@ -78,8 +78,10 @@ class PredictionSubmissions(restful.Resource):
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
 
             score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
-#            prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
-#            prediction_string += 'Lowest Score: ' + score_prediction['low_score']
+            if 'high_score' in score_prediction:
+                prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
+            if 'low_score' in score_prediction:
+                prediction_string += 'Lowest Score: ' + score_prediction['low_score']
 
             message['attachments'].append({ 'text': prediction_string })
 
