@@ -48,9 +48,10 @@ class Scoreboard(restful.Resource):
 
 class ScorePrediction(restful.Resource):
     def post(self):
-        payload = request.form.get('text', None)
-        print(payload)
-        return payload
+        text = request.form.get('text', None)
+        username = request.form.get('user_name', None)
+        print(username)
+        return username
 
         #username = payload['user_name']
         #year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
