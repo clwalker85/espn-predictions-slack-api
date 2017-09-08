@@ -67,7 +67,7 @@ class PredictionSubmissions(restful.Resource):
                     if action['type'] == 'button' and action['style'] == 'primary':
                         prediction_string += action['text'] + ', '
 
-                prediction_string = prediction_string.rstrip(',') + '\n'
+            prediction_string = prediction_string.rstrip(',') + '\n'
 
 #                for action in attachment['actions']:
 #                    if action['type'] == 'select' and action['selected_options']:
