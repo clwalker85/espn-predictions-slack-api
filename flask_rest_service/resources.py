@@ -71,12 +71,12 @@ class ScorePrediction(restful.Resource):
                 high_score_string = param[1]
                 low_score_string = param[0]
 
-            #mongo.db.score_predictions.update(database_key, {
-            #    '$set': {
-            #        'high_score': high_score,
-            #        'low_score': low_score
-            #    },
-            #}, upsert=True, multi=False)
+            mongo.db.score_predictions.update(database_key, {
+                '$set': {
+                    'high_score': high_score,
+                    'low_score': low_score
+                },
+            }, upsert=True, multi=False)
 
             return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score_string + ', low score: ' + low_score_string
         except:
