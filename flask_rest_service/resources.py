@@ -62,11 +62,11 @@ class PredictionSubmissions(restful.Resource):
             username = prediction['username']
             prediction_string = username + ' Winners: '
 
-#            for attachment in prediction['message']['attachments']:
-#                for action in actions:
-#                    if action['type'] == 'button' and action['style'] == 'primary':
-#                        prediction_string += action['text'] + ', '
-#
+            for attachment in prediction['message']['attachments']:
+                for action in actions:
+                    if action['type'] == 'button' and action['style'] == 'primary':
+                        prediction_string += action['text'] + ', '
+
 #                prediction_string = prediction_string.rstrip(',') + '\n'
 #
 #                for action in actions:
