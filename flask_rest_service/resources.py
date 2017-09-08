@@ -60,25 +60,21 @@ class ScorePrediction(restful.Resource):
         try:
             first_score = Decimal(param[0])
             second_score = Decimal(param[1])
-            high_score = first_score
-            low_score = second_score
-            high_score_string = param[0]
-            low_score_string = param[1]
+            high_score = param[0]
+            low_score = param[1]
 
             if first_score < second_score:
-                high_score = second_score
-                low_score = first_score
-                high_score_string = param[1]
-                low_score_string = param[0]
+                high_score = param[1]
+                low_score = param[0]
 
             mongo.db.score_predictions.update(database_key, {
                 '$set': {
-                    'high_score': high_score_string,
-                    'low_score': low_score_string
+                    'high_score': high_score,
+                    'low_score': low_score
                 },
             }, upsert=True, multi=False)
 
-            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score_string + ', low score: ' + low_score_string
+            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
         except:
             return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
 
