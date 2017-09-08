@@ -73,7 +73,7 @@ class PredictionSubmissions(restful.Resource):
                         pprint.pformat(action)
                         for selected in action['selected_options']:
                             pprint.pformat(selected)
-                            matchups_string += attachment['text'] + ': ' + selected['text'] + '\n'
+                            matchups_string += attachment['fallback'] + ': ' + selected['text'] + '\n'
 
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
 
@@ -193,6 +193,7 @@ class SendPredictionForm(restful.Resource):
 
         blowout_dropdown = {
             'text': 'Which matchup will have the biggest blowout?',
+            'fallback': 'Biggest Blowout',
             'attachment_type': 'default',
             'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
             'actions': [
@@ -213,6 +214,7 @@ class SendPredictionForm(restful.Resource):
 
         closest_dropdown = {
             'text': 'Which matchup will have the closest score?',
+            'fallback': 'Closest Score',
             'attachment_type': 'default',
             'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
             'actions': [
@@ -233,6 +235,7 @@ class SendPredictionForm(restful.Resource):
 
         highest_dropdown = {
             'text': 'Who will be the highest scorer?',
+            'fallback': 'Highest Scorer',
             'attachment_type': 'default',
             'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
             'actions': [
@@ -253,6 +256,7 @@ class SendPredictionForm(restful.Resource):
 
         lowest_dropdown = {
             'text': 'Who will be the lowest scorer?',
+            'fallback': 'Lowest Scorer',
             'attachment_type': 'default',
             'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
             'actions': [
