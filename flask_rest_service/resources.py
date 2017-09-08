@@ -68,9 +68,9 @@ class PredictionSubmissions(restful.Resource):
                 for action in attachment['actions']:
                     if action['type'] == 'button' and action['style'] == 'primary':
                         winners_string += action['text'] + ', '
-#                    if action['type'] == 'select' and action['selected_options']:
-#                        for selected in action['selected_options']:
-#                            matchups_string += attachment['text'] + ': ' + selected['text'] + '\n'
+                    if action['type'] == 'select' and action['selected_options']:
+                        for selected in action['selected_options']:
+                            matchups_string += attachment['text'] + ': ' + selected['text'] + '\n'
 
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
 
