@@ -73,8 +73,8 @@ class ScorePrediction(restful.Resource):
 
             mongo.db.score_predictions.update(database_key, {
                 '$set': {
-                    #'high_score': high_score,
-                    'low_score': low_score
+                    'high_score': high_score_string,
+                    'low_score': low_score_string
                 },
             }, upsert=True, multi=False)
 
