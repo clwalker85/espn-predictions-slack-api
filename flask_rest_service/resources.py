@@ -50,33 +50,28 @@ class ScorePrediction(restful.Resource):
     def post(self):
         text = request.form.get('text', None)
         username = request.form.get('user_name', None)
-        print(username)
-        return username
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        database_key = { 'username': username, 'year_and_week': year_and_week }
+        param = text.split()
 
-        #username = payload['user_name']
-        #year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
-        #database_key = { 'username': username, 'year_and_week': year_and_week }
-        #text = payload['text']
-        #param = text.split()
+        if len(param) < 2:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
 
-        #if len(param) < 2:
-        #    return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
+        try:
+            first_score = Decimal(param[0])
+            second_score = Decimal(param[1])
+            high_score = param[0]
+            low_score = param[1]
 
-        #try:
-        #    first_score = Decimal(param[0])
-        #    second_score = Decimal(param[1])
-        #    high_score = param[0]
-        #    low_score = param[1]
+            if first_score < second_score
+                high_score = param[1]
+                low_score = param[0]
 
-        #    if first_score < second_score
-        #        high_score = param[1]
-        #        low_score = param[0]
+            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
+        except ValueError:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
 
-        #    return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
-        #except ValueError:
-        #    return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
-
-        #return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
+        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
 
 class Prediction(restful.Resource):
     def post(self):
