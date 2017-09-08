@@ -69,10 +69,10 @@ class PredictionSubmissions(restful.Resource):
 
                 prediction_string = prediction_string.rstrip(',') + '\n'
 
-                for action in attachment['actions']:
-                    if action['type'] == 'select' and action['selected_options']:
-                        for selected in action['selected_options']:
-                            prediction_string += attachment['text'] + ': ' + selected['text'] + '\n'
+#                for action in attachment['actions']:
+#                    if action['type'] == 'select' and action['selected_options']:
+#                        for selected in action['selected_options']:
+#                            prediction_string += attachment['text'] + ': ' + selected['text'] + '\n'
 
 #            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
 #            prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
