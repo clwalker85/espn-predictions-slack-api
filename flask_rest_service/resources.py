@@ -68,7 +68,7 @@ class ScorePrediction(restful.Resource):
                 low_score = param[0]
 
             return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
-        except InvalidOperation:
+        except:
             return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
 
         return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
