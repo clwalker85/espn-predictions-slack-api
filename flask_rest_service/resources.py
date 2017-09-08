@@ -58,28 +58,27 @@ class PredictionSubmissions(restful.Resource):
             'attachments': []
         }
 
-        score_predictions = mongo.db.score_predictions.find({ 'year_and_week': year_and_week })
-#        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
-#            username = prediction['username']
-#            prediction_string = username + ' Winners: '
-#
-#            for attachment in prediction['message']['attachments']:
-#                for action in actions:
-#                    if action['type'] == 'button' and action['style'] == 'primary':
-#                        prediction_string += action['text'] + ', '
-#
-#                prediction_string = prediction_string.rstrip(',') + '\n'
-#
-#                for action in actions:
-#                    if action['type'] == 'select' and action['selected_options']:
-#                        for selected in action['selected_options']:
-#                            prediction_string += attachment['text'] + ': ' + selected['text'] + '\n'
-#
-#            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
-#            prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
-#            prediction_string += 'Lowest Score: ' + score_prediction['low_score']
-#
-#            message['attachments'].append({ 'text': prediction_string })
+        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
+            username = prediction['username']
+            prediction_string = username + ' Winners: '
+
+            for attachment in prediction['message']['attachments']:
+                for action in actions:
+                    if action['type'] == 'button' and action['style'] == 'primary':
+                        prediction_string += action['text'] + ', '
+
+                prediction_string = prediction_string.rstrip(',') + '\n'
+
+                for action in actions:
+                    if action['type'] == 'select' and action['selected_options']:
+                        for selected in action['selected_options']:
+                            prediction_string += attachment['text'] + ': ' + selected['text'] + '\n'
+
+            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
+            prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
+            prediction_string += 'Lowest Score: ' + score_prediction['low_score']
+
+            message['attachments'].append({ 'text': prediction_string })
 
         return message
 
