@@ -48,6 +48,9 @@ class Scoreboard(restful.Resource):
 
 class ScorePrediction(restful.Resource):
     def post(self):
+        if datetime.now() > DEADLINE_TIME:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
+
         text = request.form.get('text', None)
         username = request.form.get('user_name', None)
         year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
