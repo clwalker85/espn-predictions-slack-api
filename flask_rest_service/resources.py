@@ -63,7 +63,7 @@ class ScorePrediction(restful.Resource):
             high_score = param[0]
             low_score = param[1]
 
-            if first_score < second_score
+            if first_score < second_score:
                 high_score = param[1]
                 low_score = param[0]
 
