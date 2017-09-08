@@ -58,7 +58,7 @@ class PredictionSubmissions(restful.Resource):
             'attachments': []
         }
 
-#        score_predictions = mongo.db.score_predictions.find({ 'year_and_week': year_and_week })
+        score_predictions = mongo.db.score_predictions.find({ 'year_and_week': year_and_week })
 #        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
 #            username = prediction['username']
 #            prediction_string = username + ' Winners: '
