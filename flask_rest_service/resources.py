@@ -43,7 +43,7 @@ class Root(restful.Resource):
 class Scoreboard(restful.Resource):
     def post(self):
         league = League(LEAGUE_ID, LEAGUE_YEAR)
-        return pprint.pformat(league.scoreboard())
+        return league.scoreboard()
 
 class PredictionSubmissions(restful.Resource):
     def post(self):
