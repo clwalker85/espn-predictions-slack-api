@@ -42,9 +42,9 @@ class Root(restful.Resource):
 
 class Scoreboard(restful.Resource):
     def post(self):
-        league = League(LEAGUE_ID, LEAGUE_YEAR)
-        pprint.pformat(league)
-        pprint.pformat(league.scoreboard())
+        #league = League(LEAGUE_ID, LEAGUE_YEAR)
+        #pprint.pformat(league)
+        #pprint.pformat(league.scoreboard())
         return Response()
 
 class PredictionSubmissions(restful.Resource):
@@ -65,6 +65,8 @@ class PredictionSubmissions(restful.Resource):
             winners_string = ''
             matchups_string = ''
 
+            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
+
             for attachment in prediction['message']['attachments']:
                 for action in attachment['actions']:
                     if action['type'] == 'button' and action['style'] == 'primary':
@@ -72,15 +74,15 @@ class PredictionSubmissions(restful.Resource):
                         
                     if action['type'] == 'select' and 'selected_options' in action:
                         for selected in action['selected_options']:
-                            matchups_string += attachment['fallback'] + ': ' + selected['text'] + '\n'
+                            matchups_string += attachment['fallback'] + ': ' + selected['text']
+                            if score_prediction:
+                                if "highest" in attachment['text']:
+                                    matchups_string += ', ' + score_prediction['high_score']
+                                elif "lowest" in attachment['text']:
+                                    matchups_string += ', ' + score_prediction['low_score']
+                            matchups_string += '\n'
 
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
-
-            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
-            if score_prediction:
-                prediction_string += 'Highest Score: ' + score_prediction['high_score'] + '\n'
-                prediction_string += 'Lowest Score: ' + score_prediction['low_score']
-
             message['attachments'].append({ 'text': prediction_string })
 
         return message
