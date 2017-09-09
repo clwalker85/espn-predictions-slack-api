@@ -42,9 +42,8 @@ class Root(restful.Resource):
 
 class Scoreboard(restful.Resource):
     def post(self):
-        #league = League(LEAGUE_ID, year)
-        #league.scoreboard(week=week)
-        return Response()
+        league = League(LEAGUE_ID, LEAGUE_YEAR)
+        return pprint.pformat(league.scoreboard())
 
 class PredictionSubmissions(restful.Resource):
     def post(self):
@@ -70,9 +69,7 @@ class PredictionSubmissions(restful.Resource):
                         winners_string += action['text'] + ', '
                         
                     if action['type'] == 'select' and 'selected_options' in action:
-                        pprint.pformat(action)
                         for selected in action['selected_options']:
-                            pprint.pformat(selected)
                             matchups_string += attachment['fallback'] + ': ' + selected['text'] + '\n'
 
             prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
