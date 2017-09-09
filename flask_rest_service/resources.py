@@ -80,9 +80,12 @@ class PredictionSubmissions(restful.Resource):
                                     matchups_string += ', ' + score_prediction['high_score']
                                 elif "lowest" in attachment['text']:
                                     matchups_string += ', ' + score_prediction['low_score']
-                            matchups_string += '\n'
+                            if "closest" in attachment['text']
+                                matchups_string += '\n'
+                            else:
+                                matchups_string += ' | '
 
-            prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string
+            prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string.rstrip('| ')
             message['attachments'].append({ 'text': prediction_string })
 
         return message
