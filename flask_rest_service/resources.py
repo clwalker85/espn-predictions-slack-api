@@ -72,7 +72,9 @@ class PredictionCalculations(restful.Resource):
         highest_timestamp_tiebreaker_used, lowest_timestamp_tiebreaker_used = False, False
         highest_within_one_point, lowest_within_one_point = False, False
 
-        formula_string = ''
+        formula_string = 'TOTAL = MATCHUP TOTAL + BLOWOUT BONUS + CLOSEST BONUS + HIGHEST BONUS + LOWEST BONUS\n'
+        formula_by_user = []
+
         standings_string = ''
 
         matchup_result = mongo.db.matchup_results.find_one({ 'year_and_week': year_and_week })
@@ -86,11 +88,20 @@ class PredictionCalculations(restful.Resource):
             username = prediction['username']
             score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
             user_winners = []
+            user_formula = {
+                'matchup_total': 0,
+                'blowout_bonus': 0,
+                'closest_bonus': 0,
+                'highest_bonus': 0,
+                'lowest_bonus': 0
+            }
 
             for attachment in prediction['message']['attachments']:
                 for action in attachment['actions']:
                     if action['type'] == 'button' and action['style'] == 'primary':
                         user_winners.append(action['text'])
+                        if action['text'] in matchup_result['winners']:
+                            user_formula['matchup_total'] += 1
                     # calculating winners before highest/lowest on purpose, order of original JSON/form matters here
                     if action['type'] == 'select' and 'blowout' in attachment['text']:
                         if not blowout_matchup:
@@ -167,6 +178,9 @@ class PredictionCalculations(restful.Resource):
                                     current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                     if current_distance_to_pin <= 1:
                                         lowest_within_one_point = True
+            # after processing all this user's selections
+            formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
+            formula_string += username + ': ' + formula_total + ' = ' + user_formula['matchup_total'] + ' + ' + user_formula['blowout_bonus'] + ' + ' + user_formula['closest_bonus'] + ' + ' + user_formula['highest_bonus'] + ' + ' + user_formula['lowest_bonus'] + '\n'
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
@@ -208,6 +222,8 @@ class PredictionCalculations(restful.Resource):
             bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
         bonus_string += '.\n'
         message['attachments'].append({ 'text': bonus_string })
+
+        message['attachments'].append({ 'text': formula_string })
 
         return message
 
