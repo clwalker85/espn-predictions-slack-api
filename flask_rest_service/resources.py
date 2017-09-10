@@ -227,7 +227,7 @@ class PredictionCalculations(restful.Resource):
         bonus_string += '.\n'
         message['attachments'].append({ 'text': bonus_string })
 
-        for formula_object in formula_by_user.sort(key=lambda x: x['total'], reverse=True):
+        for formula_object in formula_by_user.sort(key=lambda x: x.total, reverse=True):
             formula_string += formula_object['formula'] + '\n'
         message['attachments'].append({ 'text': formula_string })
 
