@@ -73,7 +73,7 @@ class PredictionCalculations(restful.Resource):
         highest_within_one_point, lowest_within_one_point = False, False
 
         formula_string = 'TOTAL = MATCHUP TOTAL + BLOWOUT BONUS + CLOSEST BONUS + HIGHEST BONUS + LOWEST BONUS\n'
-        formula_by_user = []
+        formula_by_user = {}
 
         standings_string = ''
 
@@ -89,6 +89,7 @@ class PredictionCalculations(restful.Resource):
             score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
             user_winners = []
             user_formula = {
+                'username': username,
                 'matchup_total': 0,
                 'blowout_bonus': 0,
                 'closest_bonus': 0,
@@ -183,12 +184,7 @@ class PredictionCalculations(restful.Resource):
                                     if current_distance_to_pin <= 1:
                                         lowest_within_one_point = True
             # after processing all this user's selections
-            formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
-            user_formula_string = username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
-            formula_by_user.append({
-                'total': formula_total,
-                'formula': user_formula_string
-            })
+            formula_by_user[username] = user_formula
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
@@ -211,10 +207,12 @@ class PredictionCalculations(restful.Resource):
             bonus_string += ', '.join(highest_winners[:-2] + [' and '.join(highest_winners[-2:])])
         bonus_string += ' got a point for guessing the highest scorer'
         if highest_pin_winner:
+            formula_by_user[highest_pin_winner]['highest_bonus'] += 1
             bonus_string += ', with ' + highest_pin_winner + ' getting an extra point for guessing the closest score'
         if highest_timestamp_tiebreaker_used:
             bonus_string += ' (earliest prediction tiebreaker was used)'
         if highest_within_one_point:
+            formula_by_user[highest_pin_winner]['highest_bonus'] += 1
             bonus_string += '. ' + highest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
         bonus_string += '.\n'
         if not lowest_winners:
@@ -223,16 +221,22 @@ class PredictionCalculations(restful.Resource):
             bonus_string += ', '.join(lowest_winners[:-2] + [' and '.join(lowest_winners[-2:])])
         bonus_string += ' got a point for guessing the lowest scorer'
         if lowest_pin_winner:
+            formula_by_user[lowest_pin_winner]['lowest_bonus'] += 1
             bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the closest score'
         if lowest_timestamp_tiebreaker_used:
             bonus_string += ' (earliest prediction tiebreaker was used)'
         if lowest_within_one_point:
+            formula_by_user[lowest_pin_winner]['lowest_bonus'] += 1
             bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
         bonus_string += '.\n'
         message['attachments'].append({ 'text': bonus_string })
 
-        for formula_object in sorted(formula_by_user, key=lambda x: x['total'], reverse=True):
-            formula_string += formula_object['formula'] + '\n'
+        prediction_formula = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
+        user_formulas = formula_by_user.values()
+        for user_formula in sorted(user_formulas, key=prediction_formula, reverse=True):
+            formula_total = prediction_formula(user_formula)
+            user_formula_string = username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
+            formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
         return message
