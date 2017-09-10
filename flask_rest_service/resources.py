@@ -235,7 +235,7 @@ class PredictionCalculations(restful.Resource):
         user_formulas = formula_by_user.values()
         for user_formula in sorted(user_formulas, key=prediction_formula, reverse=True):
             formula_total = prediction_formula(user_formula)
-            user_formula_string = username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
+            user_formula_string = user_formula'username'] + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
