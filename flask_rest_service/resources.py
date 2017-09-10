@@ -52,8 +52,8 @@ class Scoreboard(restful.Resource):
 
 class PredictionCalculations(restful.Resource):
     def post(self):
-        if datetime.now() < WEEK_END_TIME:
-            return Response()
+        #if datetime.now() < WEEK_END_TIME:
+        #    return Response()
 
         year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
         message = {
