@@ -147,7 +147,7 @@ class PredictionCalculations(restful.Resource):
                                     lowest_pin_score = score_prediction['low_score']
                                     lowest_pin_timestamp = prediction['message']['ts']
                                 else:
-                                    lowest_pin_temp = round(Decimal(lowest_pin_score), 1)
+                                    lowest_pin_temp = abs(round(Decimal(lowest_pin_score), 1))
 #                                    current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
 #                                    contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
 #                                    if current_distance_to_pin > contender_distance_to_pin:
