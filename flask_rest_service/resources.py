@@ -178,6 +178,7 @@ class PredictionCalculations(restful.Resource):
                                     current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                     if current_distance_to_pin <= 1:
                                         lowest_within_one_point = True
+
             # after processing all this user's selections
             formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
             formula_string += username + ': ' + formula_total + ' = ' + user_formula['matchup_total'] + ' + ' + user_formula['blowout_bonus'] + ' + ' + user_formula['closest_bonus'] + ' + ' + user_formula['highest_bonus'] + ' + ' + user_formula['lowest_bonus'] + '\n'
