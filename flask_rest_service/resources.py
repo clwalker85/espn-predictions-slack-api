@@ -149,10 +149,10 @@ class PredictionCalculations(restful.Resource):
                                 else:
                                     current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                     contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                    if current_distance_to_pin > contender_distance_to_pin:
-                                        lowest_pin_winner = username
-                                        lowest_pin_score = score_prediction['low_score']
-                                        lowest_pin_timestamp = prediction['message']['ts']
+#                                    if current_distance_to_pin > contender_distance_to_pin:
+#                                        lowest_pin_winner = username
+#                                        lowest_pin_score = score_prediction['low_score']
+#                                        lowest_pin_timestamp = prediction['message']['ts']
 #                                    elif current_distance_to_pin == contender_distance_to_pin:
 #                                        lowest_timestamp_tiebreaker_used = True
 #                                        # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
@@ -162,9 +162,9 @@ class PredictionCalculations(restful.Resource):
 #                                            lowest_pin_winner = username
 #                                            lowest_pin_score = score_prediction['low_score']
 #                                            lowest_pin_timestamp = prediction['message']['ts']
-                                current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                if current_distance_to_pin <= 1:
-                                    lowest_within_one_point = True
+#                                current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
+#                                if current_distance_to_pin <= 1:
+#                                    lowest_within_one_point = True
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
