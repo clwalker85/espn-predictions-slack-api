@@ -99,7 +99,7 @@ class PredictionCalculations(restful.Resource):
                                     blowout_matchup = option['text']
                         if 'selected_options' in action:
                             for selected in action['selected_options']:
-                                if matchup_result['blowout'] in selected['text'] and matchup_result['highest'] in user_winner and username not in blowout_winners:
+                                if matchup_result['blowout'] in selected['text'] and matchup_result['highest'] in user_winners and username not in blowout_winners:
                                     blowout_winners.append(username)
                     if action['type'] == 'select' and 'closest' in attachment['text']:
                         if not closest_matchup:
