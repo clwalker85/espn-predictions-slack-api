@@ -112,6 +112,7 @@ class PredictionCalculations(restful.Resource):
                             for selected in action['selected_options']:
                                 if matchup_result['blowout'] in selected['text'] and matchup_result['highest'] in user_winners and username not in blowout_winners:
                                     blowout_winners.append(username)
+                                    user_formula['blowout_bonus'] += 1
                     if action['type'] == 'select' and 'closest' in attachment['text']:
                         if not closest_matchup:
                             for option in action['options']:
@@ -121,10 +122,12 @@ class PredictionCalculations(restful.Resource):
                             for selected in action['selected_options']:
                                 if matchup_result['closest'] in selected['text'] and username not in closest_winners:
                                     closest_winners.append(username)
+                                    user_formula['closest_bonus'] += 1
                     if action['type'] == 'select' and 'highest' in attachment['text'] and 'selected_options' in action:
                         for selected in action['selected_options']:
                             if matchup_result['highest'] in selected['text'] and username not in highest_winners:
                                 highest_winners.append(username)
+                                user_formula['highest_bonus'] += 1
                                 if score_prediction:
                                     if not highest_pin_winner:
                                         highest_pin_winner = username
@@ -154,6 +157,7 @@ class PredictionCalculations(restful.Resource):
                         for selected in action['selected_options']:
                             if matchup_result['lowest'] in selected['text'] and username not in lowest_winners:
                                 lowest_winners.append(username)
+                                user_formula['lowest_bonus'] += 1
                                 if score_prediction:
                                     if not lowest_pin_winner:
                                         lowest_pin_winner = username
