@@ -111,61 +111,61 @@ class PredictionCalculations(restful.Resource):
                             for selected in action['selected_options']:
                                 if matchup_result['closest'] in selected['text'] and username not in closest_winners:
                                     closest_winners.append(username)
-                    if action['type'] == 'select' and 'highest' in attachment['text'] and 'selected_options' in action:
-                        for selected in action['selected_options']:
-                            if matchup_result['highest'] in selected['text'] and matchup_result['highest'] in user_winners and username not in highest_winners:
-                                highest_winners.append(username)
-                                if not highest_pin_winner:
-                                    highest_pin_winner = username
-                                    highest_pin_score = score_prediction['high_score']
-                                    highest_pin_timestamp = prediction['message']['ts']
-                                else:
-                                    current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
-                                    contender_distance_to_pin = abs(round(Decimal(score_prediction['high_score']), 1) - round(Decimal(matchup_result['high_score']), 1))
-                                    if current_distance_to_pin > contender_distance_to_pin:
-                                        highest_pin_winner = username
-                                        highest_pin_score = score_prediction['high_score']
-                                        highest_pin_timestamp = prediction['message']['ts']
-                                    elif current_distance_to_pin == contender_distance_to_pin:
-                                        highest_timestamp_tiebreaker_used = True
-                                        # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
-                                        current_timestamp = float(highest_pin_timestamp)
-                                        contender_timestamp = float(prediction['message']['ts'])
-                                        if current_timestamp > contender_timestamp:
-                                            highest_pin_winner = username
-                                            highest_pin_score = score_prediction['high_score']
-                                            highest_pin_timestamp = prediction['message']['ts']
-                                current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
-                                if current_distance_to_pin <= 1:
-                                    highest_within_one_point = True
-                                    
-                    if action['type'] == 'select' and 'lowest' in attachment['text'] and 'selected_options' in action:
-                        for selected in action['selected_options']:
-                            if matchup_result['lowest'] in selected['text'] and username not in lowest_winners:
-                                lowest_winners.append(username)
-                                if not lowest_pin_winner:
-                                    lowest_pin_winner = username
-                                    lowest_pin_score = score_prediction['low_score']
-                                    lowest_pin_timestamp = prediction['message']['ts']
-                                else:
-                                    current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                    contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                    if current_distance_to_pin > contender_distance_to_pin:
-                                        lowest_pin_winner = username
-                                        lowest_pin_score = score_prediction['low_score']
-                                        lowest_pin_timestamp = prediction['message']['ts']
-                                    elif current_distance_to_pin == contender_distance_to_pin:
-                                        lowest_timestamp_tiebreaker_used = True
-                                        # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
-                                        current_timestamp = float(lowest_pin_timestamp)
-                                        contender_timestamp = float(prediction['message']['ts'])
-                                        if current_timestamp > contender_timestamp:
-                                            lowest_pin_winner = username
-                                            lowest_pin_score = score_prediction['low_score']
-                                            lowest_pin_timestamp = prediction['message']['ts']
-                                current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                if current_distance_to_pin <= 1:
-                                    lowest_within_one_point = True
+#                    if action['type'] == 'select' and 'highest' in attachment['text'] and 'selected_options' in action:
+#                        for selected in action['selected_options']:
+#                            if matchup_result['highest'] in selected['text'] and matchup_result['highest'] in user_winners and username not in highest_winners:
+#                                highest_winners.append(username)
+#                                if not highest_pin_winner:
+#                                    highest_pin_winner = username
+#                                    highest_pin_score = score_prediction['high_score']
+#                                    highest_pin_timestamp = prediction['message']['ts']
+#                                else:
+#                                    current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
+#                                    contender_distance_to_pin = abs(round(Decimal(score_prediction['high_score']), 1) - round(Decimal(matchup_result['high_score']), 1))
+#                                    if current_distance_to_pin > contender_distance_to_pin:
+#                                        highest_pin_winner = username
+#                                        highest_pin_score = score_prediction['high_score']
+#                                        highest_pin_timestamp = prediction['message']['ts']
+#                                    elif current_distance_to_pin == contender_distance_to_pin:
+#                                        highest_timestamp_tiebreaker_used = True
+#                                        # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
+#                                        current_timestamp = float(highest_pin_timestamp)
+#                                        contender_timestamp = float(prediction['message']['ts'])
+#                                        if current_timestamp > contender_timestamp:
+#                                            highest_pin_winner = username
+#                                            highest_pin_score = score_prediction['high_score']
+#                                            highest_pin_timestamp = prediction['message']['ts']
+#                                current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
+#                                if current_distance_to_pin <= 1:
+#                                    highest_within_one_point = True
+#                                    
+#                    if action['type'] == 'select' and 'lowest' in attachment['text'] and 'selected_options' in action:
+#                        for selected in action['selected_options']:
+#                            if matchup_result['lowest'] in selected['text'] and username not in lowest_winners:
+#                                lowest_winners.append(username)
+#                                if not lowest_pin_winner:
+#                                    lowest_pin_winner = username
+#                                    lowest_pin_score = score_prediction['low_score']
+#                                    lowest_pin_timestamp = prediction['message']['ts']
+#                                else:
+#                                    current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
+#                                    contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
+#                                    if current_distance_to_pin > contender_distance_to_pin:
+#                                        lowest_pin_winner = username
+#                                        lowest_pin_score = score_prediction['low_score']
+#                                        lowest_pin_timestamp = prediction['message']['ts']
+#                                    elif current_distance_to_pin == contender_distance_to_pin:
+#                                        lowest_timestamp_tiebreaker_used = True
+#                                        # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
+#                                        current_timestamp = float(lowest_pin_timestamp)
+#                                        contender_timestamp = float(prediction['message']['ts'])
+#                                        if current_timestamp > contender_timestamp:
+#                                            lowest_pin_winner = username
+#                                            lowest_pin_score = score_prediction['low_score']
+#                                            lowest_pin_timestamp = prediction['message']['ts']
+#                                current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
+#                                if current_distance_to_pin <= 1:
+#                                    lowest_within_one_point = True
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
@@ -182,30 +182,30 @@ class PredictionCalculations(restful.Resource):
         else:
             bonus_string += ', '.join(closest_winners[:-2] + [' and '.join(closest_winners[-2:])])
         bonus_string += ' got a point for guessing the matchup with the closest margin of victory.\n'
-        if not highest_winners:
-            bonus_string += 'No one'
-        else:
-            bonus_string += ', '.join(highest_winners[:-2] + [' and '.join(highest_winners[-2:])])
-        bonus_string += ' got a point for guessing the highest scorer'
-        if highest_pin_winner:
-            bonus_string += ', with ' + highest_pin_winner + ' getting an extra point for guessing the closest score'
-        if highest_timestamp_tiebreaker_used:
-            bonus_string += ' (earliest prediction tiebreaker was used)'
-        if highest_within_one_point:
-            bonus_string += '. ' + highest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
-        bonus_string += '.\n'
-        if not lowest_winners:
-            bonus_string += 'No one'
-        else:
-            bonus_string += ', '.join(lowest_winners[:-2] + [' and '.join(lowest_winners[-2:])])
-        bonus_string += ' got a point for guessing the lowest scorer'
-        if lowest_pin_winner:
-            bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the closest score'
-        if lowest_timestamp_tiebreaker_used:
-            bonus_string += ' (earliest prediction tiebreaker was used)'
-        if lowest_within_one_point:
-            bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
-        bonus_string += '.\n'
+#        if not highest_winners:
+#            bonus_string += 'No one'
+#        else:
+#            bonus_string += ', '.join(highest_winners[:-2] + [' and '.join(highest_winners[-2:])])
+#        bonus_string += ' got a point for guessing the highest scorer'
+#        if highest_pin_winner:
+#            bonus_string += ', with ' + highest_pin_winner + ' getting an extra point for guessing the closest score'
+#        if highest_timestamp_tiebreaker_used:
+#            bonus_string += ' (earliest prediction tiebreaker was used)'
+#        if highest_within_one_point:
+#            bonus_string += '. ' + highest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
+#        bonus_string += '.\n'
+#        if not lowest_winners:
+#            bonus_string += 'No one'
+#        else:
+#            bonus_string += ', '.join(lowest_winners[:-2] + [' and '.join(lowest_winners[-2:])])
+#        bonus_string += ' got a point for guessing the lowest scorer'
+#        if lowest_pin_winner:
+#            bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the closest score'
+#        if lowest_timestamp_tiebreaker_used:
+#            bonus_string += ' (earliest prediction tiebreaker was used)'
+#        if lowest_within_one_point:
+#            bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
+#        bonus_string += '.\n'
         message['attachments'].append({ 'text': bonus_string })
 
         return message
