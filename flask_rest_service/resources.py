@@ -61,7 +61,7 @@ class PredictionSubmissions(restful.Resource):
 
         for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
             username = prediction['username']
-            prediction_string = '@' + username + ' Winners: '
+            prediction_string = username + ' Winners: '
             winners_string = ''
             matchups_string = ''
 
