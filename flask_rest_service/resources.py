@@ -186,7 +186,7 @@ class PredictionCalculations(restful.Resource):
             formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
             user_formula_string = username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
             formula_by_user.append({
-                'total': user_formula['matchup_total'],
+                'total': formula_total,
                 'formula': user_formula_string
             })
 
