@@ -17,7 +17,10 @@ WEBHOOK_URLS = [
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '1'
 DEADLINE_STRING = 'September 7th, 2017, at 08:30PM'
+# UTC version of time above - https://www.worldtimebuddy.com/
 DEADLINE_TIME = datetime.strptime('September 08 2017 12:30AM', '%B %d %Y %I:%M%p')
+# UTC version of Tuesday @ 8AM of that week
+WEEK_END_TIME = datetime.strptime('September 12 2017 12:00PM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
     ('Walker versus Renato', 'Walker', 'Renato'),
     ('Bryant versus Mike', 'Bryant', 'Mike'),
@@ -47,6 +50,34 @@ class Scoreboard(restful.Resource):
         #pprint.pformat(league.scoreboard())
         return Response()
 
+class PredictionCalculations(restful.Resource):
+    def post(self):
+        if datetime.now() < WEEK_END_TIME:
+            return Response()
+
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Prediction calculations for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'attachments': []
+        }
+        results_string = 'Winners: '
+
+        matchup_result = mongo.db.matchup_results.find_one({ 'year_and_week': year_and_week })
+
+        for winner in matchup_result['winners']:
+            results_string += winner + ', '
+
+        results_string = results_string.rstrip(', ') + '\n'
+
+        results_string += 'Blowout: ' + matchup_result['blowout'] + ' | Closest: ' + matchup_result['closest'] + '\n'
+        results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
+        results_string += 'Lowest: ' + matchup_result['lowest'] + ', ' + matchup_result['low_score']
+
+        message['attachments'].append({ 'text': results_string })
+
+        return message
+
 class PredictionSubmissions(restful.Resource):
     def post(self):
         if datetime.now() < DEADLINE_TIME:
@@ -61,7 +92,7 @@ class PredictionSubmissions(restful.Resource):
 
         for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
             username = prediction['username']
-            prediction_string = username + ' Winners: '
+            prediction_string = username + ' picks: '
             winners_string = ''
             matchups_string = ''
 
@@ -290,3 +321,4 @@ api.add_resource(Prediction, '/prediction/')
 api.add_resource(ScorePrediction, '/prediction/score/')
 api.add_resource(SendPredictionForm, '/prediction/form/')
 api.add_resource(PredictionSubmissions, '/prediction/submissions/')
+api.add_resource(PredictionCalculations, '/prediction/calculations/')
