@@ -180,7 +180,7 @@ class PredictionCalculations(restful.Resource):
                                         lowest_within_one_point = True
             # after processing all this user's selections
             formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
-#            formula_string += username + ': ' + formula_total + ' = ' + user_formula['matchup_total'] + ' + ' + user_formula['blowout_bonus'] + ' + ' + user_formula['closest_bonus'] + ' + ' + user_formula['highest_bonus'] + ' + ' + user_formula['lowest_bonus'] + '\n'
+            formula_string += username + ': ' + formula_total + ' = ' + user_formula['matchup_total'] + ' + ' + user_formula['blowout_bonus'] + ' + ' + user_formula['closest_bonus'] + ' + ' + user_formula['highest_bonus'] + ' + ' + user_formula['lowest_bonus'] + '\n'
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
