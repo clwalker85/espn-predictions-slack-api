@@ -101,7 +101,7 @@ class PredictionCalculations(restful.Resource):
                     if action['type'] == 'button' and action['style'] == 'primary':
                         user_winners.append(action['text'])
                         if action['text'] in matchup_result['winners']:
-#                            user_formula['matchup_total'] += 1
+                            user_formula['matchup_total'] += 1
                     # calculating winners before highest/lowest on purpose, order of original JSON/form matters here
                     if action['type'] == 'select' and 'blowout' in attachment['text']:
                         if not blowout_matchup:
