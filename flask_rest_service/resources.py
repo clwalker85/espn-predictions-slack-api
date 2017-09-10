@@ -180,7 +180,11 @@ class PredictionCalculations(restful.Resource):
                                         lowest_within_one_point = True
             # after processing all this user's selections
             formula_total = user_formula['matchup_total'] + user_formula['blowout_bonus'] + user_formula['closest_bonus'] + user_formula['highest_bonus'] + user_formula['lowest_bonus']
-            formula_string += username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus']) + '\n'
+            user_formula_string = username + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
+            formula_by_user.append({
+                'total': user_formula['matchup_total'],
+                'formula': user_formula_string
+            })
 
         results_string += 'Blowout: ' + blowout_matchup + ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + matchup_result['highest'] + ', ' + matchup_result['high_score'] + ' | '
@@ -223,6 +227,8 @@ class PredictionCalculations(restful.Resource):
         bonus_string += '.\n'
         message['attachments'].append({ 'text': bonus_string })
 
+        for formula_object in formula_by_user.sort(key=lambda x: x['total'], reverse=True):
+            formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
         return message
