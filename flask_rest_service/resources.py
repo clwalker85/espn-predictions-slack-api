@@ -235,13 +235,14 @@ class PredictionCalculations(restful.Resource):
         user_formulas = sorted(formula_by_user.values(), key=prediction_formula, reverse=True)
         for user_formula in user_formulas:
             formula_total = prediction_formula(user_formula)
+            database_key = { 'username': user_formula['username'], 'year_and_week': year_and_week }
             if int(LEAGUE_WEEK) == 1:
-                mongo.db.prediction_standings.insert_one({
-                    'username': user_formula['username'],
-                    'year_and_week': year_and_week,
-                    'total': 0,
-                    'low': formula_total
-                })
+                mongo.db.prediction_standings.update(database_key, {
+                    '$set': {
+                        'total': 0,
+                        'low': formula_total
+                    },
+                }, upsert=True, multi=False)
             user_formula_string = user_formula['username'] + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
@@ -255,13 +256,13 @@ class PredictionCalculations(restful.Resource):
 #                        'total': prediction_record['total'] + prediction_record['low'],
 #                        'low': formula_total
 #                    },
-#                }, multi=False)
+#                }, upsert=True, multi=False)
 #            else:
 #                mongo.db.prediction_standings.update(database_key, {
 #                    '$set': {
 #                        'total': prediction_record['total'] + formula_total,
 #                    },
-#                }, multi=False)
+#                }, upsert=True, multi=False)
 
         for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week', year_and_week }).sort([('total', -1), ('low', -1)]):
             standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
