@@ -52,8 +52,8 @@ class Scoreboard(restful.Resource):
 
 class PredictionCalculations(restful.Resource):
     def post(self):
-        if datetime.now() < WEEK_END_TIME:
-            return Response()
+        #if datetime.now() < WEEK_END_TIME:
+        #    return Response()
 
         year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
         message = {
@@ -75,7 +75,7 @@ class PredictionCalculations(restful.Resource):
         formula_string = 'TOTAL = MATCHUP TOTAL + BLOWOUT BONUS + CLOSEST BONUS + HIGHEST BONUS + LOWEST BONUS\n'
         formula_by_user = {}
 
-        standings_string = ''
+        standings_string = 'Draft selection standings for the season so far (with lowest score dropped):\n'
 
         matchup_result = mongo.db.matchup_results.find_one({ 'year_and_week': year_and_week })
 
@@ -232,12 +232,14 @@ class PredictionCalculations(restful.Resource):
         message['attachments'].append({ 'text': bonus_string })
 
         prediction_formula = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
-        user_formulas = formula_by_user.values()
-        for user_formula in sorted(user_formulas, key=prediction_formula, reverse=True):
+        user_formulas = sorted(formula_by_user.values(), key=prediction_formula, reverse=True)
+        for user_formula in user_formulas:
             formula_total = prediction_formula(user_formula)
             user_formula_string = user_formula['username'] + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
+
+        message['attachments'].append({ 'text': standings_string })
 
         return message
 
