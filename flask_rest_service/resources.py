@@ -239,8 +239,8 @@ class PredictionCalculations(restful.Resource):
                 mongo.db.prediction_standings.insert_one({
                     'username': user_formula['username'],
                     'year_and_week': year_and_week,
-                    'total': int(0),
-                    'low': int(formula_total)
+                    'total': '0',
+                    'low': str(formula_total)
                 })
             user_formula_string = user_formula['username'] + ': ' + str(formula_total) + ' = ' + str(user_formula['matchup_total']) + ' + ' + str(user_formula['blowout_bonus']) + ' + ' + str(user_formula['closest_bonus']) + ' + ' + str(user_formula['highest_bonus']) + ' + ' + str(user_formula['lowest_bonus'])
             formula_string += user_formula_string + '\n'
@@ -264,7 +264,7 @@ class PredictionCalculations(restful.Resource):
 #                }, multi=False)
 
         for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week', year_and_week }).sort([('total', -1), ('low', -1)]):
-            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+            standings_string += prediction_record['username'] + ' - ' + prediction_record['total'] + '; LOW: ' + prediction_record['low'] + '\n'
         message['attachments'].append({ 'text': standings_string })
 
         return message
