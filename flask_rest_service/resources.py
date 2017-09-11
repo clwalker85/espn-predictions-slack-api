@@ -10,6 +10,7 @@ from flask_rest_service import app, api, mongo
 
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
+LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
 WEBHOOK_URLS = [
     # Freddy
     'https://hooks.slack.com/services/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'
@@ -233,6 +234,16 @@ class PredictionCalculations(restful.Resource):
 
         prediction_formula = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
         user_formulas = sorted(formula_by_user.values(), key=prediction_formula, reverse=True)
+        if int(LEAGUE_WEEK) == 1:
+            users_without_predictions = list(set(LEAGUE_USERNAMES) - set(formula_by_user.keys()))
+            for username in users_without_predictions:
+                database_key = { 'username': username, 'year_and_week': year_and_week }
+                mongo.db.prediction_standings.update(database_key, {
+                    '$set': {
+                        'total': 0,
+                        'low': 0
+                    },
+                }, upsert=True, multi=False)
         for user_formula in user_formulas:
             formula_total = prediction_formula(user_formula)
             database_key = { 'username': user_formula['username'], 'year_and_week': year_and_week }
@@ -247,22 +258,26 @@ class PredictionCalculations(restful.Resource):
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
-#        if int(LEAGUE_WEEK) > 1:
-#            database_key = { 'username': user_formula['username'], 'year_and_week': year_and_week }
-#            prediction_record = mongo.db.prediction_standings.find_one(database_key)
-#            if formula_total < prediction_record['low']:
-#                mongo.db.prediction_standings.update(database_key, {
-#                    '$set': {
-#                        'total': prediction_record['total'] + prediction_record['low'],
-#                        'low': formula_total
-#                    },
-#                }, upsert=True, multi=False)
-#            else:
-#                mongo.db.prediction_standings.update(database_key, {
-#                    '$set': {
-#                        'total': prediction_record['total'] + formula_total,
-#                    },
-#                }, upsert=True, multi=False)
+        if int(LEAGUE_WEEK) > 1:
+            last_week = int(LEAGUE_WEEK) - 1
+            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
+            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
+                username = prediction_record['username']
+                database_key = { 'username': username, 'year_and_week': year_and_week }
+                formula_total = prediction_formula(formula_by_user[username])
+                if formula_total < prediction_record['low']:
+                    mongo.db.prediction_standings.update(database_key, {
+                        '$set': {
+                            'total': prediction_record['total'] + prediction_record['low'],
+                            'low': formula_total
+                        },
+                    }, upsert=True, multi=False)
+                else:
+                    mongo.db.prediction_standings.update(database_key, {
+                        '$set': {
+                            'total': prediction_record['total'] + formula_total,
+                        },
+                    }, upsert=True, multi=False)
 
         for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
             standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
