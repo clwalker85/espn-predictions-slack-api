@@ -6,7 +6,7 @@ from datetime import datetime
 from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
-from flask_rest_service import app, api, mongo, client_id, client_secret, client_scope
+from flask_rest_service import app, api, mongo
 
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
