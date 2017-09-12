@@ -1,3 +1,4 @@
+import os
 import json
 import pprint
 import requests
@@ -30,23 +31,21 @@ MATCHUPS = [
 
 def post_to_slack(url, payload):
     slack_token = os.environ.get('SLACK_API_TOKEN')
-#    sc = SlackClient(slack_token)
+    sc = SlackClient(slack_token)
 
-    return 
+    dm_channel_list = sc.api_call("im.list")
 
-#    dm_channel_list = sc.api_call("im.list")
-#
-#    for channel in dm_channel_list:
-#        #if channel['user'] in LEAGUE_USERNAMES:
-#        user = sc.api_call('users.info', user=channel['user'])
-#        if user['name'] == 'clwalker':
-#            sc.api_call("chat.postMessage",
-#                channel=channel['id'],
-#                text=payload['text'],
-#                attachments=payload['attachments'],
-#                as_user=False
-#            )
-#    return
+    for channel in dm_channel_list:
+        #if channel['user'] in LEAGUE_USERNAMES:
+        user = sc.api_call('users.info', user=channel['user'])
+        if user['name'] == 'clwalker':
+            sc.api_call("chat.postMessage",
+                channel=channel['id'],
+                text=payload['text'],
+                attachments=payload['attachments'],
+                as_user=False
+            )
+    return
 
 class Root(restful.Resource):
     def get(self):
