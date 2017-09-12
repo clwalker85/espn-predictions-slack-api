@@ -8,6 +8,7 @@ from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 from flask_rest_service import app, api, mongo
+from slackclient import SlackClient
 
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
@@ -33,18 +34,18 @@ def post_to_slack(url, payload):
     slack_token = os.environ.get('SLACK_API_TOKEN')
     sc = SlackClient(slack_token)
 
-#    dm_channel_list = sc.api_call("im.list")
+    dm_channel_list = sc.api_call("im.list")
 
-#    for channel in dm_channel_list:
-#        #if channel['user'] in LEAGUE_USERNAMES:
-#        user = sc.api_call('users.info', user=channel['user'])
-#        if user['name'] == 'clwalker':
-#            sc.api_call("chat.postMessage",
-#                channel=channel['id'],
-#                text=payload['text'],
-#                attachments=payload['attachments'],
-#                as_user=False
-#            )
+    for channel in dm_channel_list:
+        #if channel['user'] in LEAGUE_USERNAMES:
+        user = sc.api_call('users.info', user=channel['user'])
+        if user['name'] == 'clwalker':
+            sc.api_call("chat.postMessage",
+                channel=channel['id'],
+                text=payload['text'],
+                attachments=payload['attachments'],
+                as_user=False
+            )
     return
 
 class Root(restful.Resource):
