@@ -6,15 +6,11 @@ from datetime import datetime
 from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
-from flask_rest_service import app, api, mongo
+from flask_rest_service import app, api, mongo, client_id, client_secret, client_scope
 
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
-WEBHOOK_URLS = [
-    # Freddy
-    'https://hooks.slack.com/services/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'
-]
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '2'
 DEADLINE_STRING = 'September 14th, 2017, at 08:25PM'
@@ -33,9 +29,21 @@ MATCHUPS = [
 ]
 
 def post_to_slack(url, payload):
-    headers = { 'content-type': 'application/json' }
-    payload = json.dumps(payload)
-    return requests.post(url, headers=headers, data=payload)
+    slack_token = os.environ.get('SLACK_API_TOKEN')
+    sc = SlackClient(slack_token)
+
+    dm_channel_list = sc.api_call("im.list")
+
+    for channel in dm_channel_list:
+        #if channel['user'] in LEAGUE_USERNAMES:
+        if channel['user'] == 'clwalker':
+            sc.api_call("chat.postMessage",
+                channel=channel['id'],
+                text=payload['text'],
+                attachments=payload['attachments'],
+                as_user=False
+            )
+    return
 
 class Root(restful.Resource):
     def get(self):
@@ -162,8 +170,7 @@ class SendPredictionForm(restful.Resource):
             })
         message['attachments'].append(lowest_dropdown)
 
-        for url in WEBHOOK_URLS:
-            post_to_slack(url, message)
+        post_to_slack(url, message)
 
         return Response()
 
