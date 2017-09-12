@@ -32,10 +32,10 @@ def post_to_slack(url, payload):
     slack_token = os.environ.get('SLACK_API_TOKEN')
     sc = SlackClient(slack_token)
 
-    dm_channel_list = sc.api_call("im.list")
+    return 
 
-    return dm_channel_list
-
+#    dm_channel_list = sc.api_call("im.list")
+#
 #    for channel in dm_channel_list:
 #        #if channel['user'] in LEAGUE_USERNAMES:
 #        user = sc.api_call('users.info', user=channel['user'])
