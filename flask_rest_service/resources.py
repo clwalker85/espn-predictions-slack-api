@@ -31,7 +31,7 @@ MATCHUPS = [
 ]
 
 def post_to_slack(payload):
-#    slack_token = os.environ.get('SLACK_API_TOKEN')
+    slack_token = os.environ['SLACK_API_TOKEN']
 #    sc = SlackClient(slack_token)
 
 #    dm_channel_list = sc.api_call("im.list")
