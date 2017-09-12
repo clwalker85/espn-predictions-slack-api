@@ -16,20 +16,20 @@ WEBHOOK_URLS = [
     'https://hooks.slack.com/services/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'
 ]
 LEAGUE_YEAR = '2017'
-LEAGUE_WEEK = '1'
-DEADLINE_STRING = 'September 7th, 2017, at 08:30PM'
+LEAGUE_WEEK = '2'
+DEADLINE_STRING = 'September 14th, 2017, at 08:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
-DEADLINE_TIME = datetime.strptime('September 08 2017 12:30AM', '%B %d %Y %I:%M%p')
+DEADLINE_TIME = datetime.strptime('September 15 2017 12:25AM', '%B %d %Y %I:%M%p')
 # UTC version of Tuesday @ 8AM of that week
-WEEK_END_TIME = datetime.strptime('September 12 2017 12:00PM', '%B %d %Y %I:%M%p')
+WEEK_END_TIME = datetime.strptime('September 19 2017 12:00PM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
-    ('Walker versus Renato', 'Walker', 'Renato'),
-    ('Bryant versus Mike', 'Bryant', 'Mike'),
-    ('Kevin versus Justin', 'Kevin', 'Justin'),
-    ('Todd versus Freddy', 'Todd', 'Freddy'),
-    ('Tom versus Alexis', 'Tom', 'Alexis'),
-    ('James versus Ian', 'James', 'Ian'),
-    ('Cathy versus Joel', 'Cathy', 'Joel'),
+    ('Alexis versus Walker', 'Alexis', 'Walker'),
+    ('Kevin versus Bryant', 'Kevin', 'Bryant'),
+    ('Mike versus Todd', 'Mike', 'Todd'),
+    ('Justin versus Tom', 'Justin', 'Tom'),
+    ('Freddy versus James', 'Freddy', 'James'),
+    ('Ian versus Cathy', 'Ian', 'Cathy'),
+    ('Renato versus Joel', 'Renato', 'Joel'),
 ]
 
 def post_to_slack(url, payload):
