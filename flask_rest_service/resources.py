@@ -36,7 +36,8 @@ def post_to_slack(url, payload):
 
     for channel in dm_channel_list:
         #if channel['user'] in LEAGUE_USERNAMES:
-        if channel['user'] == 'clwalker':
+        user = sc.api_call('users.info', user=channel['user'])
+        if user['name'] == 'clwalker':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
                 text=payload['text'],
