@@ -51,10 +51,246 @@ class Scoreboard(restful.Resource):
         #pprint.pformat(league.scoreboard())
         return Response()
 
+class SendPredictionForm(restful.Resource):
+    def get(self):
+        message = {
+            'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
+            'attachments': []
+        }
+        for index, matchup in enumerate(MATCHUPS):
+            message['attachments'].append({
+                'text': matchup[0],
+                'attachment_type': 'default',
+                'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+                'actions': [
+                    {
+                        'name': 'winner' + str(index),
+                        'text': matchup[1],
+                        'type': 'button',
+                        'value': matchup[1]
+                    },
+                    {
+                        'name': 'winner' + str(index),
+                        'text': matchup[2],
+                        'type': 'button',
+                        'value': matchup[2]
+                    }
+                ]
+            })
+
+        blowout_dropdown = {
+            'text': 'Which matchup will have the biggest blowout?',
+            'fallback': 'Blowout',
+            'attachment_type': 'default',
+            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+            'actions': [
+                {
+                    'name': 'blowout',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for matchup in MATCHUPS:
+            blowout_dropdown['actions'][0]['options'].append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message['attachments'].append(blowout_dropdown)
+
+        closest_dropdown = {
+            'text': 'Which matchup will have the closest score?',
+            'fallback': 'Closest',
+            'attachment_type': 'default',
+            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+            'actions': [
+                {
+                    'name': 'closest',
+                    'text': 'Pick a matchup...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for matchup in MATCHUPS:
+            closest_dropdown['actions'][0]['options'].append({
+                'text': matchup[0],
+                'value': matchup[0]
+            })
+        message['attachments'].append(closest_dropdown)
+
+        highest_dropdown = {
+            'text': 'Who will be the highest scorer?',
+            'fallback': 'Highest',
+            'attachment_type': 'default',
+            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+            'actions': [
+                {
+                    'name': 'highest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for team in LEAGUE_MEMBERS:
+            highest_dropdown['actions'][0]['options'].append({
+                'text': team,
+                'value': team
+            })
+        message['attachments'].append(highest_dropdown)
+
+        lowest_dropdown = {
+            'text': 'Who will be the lowest scorer?',
+            'fallback': 'Lowest',
+            'attachment_type': 'default',
+            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+            'actions': [
+                {
+                    'name': 'lowest',
+                    'text': 'Pick a team...',
+                    'type': 'select',
+                    'options': []
+                }
+            ]
+        }
+        for team in LEAGUE_MEMBERS:
+            lowest_dropdown['actions'][0]['options'].append({
+                'text': team,
+                'value': team
+            })
+        message['attachments'].append(lowest_dropdown)
+
+        for url in WEBHOOK_URLS:
+            post_to_slack(url, message)
+
+        return Response()
+
+class Prediction(restful.Resource):
+    def post(self):
+        if datetime.now() > DEADLINE_TIME:
+            return Response()
+
+        payload = json.loads(request.form.get('payload', None))
+
+        username = payload['user']['name']
+        year_and_week = payload['callback_id']
+        database_key = { 'username': username, 'year_and_week': year_and_week }
+        message = payload['original_message']
+        actions = payload['actions']
+
+        for attachment in message['attachments']:
+            for action in actions:
+                for element in attachment['actions']:
+                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] == element['value']:
+                        attachment['color'] = 'good'
+                        element['style'] = 'primary'
+
+                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] != element['value']:
+                        element['style'] = None
+
+                    if element['type'] == 'select' and action['name'] == element['name']:
+                        attachment['color'] = 'good'
+                        element['selected_options'] = []
+                        for selected in action['selected_options']:
+                            for option in element['options']:
+                                if option['value'] == selected['value']:
+                                    element['selected_options'].append(option)
+
+        mongo.db.predictions.update(database_key, {
+            '$set': {
+                'message': message
+            },
+        }, upsert=True, multi=False)
+
+        ## Slack replaces old prediction form with any immediate response,
+        ## so return the form again with any selected buttons styled
+        return message
+
+class ScorePrediction(restful.Resource):
+    def post(self):
+        if datetime.now() > DEADLINE_TIME:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
+
+        text = request.form.get('text', None)
+        username = request.form.get('user_name', None)
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        database_key = { 'username': username, 'year_and_week': year_and_week }
+        param = text.split()
+
+        if len(param) < 2:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
+
+        try:
+            first_score = Decimal(param[0])
+            second_score = Decimal(param[1])
+            high_score = param[0]
+            low_score = param[1]
+
+            if first_score < second_score:
+                high_score = param[1]
+                low_score = param[0]
+
+            mongo.db.score_predictions.update(database_key, {
+                '$set': {
+                    'high_score': high_score,
+                    'low_score': low_score
+                },
+            }, upsert=True, multi=False)
+
+            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
+        except:
+            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
+
+        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
+
+class PredictionSubmissions(restful.Resource):
+    def post(self):
+        if datetime.now() < DEADLINE_TIME:
+            return Response()
+
+        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Predictions submitted for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'attachments': []
+        }
+
+        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
+            username = prediction['username']
+            prediction_string = username + ' picks: '
+            winners_string, matchups_string = '', ''
+
+            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
+
+            for attachment in prediction['message']['attachments']:
+                for action in attachment['actions']:
+                    if action['type'] == 'button' and action['style'] == 'primary':
+                        winners_string += action['text'] + ', '
+                        
+                    if action['type'] == 'select' and 'selected_options' in action:
+                        for selected in action['selected_options']:
+                            matchups_string += attachment['fallback'] + ': ' + selected['text']
+                            if score_prediction:
+                                if "highest" in attachment['text']:
+                                    matchups_string += ', ' + score_prediction['high_score']
+                                elif "lowest" in attachment['text']:
+                                    matchups_string += ', ' + score_prediction['low_score']
+                            if "closest" in attachment['text']:
+                                matchups_string += '\n'
+                            else:
+                                matchups_string += ' | '
+
+            prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string.rstrip('| ')
+            message['attachments'].append({ 'text': prediction_string })
+
+        return message
+
 class PredictionCalculations(restful.Resource):
     def post(self):
-        #if datetime.now() < WEEK_END_TIME:
-        #    return Response()
+        if datetime.now() < WEEK_END_TIME:
+            return Response()
 
         year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
         message = {
@@ -284,242 +520,6 @@ class PredictionCalculations(restful.Resource):
         message['attachments'].append({ 'text': standings_string })
 
         return message
-
-class PredictionSubmissions(restful.Resource):
-    def post(self):
-        if datetime.now() < DEADLINE_TIME:
-            return Response()
-
-        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
-        message = {
-            'response_type': 'in_channel',
-            'text': 'Predictions submitted for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
-            'attachments': []
-        }
-
-        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
-            username = prediction['username']
-            prediction_string = username + ' picks: '
-            winners_string, matchups_string = '', ''
-
-            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
-
-            for attachment in prediction['message']['attachments']:
-                for action in attachment['actions']:
-                    if action['type'] == 'button' and action['style'] == 'primary':
-                        winners_string += action['text'] + ', '
-                        
-                    if action['type'] == 'select' and 'selected_options' in action:
-                        for selected in action['selected_options']:
-                            matchups_string += attachment['fallback'] + ': ' + selected['text']
-                            if score_prediction:
-                                if "highest" in attachment['text']:
-                                    matchups_string += ', ' + score_prediction['high_score']
-                                elif "lowest" in attachment['text']:
-                                    matchups_string += ', ' + score_prediction['low_score']
-                            if "closest" in attachment['text']:
-                                matchups_string += '\n'
-                            else:
-                                matchups_string += ' | '
-
-            prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string.rstrip('| ')
-            message['attachments'].append({ 'text': prediction_string })
-
-        return message
-
-class ScorePrediction(restful.Resource):
-    def post(self):
-        if datetime.now() > DEADLINE_TIME:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
-
-        text = request.form.get('text', None)
-        username = request.form.get('user_name', None)
-        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
-        database_key = { 'username': username, 'year_and_week': year_and_week }
-        param = text.split()
-
-        if len(param) < 2:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
-
-        try:
-            first_score = Decimal(param[0])
-            second_score = Decimal(param[1])
-            high_score = param[0]
-            low_score = param[1]
-
-            if first_score < second_score:
-                high_score = param[1]
-                low_score = param[0]
-
-            mongo.db.score_predictions.update(database_key, {
-                '$set': {
-                    'high_score': high_score,
-                    'low_score': low_score
-                },
-            }, upsert=True, multi=False)
-
-            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
-        except:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
-
-        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
-
-class Prediction(restful.Resource):
-    def post(self):
-        if datetime.now() > DEADLINE_TIME:
-            return Response()
-
-        payload = json.loads(request.form.get('payload', None))
-
-        username = payload['user']['name']
-        year_and_week = payload['callback_id']
-        database_key = { 'username': username, 'year_and_week': year_and_week }
-        message = payload['original_message']
-        actions = payload['actions']
-
-        for attachment in message['attachments']:
-            for action in actions:
-                for element in attachment['actions']:
-                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] == element['value']:
-                        attachment['color'] = 'good'
-                        element['style'] = 'primary'
-
-                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] != element['value']:
-                        element['style'] = None
-
-                    if element['type'] == 'select' and action['name'] == element['name']:
-                        attachment['color'] = 'good'
-                        element['selected_options'] = []
-                        for selected in action['selected_options']:
-                            for option in element['options']:
-                                if option['value'] == selected['value']:
-                                    element['selected_options'].append(option)
-
-        mongo.db.predictions.update(database_key, {
-            '$set': {
-                'message': message
-            },
-        }, upsert=True, multi=False)
-
-        ## Slack replaces old prediction form with any immediate response,
-        ## so return the form again with any selected buttons styled
-        return message
-
-class SendPredictionForm(restful.Resource):
-    def get(self):
-        message = {
-            'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
-            'attachments': []
-        }
-        for index, matchup in enumerate(MATCHUPS):
-            message['attachments'].append({
-                'text': matchup[0],
-                'attachment_type': 'default',
-                'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-                'actions': [
-                    {
-                        'name': 'winner' + str(index),
-                        'text': matchup[1],
-                        'type': 'button',
-                        'value': matchup[1]
-                    },
-                    {
-                        'name': 'winner' + str(index),
-                        'text': matchup[2],
-                        'type': 'button',
-                        'value': matchup[2]
-                    }
-                ]
-            })
-
-        blowout_dropdown = {
-            'text': 'Which matchup will have the biggest blowout?',
-            'fallback': 'Blowout',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'blowout',
-                    'text': 'Pick a matchup...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for matchup in MATCHUPS:
-            blowout_dropdown['actions'][0]['options'].append({
-                'text': matchup[0],
-                'value': matchup[0]
-            })
-        message['attachments'].append(blowout_dropdown)
-
-        closest_dropdown = {
-            'text': 'Which matchup will have the closest score?',
-            'fallback': 'Closest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'closest',
-                    'text': 'Pick a matchup...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for matchup in MATCHUPS:
-            closest_dropdown['actions'][0]['options'].append({
-                'text': matchup[0],
-                'value': matchup[0]
-            })
-        message['attachments'].append(closest_dropdown)
-
-        highest_dropdown = {
-            'text': 'Who will be the highest scorer?',
-            'fallback': 'Highest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'highest',
-                    'text': 'Pick a team...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for team in LEAGUE_MEMBERS:
-            highest_dropdown['actions'][0]['options'].append({
-                'text': team,
-                'value': team
-            })
-        message['attachments'].append(highest_dropdown)
-
-        lowest_dropdown = {
-            'text': 'Who will be the lowest scorer?',
-            'fallback': 'Lowest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'lowest',
-                    'text': 'Pick a team...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for team in LEAGUE_MEMBERS:
-            lowest_dropdown['actions'][0]['options'].append({
-                'text': team,
-                'value': team
-            })
-        message['attachments'].append(lowest_dropdown)
-
-        for url in WEBHOOK_URLS:
-            post_to_slack(url, message)
-
-        return Response()
 
 api.add_resource(Root, '/')
 api.add_resource(Scoreboard, '/scoreboard/')
