@@ -34,23 +34,26 @@ MATCHUPS = [
 def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = SlackClient(slack_token)
+
+    user_list = sc.api_call('users.list', presence=False)
     
-    for username in LEAGUE_USERNAMES:
-        if username == 'clwalker':
-            channel = sc.api_call('im.open', user=username)
-            print(pprint.pformat(channel))
+    if 'members' in user_list:
+        for user in user_list['members']:
+            if user['name'] == 'clwalker':
+                channel = sc.api_call('im.open', user=user['id'])
+                print(pprint.pformat(channel))
 
-            if 'channel' in channel:
-                channel = channel['channel']
-            print('after if check')
+                if 'channel' in channel:
+                    channel = channel['channel']
+                print('after if check')
 
-            sc.api_call("chat.postMessage",
-                channel=channel['id'],
-                text=payload['text'],
-                attachments=payload['attachments'],
-                as_user=False
-            )
-            print('after message post')
+                sc.api_call("chat.postMessage",
+                    channel=channel['id'],
+                    text=payload['text'],
+                    attachments=payload['attachments'],
+                    as_user=False
+                )
+                print('after message post')
     return
 
 class Root(restful.Resource):
