@@ -39,7 +39,6 @@ def post_to_slack(payload):
     print('before for loop')
     
     for channel in dm_channel_list['ims']:
-        print('before user fetch')
         user = sc.api_call('users.info', user=channel['user'])
         print('after user fetch / before message')
 
@@ -54,10 +53,6 @@ def post_to_slack(payload):
                 attachments=payload['attachments'],
                 as_user=False
             )
-        else:
-            print('if condition failed' + channel['user'])
-            print(pprint.pformat(user))
-            break
     print('after for loop')
     return
 
