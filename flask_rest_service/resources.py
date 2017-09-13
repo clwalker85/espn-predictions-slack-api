@@ -39,19 +39,18 @@ def post_to_slack(payload):
         if username == 'clwalker':
             channel = sc.api_call('im.open', user=username)
             print(pprint.pformat(channel))
-        else:
-            print('Does not match: ' + username)
 
-        if 'channel' in channel:
-            channel = channel['channel']
+            if 'channel' in channel:
+                channel = channel['channel']
+            print('after if check')
 
-        if username == 'clwalker':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
                 as_user=False
             )
+            print('after message post')
     return
 
 class Root(restful.Resource):
