@@ -43,10 +43,10 @@ def post_to_slack(payload):
                 channel = sc.api_call('im.open', user=user['id'])
                 print(user['name'])
                 print(user['id'])
-                print(channel['id'])
 
                 if 'channel' in channel:
                     channel = channel['channel']
+                print(channel['id'])
 
 #            sc.api_call("chat.postMessage",
 #                channel=channel['id'],
