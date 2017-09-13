@@ -40,6 +40,7 @@ def post_to_slack(payload):
             channel = sc.api_call('im.open', user=username)
             print(pprint.pformat(channel))
         else:
+            print('Does not match: ' + username)
             break
 
         if 'channel' in channel:
@@ -50,7 +51,7 @@ def post_to_slack(payload):
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
-                as_user=True
+                as_user=False
             )
     return
 
