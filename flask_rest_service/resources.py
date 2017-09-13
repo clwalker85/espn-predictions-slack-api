@@ -35,7 +35,7 @@ def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = SlackClient(slack_token)
 
-    for channel in dm_channel_list:
+    for channel in LEAGUE_DM_CHANNEL_IDS:
         sc.api_call("chat.postMessage",
             channel=channel,
             text=payload['text'],
