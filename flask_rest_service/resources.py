@@ -13,7 +13,7 @@ from slackclient import SlackClient
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
-LEAGUE_DM_CHANNEL_IDS = ['D3PRFLH2S']
+LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ' ]
 LEAGUE_YEAR = '2017'
 LEAGUE_WEEK = '2'
 DEADLINE_STRING = 'September 14th, 2017, at 08:25PM'
@@ -35,25 +35,19 @@ def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = SlackClient(slack_token)
 
-    user_list = sc.api_call('users.list', presence=False)
-    
-    if 'members' in user_list:
-        for user in user_list['members']:
-            if user['name'] in LEAGUE_USERNAMES:
-                channel = sc.api_call('im.open', user=user['id'])
-                print(user['name'])
-                print(user['id'])
+    for user_id in LEAGUE_USER_IDS:
+        channel = sc.api_call('im.open', user=user_id)
 
-                if 'channel' in channel:
-                    channel = channel['channel']
-                print(channel['id'])
+        if 'channel' in channel:
+            channel = channel['channel']
 
-#            sc.api_call("chat.postMessage",
-#                channel=channel['id'],
-#                text=payload['text'],
-#                attachments=payload['attachments'],
-#                as_user=False
-#            )
+        if user_id == 'U3NE3S6CQ':
+            sc.api_call("chat.postMessage",
+                channel=channel['id'],
+                text=payload['text'],
+                attachments=payload['attachments'],
+                as_user=False
+            )
     return
 
 class Root(restful.Resource):
