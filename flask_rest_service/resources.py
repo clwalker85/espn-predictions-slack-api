@@ -41,7 +41,6 @@ def post_to_slack(payload):
             print(pprint.pformat(channel))
         else:
             print('Does not match: ' + username)
-            break
 
         if 'channel' in channel:
             channel = channel['channel']
