@@ -44,13 +44,16 @@ def post_to_slack(payload):
         user = sc.api_call('users.info', user=channel['user'])
         print('after user fetch / before message')
 
-        if user['name'] == 'clwalker':
+        if 'name' in user and user['name'] == 'clwalker':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
                 as_user=False
             )
+        else:
+            print('if condition failed' + channel['user'])
+    print('after for loop')
     return
 
 class Root(restful.Resource):
