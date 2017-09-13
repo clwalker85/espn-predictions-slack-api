@@ -39,17 +39,21 @@ def post_to_slack(payload):
     
     if 'members' in user_list:
         for user in user_list['members']:
-            channel = sc.api_call('im.open', user=user['id'])
+            if user['name'] in LEAGUE_USERNAMES:
+                channel = sc.api_call('im.open', user=user['id'])
+                print(user['name'])
+                print(user['id'])
+                print(channel['id'])
 
-            if 'channel' in channel:
-                channel = channel['channel']
+                if 'channel' in channel:
+                    channel = channel['channel']
 
-            sc.api_call("chat.postMessage",
-                channel=channel['id'],
-                text=payload['text'],
-                attachments=payload['attachments'],
-                as_user=False
-            )
+#            sc.api_call("chat.postMessage",
+#                channel=channel['id'],
+#                text=payload['text'],
+#                attachments=payload['attachments'],
+#                as_user=False
+#            )
     return
 
 class Root(restful.Resource):
