@@ -40,10 +40,13 @@ def post_to_slack(payload):
     
     for channel in dm_channel_list['ims']:
         print('before user fetch')
-        #if channel['user'] in LEAGUE_USERNAMES:
         user = sc.api_call('users.info', user=channel['user'])
         print('after user fetch / before message')
 
+        if 'user' in user:
+            user = user['user']
+
+        #if channel['user'] in LEAGUE_USERNAMES:
         if 'name' in user and user['name'] == 'clwalker':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
