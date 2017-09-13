@@ -53,6 +53,8 @@ def post_to_slack(payload):
             )
         else:
             print('if condition failed' + channel['user'])
+            print(pprint.pformat(user))
+            break
     print('after for loop')
     return
 
