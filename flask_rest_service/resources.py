@@ -38,6 +38,9 @@ def post_to_slack(payload):
     for username in LEAGUE_USERNAMES:
         if username == 'clwalker':
             channel = sc.api_call('im.open', user=username)
+            print(pprint.pformat(channel))
+        else:
+            break
 
         if 'channel' in channel:
             channel = channel['channel']
