@@ -43,7 +43,7 @@ def post_to_slack(payload):
             user = user['user']
 
         if 'name' in user and user['name'] in LEAGUE_USERNAMES:
-            print(name['name'])
+            print(user['name'])
             print(channel['id'])
 #            sc.api_call("chat.postMessage",
 #                channel=channel['id'],
