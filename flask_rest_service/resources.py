@@ -38,7 +38,8 @@ def post_to_slack(payload):
 
     pprint.pformat(dm_channel_list)
 
-#    for channel in dm_channel_list:
+    for channel in dm_channel_list:
+        print('CLW was here')
 #        #if channel['user'] in LEAGUE_USERNAMES:
 #        user = sc.api_call('users.info', user=channel['user'])
 #        if user['name'] == 'clwalker':
