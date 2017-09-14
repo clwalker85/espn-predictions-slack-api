@@ -184,16 +184,13 @@ class Prediction(restful.Resource):
         if datetime.now() > DEADLINE_TIME:
             return Response()
 
-        print('After deadline check')
         payload = json.loads(request.form.get('payload', None))
-        print('After payload')
 
         username = payload['user']['name']
         year_and_week = payload['callback_id']
         database_key = { 'username': username, 'year_and_week': year_and_week }
         message = payload['original_message']
         actions = payload['actions']
-        print('After variable init')
 
         for attachment in message['attachments']:
             for action in actions:
@@ -212,14 +209,12 @@ class Prediction(restful.Resource):
                             for option in element['options']:
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
-        print('After for loop')
 
-        mongo.db.predictions.update(database_key, {
-            '$set': {
-                'message': message
-            },
-        }, upsert=True, multi=False)
-        print('After DB update')
+#        mongo.db.predictions.update(database_key, {
+#            '$set': {
+#                'message': message
+#            },
+#        }, upsert=True, multi=False)
 
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
