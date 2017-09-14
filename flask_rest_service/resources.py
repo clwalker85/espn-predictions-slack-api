@@ -2,6 +2,7 @@ import os
 import json
 import pprint
 import requests
+import traceback
 from decimal import Decimal
 from datetime import datetime
 from espnff import League
@@ -217,8 +218,10 @@ class Prediction(restful.Resource):
                     'message': message
                 },
             }, upsert=True, multi=False)
-        except:
-            print(pprint.pformat(result))
+        except Exception as e:
+            print(traceback.format_exc())
+            print(e.__doc__)
+            print(e.message)
             return message
 
 
