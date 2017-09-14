@@ -220,8 +220,6 @@ class Prediction(restful.Resource):
         except Exception as e:
             print(pprint.pformat(e))
             print(traceback.format_exc())
-            print(e.__doc__)
-            print(e.message)
             return message
 
 
