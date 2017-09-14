@@ -37,12 +37,12 @@ def post_to_slack(payload):
     sc = SlackClient(slack_token)
 
     for user_id in LEAGUE_USER_IDS:
-        channel = sc.api_call('im.open', user=user_id)
+        if user_id in ['U3P2770FK', 'U3P3NU4E6', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L']:
+            channel = sc.api_call('im.open', user=user_id)
 
-        if 'channel' in channel:
-            channel = channel['channel']
+            if 'channel' in channel:
+                channel = channel['channel']
 
-        if user_id == 'U3NEWLZFS':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
                 text=payload['text'],
