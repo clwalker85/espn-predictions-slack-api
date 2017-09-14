@@ -211,18 +211,14 @@ class Prediction(restful.Resource):
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
 
-        print(pprint.pformat(database_key))
         try:
-            result = mongo.db.predictions.update(database_key, {
+            mongo.db.predictions.update(database_key, {
                 '$set': {
                     'message': message
                 },
             }, upsert=True, multi=False)
-        except mongo.errors.DuplicateKeyError as e:
-            print(e.error_document)
-            print(e.dup_val)
-            return message
         except Exception as e:
+            print(pprint.pformat(e))
             print(traceback.format_exc())
             print(e.__doc__)
             print(e.message)
