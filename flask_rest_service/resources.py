@@ -211,13 +211,16 @@ class Prediction(restful.Resource):
                                     element['selected_options'].append(option)
 
         print(pprint.pformat(database_key))
-        result = mongo.db.predictions.update(database_key, {
-            '$set': {
-                'message': message
-            },
-        }, upsert=True, multi=False)
+        try:
+            result = mongo.db.predictions.update(database_key, {
+                '$set': {
+                    'message': message
+                },
+            }, upsert=True, multi=False)
+        except:
+            print(pprint.pformat(result))
+            return message
 
-        print(pprint.pformat(result))
 
         ## Slack replaces old prediction form with any immediate response,
         ## so return the form again with any selected buttons styled
