@@ -214,6 +214,8 @@ class Prediction(restful.Resource):
         try:
             mongo.db.predictions.update(database_key, {
                 '$set': {
+                    'username': username,
+                    'year_and_week': year_and_week,
                     'message': message
                 },
             }, upsert=True, multi=False)
@@ -253,6 +255,8 @@ class ScorePrediction(restful.Resource):
 
             mongo.db.score_predictions.update(database_key, {
                 '$set': {
+                    'username': username,
+                    'year_and_week': year_and_week,
                     'high_score': high_score,
                     'low_score': low_score
                 },
