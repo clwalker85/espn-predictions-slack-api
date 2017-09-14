@@ -218,6 +218,10 @@ class Prediction(restful.Resource):
                     'message': message
                 },
             }, upsert=True, multi=False)
+        except mongo.errors.DuplicateKeyError as e:
+            print(e.error_document)
+            print(e.dup_val)
+            return message
         except Exception as e:
             print(traceback.format_exc())
             print(e.__doc__)
