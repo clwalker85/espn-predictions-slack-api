@@ -211,18 +211,11 @@ class Prediction(restful.Resource):
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
 
-        try:
-            mongo.db.predictions.update(database_key, {
-                '$set': {
-                    'username': username,
-                    'year_and_week': year_and_week,
-                    'message': message
-                },
-            }, upsert=True, multi=False)
-        except Exception as e:
-            print(pprint.pformat(e))
-            print(traceback.format_exc())
-            return message
+        mongo.db.predictions.update(database_key, {
+            '$set': {
+                'message': message
+            },
+        }, upsert=True, multi=False)
 
 
         ## Slack replaces old prediction form with any immediate response,
@@ -255,8 +248,6 @@ class ScorePrediction(restful.Resource):
 
             mongo.db.score_predictions.update(database_key, {
                 '$set': {
-                    'username': username,
-                    'year_and_week': year_and_week,
                     'high_score': high_score,
                     'low_score': low_score
                 },
