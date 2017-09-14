@@ -42,7 +42,7 @@ def post_to_slack(payload):
         if 'channel' in channel:
             channel = channel['channel']
 
-        if user_id == 'U3NE3S6CQ':
+        if user_id == 'U3P6LPVLM':
             sc.api_call("chat.postMessage",
                 channel=channel['id'],
                 text=payload['text'],
