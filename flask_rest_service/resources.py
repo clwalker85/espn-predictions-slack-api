@@ -210,7 +210,7 @@ class Prediction(restful.Resource):
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
 
-        print(pprint.pformat(message))
+        print(pprint.pformat(database_key))
         result = mongo.db.predictions.update(database_key, {
             '$set': {
                 'message': message
