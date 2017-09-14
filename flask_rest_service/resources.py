@@ -186,7 +186,6 @@ class Prediction(restful.Resource):
 
         print('After deadline check')
         payload = json.loads(request.form.get('payload', None))
-        print(pprint.pformat(payload))
         print('After payload')
 
         username = payload['user']['name']
@@ -213,7 +212,6 @@ class Prediction(restful.Resource):
                             for option in element['options']:
                                 if option['value'] == selected['value']:
                                     element['selected_options'].append(option)
-        print(pprint.pformat(message))
         print('After for loop')
 
         mongo.db.predictions.update(database_key, {
