@@ -473,7 +473,7 @@ class PredictionCalculations(restful.Resource):
         bonus_string += ' got a point for guessing the lowest scorer'
         if lowest_pin_winner:
             formula_by_user[lowest_pin_winner]['lowest_bonus'] += 1
-            bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the closest score'
+            bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the lowest score'
         if lowest_timestamp_tiebreaker_used:
             bonus_string += ' (earliest prediction tiebreaker was used)'
         if lowest_within_one_point:
@@ -508,30 +508,34 @@ class PredictionCalculations(restful.Resource):
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
-#        if int(LEAGUE_WEEK) > 1:
-#            last_week = int(LEAGUE_WEEK) - 1
-#            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
-#            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
-#                username = prediction_record['username']
-#                database_key = { 'username': username, 'year_and_week': year_and_week }
-#                formula_total = prediction_formula(formula_by_user[username])
-#                if formula_total < prediction_record['low']:
+        if int(LEAGUE_WEEK) > 1:
+            last_week = int(LEAGUE_WEEK) - 1
+            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
+            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
+                username = prediction_record['username']
+                database_key = { 'username': username, 'year_and_week': year_and_week }
+                formula_total = prediction_formula(formula_by_user[username])
+                print(formula_total)
+                print(prediction_record['low'])
+                if formula_total < prediction_record['low']:
+                    print('formula_total is less')
 #                    mongo.db.prediction_standings.update(database_key, {
 #                        '$set': {
 #                            'total': prediction_record['total'] + prediction_record['low'],
 #                            'low': formula_total
 #                        },
 #                    }, upsert=True, multi=False)
-#                else:
+                else:
+                    print('formula_total is more')
 #                    mongo.db.prediction_standings.update(database_key, {
 #                        '$set': {
 #                            'total': prediction_record['total'] + formula_total,
 #                        },
 #                    }, upsert=True, multi=False)
 
-#        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
-#            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
-#        message['attachments'].append({ 'text': standings_string })
+        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+        message['attachments'].append({ 'text': standings_string })
 
         return message
 
