@@ -531,6 +531,7 @@ class PredictionCalculations(restful.Resource):
                     mongo.db.prediction_standings.update(database_key, {
                         '$set': {
                             'total': prediction_record['total'] + formula_total,
+                            'low': prediction_record['low']
                         },
                     }, upsert=True, multi=False)
 
