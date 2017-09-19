@@ -14,22 +14,23 @@ from slackclient import SlackClient
 LEAGUE_ID = 367562
 LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
 LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
+# same order as arrays above
 LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ' ]
 LEAGUE_YEAR = '2017'
-LEAGUE_WEEK = '2'
-DEADLINE_STRING = 'September 14th, 2017, at 08:25PM'
+LEAGUE_WEEK = '3'
+DEADLINE_STRING = 'September 21st, 2017, at 08:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
-DEADLINE_TIME = datetime.strptime('September 15 2017 12:25AM', '%B %d %Y %I:%M%p')
+DEADLINE_TIME = datetime.strptime('September 22 2017 12:25AM', '%B %d %Y %I:%M%p')
 # UTC version of Tuesday @ 8AM of that week
-WEEK_END_TIME = datetime.strptime('September 19 2017 12:00PM', '%B %d %Y %I:%M%p')
+WEEK_END_TIME = datetime.strptime('September 26 2017 12:00PM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
-    ('Alexis versus Walker', 'Alexis', 'Walker'),
-    ('Kevin versus Bryant', 'Kevin', 'Bryant'),
-    ('Mike versus Todd', 'Mike', 'Todd'),
-    ('Justin versus Tom', 'Justin', 'Tom'),
-    ('Freddy versus James', 'Freddy', 'James'),
-    ('Ian versus Cathy', 'Ian', 'Cathy'),
-    ('Renato versus Joel', 'Renato', 'Joel'),
+    ('Walker versus Justin', 'Walker', 'Justin'),
+    ('Bryant versus Todd', 'Bryant', 'Todd'),
+    ('Tom versus Kevin', 'Tom', 'Kevin'),
+    ('James versus Mike', 'James', 'Mike'),
+    ('Cathy versus Freddy', 'Cathy', 'Freddy'),
+    ('Joel versus Alexis', 'Joel', 'Alexis'),
+    ('Renato versus Ian', 'Renato', 'Ian'),
 ]
 
 def post_to_slack(payload):
@@ -37,7 +38,7 @@ def post_to_slack(payload):
     sc = SlackClient(slack_token)
 
     for user_id in LEAGUE_USER_IDS:
-        #if user_id in ['U3P2770FK', 'U3P3NU4E6', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L']:
+        if user_id in [ 'U3NE3S6CQ' ]
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:
@@ -213,7 +214,8 @@ class Prediction(restful.Resource):
 
         mongo.db.predictions.update(database_key, {
             '$set': {
-                'message': message
+                'message': message,
+                'last_modified': datetime.now()
             },
         }, upsert=True, multi=False)
 
@@ -249,7 +251,8 @@ class ScorePrediction(restful.Resource):
             mongo.db.score_predictions.update(database_key, {
                 '$set': {
                     'high_score': high_score,
-                    'low_score': low_score
+                    'low_score': low_score,
+                    'last_modified': datetime.now()
                 },
             }, upsert=True, multi=False)
 
