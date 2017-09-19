@@ -537,8 +537,8 @@ class PredictionCalculations(restful.Resource):
                     }, upsert=True, multi=False)
                     print('mongo upsert done')
 
-        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
-            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+#        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+#            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
         message['attachments'].append({ 'text': standings_string })
 
         return message
