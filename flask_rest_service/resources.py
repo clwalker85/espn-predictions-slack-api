@@ -515,22 +515,30 @@ class PredictionCalculations(restful.Resource):
                 username = prediction_record['username']
                 database_key = { 'username': username, 'year_and_week': year_and_week }
                 formula_total = prediction_formula(formula_by_user[username])
+                print(username)
+                print(year_and_week)
+                print(formula_total)
+                print(pprint.pformat(prediction_record))
                 if formula_total < prediction_record['low']:
+                    print('formula_total is less')
                     mongo.db.prediction_standings.update(database_key, {
                         '$set': {
                             'total': prediction_record['total'] + prediction_record['low'],
                             'low': formula_total
                         },
                     }, upsert=True, multi=False)
+                    print('mongo upsert done')
                 else:
+                    print('formula_total is more')
                     mongo.db.prediction_standings.update(database_key, {
                         '$set': {
                             'total': prediction_record['total'] + formula_total,
                         },
                     }, upsert=True, multi=False)
+                    print('mongo upsert done')
 
-#        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
-#            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
         message['attachments'].append({ 'text': standings_string })
 
         return message
