@@ -514,7 +514,8 @@ class PredictionCalculations(restful.Resource):
             for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
                 username = prediction_record['username']
                 database_key = { 'username': username, 'year_and_week': year_and_week }
-                formula_total = prediction_formula(formula_by_user[username])
+#                formula_total = prediction_formula(formula_by_user[username])
+                formula_total = 0
                 print(formula_total)
                 print(prediction_record['low'])
                 if formula_total < prediction_record['low']:
