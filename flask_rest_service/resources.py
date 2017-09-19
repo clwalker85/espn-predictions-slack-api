@@ -387,23 +387,23 @@ class PredictionCalculations(restful.Resource):
                                     if not highest_pin_winner:
                                         highest_pin_winner = username
                                         highest_pin_score = score_prediction['high_score']
-                                        highest_pin_timestamp = prediction['message']['ts']
+                                        highest_pin_timestamp = prediction['last_modified']
                                     else:
                                         current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
                                         contender_distance_to_pin = abs(round(Decimal(score_prediction['high_score']), 1) - round(Decimal(matchup_result['high_score']), 1))
                                         if current_distance_to_pin > contender_distance_to_pin:
                                             highest_pin_winner = username
                                             highest_pin_score = score_prediction['high_score']
-                                            highest_pin_timestamp = prediction['message']['ts']
+                                            highest_pin_timestamp = prediction['last_modified']
                                         elif current_distance_to_pin == contender_distance_to_pin:
                                             highest_timestamp_tiebreaker_used = True
                                             # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
                                             current_timestamp = float(highest_pin_timestamp)
-                                            contender_timestamp = float(prediction['message']['ts'])
-                                            if current_timestamp > contender_timestamp:
+                                            contender_timestamp = float(prediction['last_modified'])
+                                            if current_timestamp and current_timestamp > contender_timestamp:
                                                 highest_pin_winner = username
                                                 highest_pin_score = score_prediction['high_score']
-                                                highest_pin_timestamp = prediction['message']['ts']
+                                                highest_pin_timestamp = prediction['last_modified']
                                     current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
                                     if current_distance_to_pin <= 1:
                                         highest_within_one_point = True
@@ -417,23 +417,23 @@ class PredictionCalculations(restful.Resource):
                                     if not lowest_pin_winner:
                                         lowest_pin_winner = username
                                         lowest_pin_score = score_prediction['low_score']
-                                        lowest_pin_timestamp = prediction['message']['ts']
+                                        lowest_pin_timestamp = prediction['last_modified']
                                     else:
                                         current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                         contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
                                         if current_distance_to_pin > contender_distance_to_pin:
                                             lowest_pin_winner = username
                                             lowest_pin_score = score_prediction['low_score']
-                                            lowest_pin_timestamp = prediction['message']['ts']
+                                            lowest_pin_timestamp = prediction['last_modified']
                                         elif current_distance_to_pin == contender_distance_to_pin:
                                             lowest_timestamp_tiebreaker_used = True
                                             # tie goes to earliest prediction, Slack uses float timestamps to guarantee ordering
                                             current_timestamp = float(lowest_pin_timestamp)
-                                            contender_timestamp = float(prediction['message']['ts'])
-                                            if current_timestamp > contender_timestamp:
+                                            contender_timestamp = float(prediction['last_modified'])
+                                            if current_timestamp and current_timestamp > contender_timestamp:
                                                 lowest_pin_winner = username
                                                 lowest_pin_score = score_prediction['low_score']
-                                                lowest_pin_timestamp = prediction['message']['ts']
+                                                lowest_pin_timestamp = prediction['last_modified']
                                     current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                     if current_distance_to_pin <= 1:
                                         lowest_within_one_point = True
