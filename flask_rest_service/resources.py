@@ -37,7 +37,7 @@ def post_to_slack(payload):
     sc = SlackClient(slack_token)
 
     for user_id in LEAGUE_USER_IDS:
-        if user_id in ['U3P2770FK', 'U3P3NU4E6', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L']:
+        #if user_id in ['U3P2770FK', 'U3P3NU4E6', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L']:
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:
@@ -508,30 +508,30 @@ class PredictionCalculations(restful.Resource):
             formula_string += user_formula_string + '\n'
         message['attachments'].append({ 'text': formula_string })
 
-        if int(LEAGUE_WEEK) > 1:
-            last_week = int(LEAGUE_WEEK) - 1
-            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
-            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
-                username = prediction_record['username']
-                database_key = { 'username': username, 'year_and_week': year_and_week }
-                formula_total = prediction_formula(formula_by_user[username])
-                if formula_total < prediction_record['low']:
-                    mongo.db.prediction_standings.update(database_key, {
-                        '$set': {
-                            'total': prediction_record['total'] + prediction_record['low'],
-                            'low': formula_total
-                        },
-                    }, upsert=True, multi=False)
-                else:
-                    mongo.db.prediction_standings.update(database_key, {
-                        '$set': {
-                            'total': prediction_record['total'] + formula_total,
-                        },
-                    }, upsert=True, multi=False)
+#        if int(LEAGUE_WEEK) > 1:
+#            last_week = int(LEAGUE_WEEK) - 1
+#            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
+#            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
+#                username = prediction_record['username']
+#                database_key = { 'username': username, 'year_and_week': year_and_week }
+#                formula_total = prediction_formula(formula_by_user[username])
+#                if formula_total < prediction_record['low']:
+#                    mongo.db.prediction_standings.update(database_key, {
+#                        '$set': {
+#                            'total': prediction_record['total'] + prediction_record['low'],
+#                            'low': formula_total
+#                        },
+#                    }, upsert=True, multi=False)
+#                else:
+#                    mongo.db.prediction_standings.update(database_key, {
+#                        '$set': {
+#                            'total': prediction_record['total'] + formula_total,
+#                        },
+#                    }, upsert=True, multi=False)
 
-        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
-            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
-        message['attachments'].append({ 'text': standings_string })
+#        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+#            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+#        message['attachments'].append({ 'text': standings_string })
 
         return message
 
