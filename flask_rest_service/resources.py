@@ -514,7 +514,12 @@ class PredictionCalculations(restful.Resource):
             for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
                 username = prediction_record['username']
                 database_key = { 'username': username, 'year_and_week': year_and_week }
-                formula_total = prediction_formula(formula_by_user[username])
+
+
+                if username in formula_by_user:
+                    formula_total = prediction_formula(formula_by_user[username])
+                else:
+                    formula_total = 0
                 print(username)
                 print(year_and_week)
                 print(formula_total)
@@ -537,8 +542,8 @@ class PredictionCalculations(restful.Resource):
                     }, upsert=True, multi=False)
                     print('mongo upsert done')
 
-#        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
-#            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
+        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+            standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
         message['attachments'].append({ 'text': standings_string })
 
         return message
