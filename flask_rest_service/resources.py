@@ -38,7 +38,7 @@ def post_to_slack(payload):
     sc = SlackClient(slack_token)
 
     for user_id in LEAGUE_USER_IDS:
-        if user_id not in [ 'U3NE3S6CQ' ]:
+        #if user_id not in [ 'U3NE3S6CQ' ]:
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:
