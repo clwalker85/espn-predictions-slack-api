@@ -22,7 +22,7 @@ DEADLINE_STRING = 'September 28th, 2017, at 08:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
 DEADLINE_TIME = datetime.strptime('September 29 2017 12:25AM', '%B %d %Y %I:%M%p')
 # UTC version of Tuesday @ 8AM of that week; remember leading zeroes in days!
-WEEK_END_TIME = datetime.strptime('November 03 2017 12:00PM', '%B %d %Y %I:%M%p')
+WEEK_END_TIME = datetime.strptime('October 03 2017 12:00PM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
     ('Kevin versus Walker', 'Kevin', 'Walker'),
     ('Tom versus Bryant', 'Tom', 'Bryant'),
