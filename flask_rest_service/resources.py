@@ -17,7 +17,7 @@ LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jt
 # same order as arrays above
 LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ' ]
 LEAGUE_YEAR = '2017'
-LEAGUE_WEEK = '6'
+LEAGUE_WEEK = '7'
 DEADLINE_STRING = 'October 19th, 2017, at 08:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
 DEADLINE_TIME = datetime.strptime('October 20 2017 12:25AM', '%B %d %Y %I:%M%p')
