@@ -19,18 +19,19 @@ LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84L
 LEAGUE_YEAR = '2017'
 # MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
 LEAGUE_WEEK = '14'
-DEADLINE_STRING = 'December 7th, 2017, at 8:25PM'
+DEADLINE_STRING = 'December 14th, 2017, at 8:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
-DEADLINE_TIME = datetime.strptime('December 08 2017 01:25AM', '%B %d %Y %I:%M%p')
+DEADLINE_TIME = datetime.strptime('December 15 2017 01:25AM', '%B %d %Y %I:%M%p')
 # UTC version of Tuesday @ 8AM of that week; remember leading zeroes in days!
-WEEK_END_TIME = datetime.strptime('December 12 2017 01:00PM', '%B %d %Y %I:%M%p')
+WEEK_END_TIME = datetime.strptime('December 19 2017 01:00PM', '%B %d %Y %I:%M%p')
 MATCHUPS = [
-    ('Justin versus Joel', 'Justin', 'Joel'),
-    ('Renato versus Walker', 'Renato', 'Walker'),
-    ('Freddy versus Tom', 'Freddy', 'Tom'),
-    ('Alexis versus James', 'Alexis', 'James'),
-    ('Mike versus Ian', 'Mike', 'Ian'),
-    ('Kevin versus Cathy', 'Kevin', 'Cathy'),
+    ('Walker versus Todd', 'Walker', 'Todd'),
+    ('Justin versus Bryant', 'Justin', 'Bryant'),
+    ('Renato versus Joel', 'Renato', 'Joel'),
+    ('Kevin versus Freddy', 'Kevin', 'Freddy'),
+    ('Ian versus Alexis', 'Ian', 'Alexis'),
+    ('Tom versus Cathy', 'Tom', 'Cathy'),
+    ('James versus Mike', 'James', 'Mike'),
 ]
 
 def post_to_slack(payload):
