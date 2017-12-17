@@ -18,7 +18,7 @@ LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jt
 LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ' ]
 LEAGUE_YEAR = '2017'
 # MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
-LEAGUE_WEEK = '14'
+LEAGUE_WEEK = '15'
 DEADLINE_STRING = 'December 14th, 2017, at 8:25PM'
 # UTC version of time above - https://www.worldtimebuddy.com/
 DEADLINE_TIME = datetime.strptime('December 15 2017 01:25AM', '%B %d %Y %I:%M%p')
@@ -70,7 +70,7 @@ class Scoreboard(restful.Resource):
 class SendPredictionForm(restful.Resource):
     def get(self):
         message = {
-            'text': 'Make your predictions for this week''s matchups below by ' + DEADLINE_STRING + ':',
+            'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
             'attachments': []
         }
         for index, matchup in enumerate(MATCHUPS):
