@@ -12,7 +12,7 @@ from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE
 
 # simple proof of concept that I could get Mongo working in Heroku
 @app.route('/', methods=['GET', 'POST'])
-def root(self):
+def root():
     return {
         'status': 'OK',
         'mongo': str(mongo.db),

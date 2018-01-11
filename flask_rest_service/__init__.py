@@ -2,11 +2,10 @@ import os
 import sys
 import logging
 from datetime import datetime
-from flask import Flask
+from flask, jsonify import Flask
 from flask.ext import restful
 from flask.ext.pymongo import PyMongo
 from flask import make_response
-from bson.json_util import dumps
 from slackclient import SlackClient
 
 MONGO_URL = os.environ.get('MONGODB_URI')
@@ -31,9 +30,7 @@ app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
 
 def output_json(obj, code, headers=None):
-    resp = make_response(dumps(obj), code)
-    resp.headers.extend(headers or {})
-    return resp
+    return jsonify(obj)
 
 DEFAULT_REPRESENTATIONS = {'application/json': output_json }
 api = restful.Api(app)
