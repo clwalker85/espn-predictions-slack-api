@@ -46,7 +46,7 @@ def scoreboard(self):
 # - we literally save exactly what the user sees, so problems are immediately obvious
 # - if the POST errors, the form isn't replaced, and the user sees their selection wasn't made
 @app.route('/prediction/', methods=['POST'])
-def save_prediction_from_slack(self):
+def save_prediction_from_slack():
     # block the prediction submission if it's after the deadline
     # an empty response to an interactive message action will make sure
     # the original message is unchanged, so it'll appear the form is unchanged and unresponsive
@@ -104,7 +104,7 @@ def save_prediction_from_slack(self):
 
 # TODO - I don't know why I have a separate table for scores, combine this with prediction form JSON
 @app.route('/prediction/score/', methods=['POST'])
-def save_score_prediction(self):
+def save_score_prediction():
     # block the score submission if it's after the deadline
     # since it's a direct Slack command, you'll need to respond with an error message
     if datetime.now() > DEADLINE_TIME:
@@ -151,7 +151,7 @@ def save_score_prediction(self):
 # in response to whoever ran the command in Slack. It's also a good way to understand the
 # JSON object that's passed back and forth (and saved) for predictions.
 @app.route('/prediction/submissions/', methods=['GET', 'POST'])
-def get_submitted_predictions(self):
+def get_submitted_predictions():
     # block the ability to see everyone's predictions unless the submission deadline has passed
     # TODO - I could respond to a direct Slack command with an error message here
     if datetime.now() < DEADLINE_TIME:
@@ -213,7 +213,7 @@ def get_submitted_predictions(self):
 # the JSON that makes up the prediction form. See the "interactive message" docs for more details:
 # https://api.slack.com/interactive-messages
 @app.route('/prediction/form/', methods=['GET', 'POST'])
-def send_prediction_form(self):
+def send_prediction_form():
     message = {
         'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
         'attachments': []
@@ -335,7 +335,7 @@ def send_prediction_form(self):
 # WARNING - I saved the most complicated code for the end. If you skipped the stuff above,
 # fucking stop and go reread that shit.
 @app.route('/prediction/calculations/', methods=['GET', 'POST'])
-def calculate_predictions(self):
+def calculate_predictions():
     if datetime.now() < WEEK_END_TIME:
         return Response()
 
