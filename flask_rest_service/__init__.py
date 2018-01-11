@@ -28,6 +28,52 @@ client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
+# TODO - replace this shit with a database table
+LEAGUE_ID = 367562
+LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
+LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
+# same order as arrays above
+LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ']
+LEAGUE_YEAR = '2017'
+# MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
+LEAGUE_WEEK = '16'
+DEADLINE_STRING = 'December 23rd, 2017, at 4:30PM'
+# UTC version of time above - https://www.worldtimebuddy.com/
+DEADLINE_TIME = datetime.strptime('December 23 2017 09:30PM', '%B %d %Y %I:%M%p')
+# UTC version of Tuesday @ 8AM of that week; remember leading zeroes in days!
+WEEK_END_TIME = datetime.strptime('December 26 2017 01:00PM', '%B %d %Y %I:%M%p')
+MATCHUPS = [
+    ('Bryant versus Todd', 'Bryant', 'Todd'),
+    ('Justin versus Walker', 'Justin', 'Walker'),
+    ('Renato versus Joel', 'Renato', 'Joel'),
+    ('Alexis versus Kevin', 'Alexis', 'Kevin'),
+    ('Freddy versus Tom', 'Freddy', 'Tom'),
+    ('Ian versus Mike', 'Ian', 'Mike'),
+    ('Cathy versus James', 'Cathy', 'James'),
+]
+# END TODO - replace this shit with a database table
+
+def post_to_slack(payload):
+    slack_token = os.environ['SLACK_API_TOKEN']
+    sc = SlackClient(slack_token)
+
+    for user_id in LEAGUE_USER_IDS:
+				# uncomment this line to send shit only to Walker
+        #if user_id not in [ 'U3NE3S6CQ' ]:
+            channel = sc.api_call('im.open', user=user_id)
+
+            if 'channel' in channel:
+                channel = channel['channel']
+
+            sc.api_call("chat.postMessage",
+                channel=channel['id'],
+                text=payload['text'],
+                attachments=payload['attachments'],
+                as_user=False
+            )
+    return
+
+# NOT IN USE, but here in case it's needed
 @app.route('/auth', methods=['GET', 'POST'])
 def auth():
     auth_code = request.args['code']
