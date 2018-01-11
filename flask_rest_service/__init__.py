@@ -1,4 +1,6 @@
 import os
+import sys
+import logging
 from datetime import datetime
 from flask import Flask
 from flask.ext import restful
@@ -11,7 +13,19 @@ MONGO_URL = os.environ.get('MONGODB_URI')
 if not MONGO_URL:
     MONGO_URL = "mongodb://localhost:27017/rest";
 
+# see this for the example:
+# https://github.com/jwatson/simple-flask-stacktrace/blob/master/server.py
 app = Flask(__name__)
+app.debug = True
+app.logger.setLevel(logging.DEBUG)
+del app.logger.handlers[:]
+handler = logging.StreamHandler(stream=sys.stdout)
+handler.setLevel(logging.DEBUG)
+handler.formatter = logging.Formatter(
+    fmt=u"%(asctime)s level=%(levelname)s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
+app.logger.addHandler(handler)
 
 app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
