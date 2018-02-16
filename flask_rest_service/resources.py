@@ -11,7 +11,7 @@ from flask.ext import restful
 from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, WEEK_END_TIME, MATCHUPS
 
 # simple proof of concept that I could get Mongo working in Heroku
-@app.route('/', methods=['GET', 'POST'])
+@api.route('/', methods=['GET', 'POST'])
 def root():
     return {
         'status': 'OK',
@@ -20,7 +20,7 @@ def root():
 
 # TODO - Add a scoreboard command when the ESPN API can be used with our league
 # https://github.com/rbarton65/espnff/pull/41
-@app.route('/scoreboard/', methods=['POST'])
+@api.route('/scoreboard/', methods=['POST'])
 def scoreboard(self):
     #league = League(LEAGUE_ID, LEAGUE_YEAR)
     #pprint.pformat(league)
@@ -45,7 +45,7 @@ def scoreboard(self):
 # - the form appears to change in place
 # - we literally save exactly what the user sees, so problems are immediately obvious
 # - if the POST errors, the form isn't replaced, and the user sees their selection wasn't made
-@app.route('/prediction/', methods=['POST'])
+@api.route('/prediction/', methods=['POST'])
 def save_prediction_from_slack():
     # block the prediction submission if it's after the deadline
     # an empty response to an interactive message action will make sure
@@ -103,7 +103,7 @@ def save_prediction_from_slack():
     return message
 
 # TODO - I don't know why I have a separate table for scores, combine this with prediction form JSON
-@app.route('/prediction/score/', methods=['POST'])
+@api.route('/prediction/score/', methods=['POST'])
 def save_score_prediction():
     # block the score submission if it's after the deadline
     # since it's a direct Slack command, you'll need to respond with an error message
@@ -150,7 +150,7 @@ def save_score_prediction():
 # This method loops through any saved predictions for the current week and posts them
 # in response to whoever ran the command in Slack. It's also a good way to understand the
 # JSON object that's passed back and forth (and saved) for predictions.
-@app.route('/prediction/submissions/', methods=['GET', 'POST'])
+@api.route('/prediction/submissions/', methods=['GET', 'POST'])
 def get_submitted_predictions():
     # block the ability to see everyone's predictions unless the submission deadline has passed
     # TODO - I could respond to a direct Slack command with an error message here
@@ -212,7 +212,7 @@ def get_submitted_predictions():
 # This is how the sausage is made. This code is pretty boring, but it lays out pretty explicitly
 # the JSON that makes up the prediction form. See the "interactive message" docs for more details:
 # https://api.slack.com/interactive-messages
-@app.route('/prediction/form/', methods=['GET', 'POST'])
+@api.route('/prediction/form/', methods=['GET', 'POST'])
 def send_prediction_form():
     message = {
         'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
@@ -334,7 +334,7 @@ def send_prediction_form():
 
 # WARNING - I saved the most complicated code for the end. If you skipped the stuff above,
 # fucking stop and go reread that shit.
-@app.route('/prediction/calculations/', methods=['GET', 'POST'])
+@api.route('/prediction/calculations/', methods=['GET', 'POST'])
 def calculate_predictions():
     if datetime.now() < WEEK_END_TIME:
         return Response()
