@@ -40,7 +40,8 @@ def output_json(obj, code, headers=None):
 def api_route(self, *args, **kwargs):
     def wrapper(cls):
         self.add_resource(cls, *args, **kwargs)
-        return wrapper
+        return cls
+    return wrapper
 
 api.route = types.MethodType(api_route, api)
 
