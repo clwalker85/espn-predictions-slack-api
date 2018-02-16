@@ -13,7 +13,7 @@ from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE
 # simple proof of concept that I could get Mongo working in Heroku
 @api.route('/')
 class Root(restful.Resource):
-    def get():
+    def get(self):
         return {
             'status': 'OK',
             'mongo': str(mongo.db),
@@ -49,7 +49,7 @@ class Scoreboard(restful.Resource):
 # - if the POST errors, the form isn't replaced, and the user sees their selection wasn't made
 @api.route('/prediction/')
 class SavePredictionFromSlack(restful.Resource):
-    def post():
+    def post(self):
         # block the prediction submission if it's after the deadline
         # an empty response to an interactive message action will make sure
         # the original message is unchanged, so it'll appear the form is unchanged and unresponsive
@@ -108,7 +108,7 @@ class SavePredictionFromSlack(restful.Resource):
 # TODO - I don't know why I have a separate table for scores, combine this with prediction form JSON
 @api.route('/prediction/score/')
 class SaveScorePrediction(restful.Resource):
-    def post():
+    def post(self):
         # block the score submission if it's after the deadline
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() > DEADLINE_TIME:
@@ -156,7 +156,7 @@ class SaveScorePrediction(restful.Resource):
 # JSON object that's passed back and forth (and saved) for predictions.
 @api.route('/prediction/submissions/')
 class GetSubmittedPredictions(restful.Resource):
-    def post():
+    def post(self):
         # block the ability to see everyone's predictions unless the submission deadline has passed
         # TODO - I could respond to a direct Slack command with an error message here
         if datetime.now() < DEADLINE_TIME:
@@ -219,7 +219,7 @@ class GetSubmittedPredictions(restful.Resource):
 # https://api.slack.com/interactive-messages
 @api.route('/prediction/form/')
 class SendPredictionForm(restful.Resource):
-    def get():
+    def get(self):
         message = {
             'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
             'attachments': []
@@ -342,7 +342,7 @@ class SendPredictionForm(restful.Resource):
 # fucking stop and go reread that shit.
 @api.route('/prediction/calculations/')
 class CalculatePredictions(restful.Resource):
-    def post():
+    def post(self):
         if datetime.now() < WEEK_END_TIME:
             return Response()
 
