@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import types
 from datetime import datetime
 from flask import Flask, jsonify
 from flask.ext import restful
