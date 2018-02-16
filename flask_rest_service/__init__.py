@@ -34,6 +34,15 @@ api = restful.Api(app)
 def output_json(obj, code, headers=None):
     return jsonify(obj)
 
+# support api.route decorators like the regular flask object
+# http://flask.pocoo.org/snippets/129/
+def api_route(self, *args, **kwargs):
+    def wrapper(cls):
+        self.add_resource(cls, *args, **kwargs)
+        return wrapper
+
+api.route = types.MethodType(api_route, api)
+
 client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
