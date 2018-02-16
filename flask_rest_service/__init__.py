@@ -2,7 +2,7 @@ import os
 import sys
 import logging
 from datetime import datetime
-from flask, jsonify import Flask
+from flask import Flask, jsonify
 from flask.ext import restful
 from flask.ext.pymongo import PyMongo
 from flask import make_response
