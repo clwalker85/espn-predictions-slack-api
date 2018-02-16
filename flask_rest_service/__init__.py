@@ -28,13 +28,11 @@ app.logger.addHandler(handler)
 
 app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
+api = restful.Api(app)
 
+@api.representation('application/json')
 def output_json(obj, code, headers=None):
     return jsonify(obj)
-
-DEFAULT_REPRESENTATIONS = {'application/json': output_json }
-api = restful.Api(app)
-api.representations = DEFAULT_REPRESENTATIONS
 
 client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
