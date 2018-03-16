@@ -138,7 +138,7 @@ class SaveScorePrediction(restful.Resource):
                 high_score = param[1]
                 low_score = param[0]
 
-            mongo.db.score_predictions.update(database_key, {
+            mongo.db.predictions.update(database_key, {
                 '$set': {
                     'high_score': high_score,
                     'low_score': low_score,
@@ -176,9 +176,6 @@ class GetSubmittedPredictions(restful.Resource):
             prediction_string = username + ' picks: '
             winners_string, matchups_string = '', ''
 
-            # TODO - I don't know why I have a separate table for scores, combine this with prediction form JSON
-            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
-
             for attachment in prediction['message']['attachments']:
                 for action in attachment['actions']:
                     # if a button is marked as 'primary', it's selected, so put it with the winners
@@ -195,11 +192,11 @@ class GetSubmittedPredictions(restful.Resource):
                             # so prepend the selection with this name
                             matchups_string += attachment['fallback'] + ': ' + selected['text']
                             # if there's a score prediction, add that too
-                            if score_prediction:
+                            if 'high_score' in prediction and 'low_score' in prediction:
                                 if "highest" in attachment['text']:
-                                    matchups_string += ', ' + score_prediction['high_score']
+                                    matchups_string += ', ' + prediction['high_score']
                                 elif "lowest" in attachment['text']:
-                                    matchups_string += ', ' + score_prediction['low_score']
+                                    matchups_string += ', ' + prediction['low_score']
                             # just an attempt to fit more information on one line
                             # this assumes that the prediction form I'm looping over
                             # has an order of blowout/closest/highest/lowest
@@ -381,7 +378,6 @@ class CalculatePredictions(restful.Resource):
         # loop through each prediction for this week
         for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
             username = prediction['username']
-            score_prediction = mongo.db.score_predictions.find_one({ 'username': username, 'year_and_week': year_and_week })
             user_winners = []
             user_formula = {
                 'username': username,
@@ -427,20 +423,20 @@ class CalculatePredictions(restful.Resource):
                             if matchup_result['highest'] in selected['text'] and username not in highest_winners:
                                 highest_winners.append(username)
                                 user_formula['highest_bonus'] += 1
-                                if score_prediction:
+                                if 'high_score' in prediction and 'low_score' in prediction:
                                     # no highest recorded so far? you're the winner by default
                                     if not highest_pin_winner:
                                         highest_pin_winner = username
-                                        highest_pin_score = score_prediction['high_score']
+                                        highest_pin_score = prediction['high_score']
                                         highest_pin_timestamp = prediction['last_modified']
                                     # already have a highest? there can only be one!
                                     else:
                                         # round score predictions and actual recorded scores, then compare
                                         current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
-                                        contender_distance_to_pin = abs(round(Decimal(score_prediction['high_score']), 1) - round(Decimal(matchup_result['high_score']), 1))
+                                        contender_distance_to_pin = abs(round(Decimal(prediction['high_score']), 1) - round(Decimal(matchup_result['high_score']), 1))
                                         if current_distance_to_pin > contender_distance_to_pin:
                                             highest_pin_winner = username
-                                            highest_pin_score = score_prediction['high_score']
+                                            highest_pin_score = prediction['high_score']
                                             highest_pin_timestamp = prediction['last_modified']
                                         # in the case of a tie, use the earliest prediction
                                         # TODO - find a more graceful way to prevent ties
@@ -450,7 +446,7 @@ class CalculatePredictions(restful.Resource):
                                             contender_timestamp = float(prediction['last_modified'])
                                             if current_timestamp and current_timestamp > contender_timestamp:
                                                 highest_pin_winner = username
-                                                highest_pin_score = score_prediction['high_score']
+                                                highest_pin_score = prediction['high_score']
                                                 highest_pin_timestamp = prediction['last_modified']
                                     current_distance_to_pin = abs(round(Decimal(highest_pin_score), 1) - round(Decimal(matchup_result['high_score']), 1))
                                     # we round because the exact match rule we're resolving below
@@ -465,17 +461,17 @@ class CalculatePredictions(restful.Resource):
                             if matchup_result['lowest'] in selected['text'] and username not in lowest_winners:
                                 lowest_winners.append(username)
                                 user_formula['lowest_bonus'] += 1
-                                if score_prediction:
+                                if 'high_score' in prediction and 'low_score' in prediction:
                                     if not lowest_pin_winner:
                                         lowest_pin_winner = username
-                                        lowest_pin_score = score_prediction['low_score']
+                                        lowest_pin_score = prediction['low_score']
                                         lowest_pin_timestamp = prediction['last_modified']
                                     else:
                                         current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
-                                        contender_distance_to_pin = abs(round(Decimal(score_prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
+                                        contender_distance_to_pin = abs(round(Decimal(prediction['low_score']), 1) - round(Decimal(matchup_result['low_score']), 1))
                                         if current_distance_to_pin > contender_distance_to_pin:
                                             lowest_pin_winner = username
-                                            lowest_pin_score = score_prediction['low_score']
+                                            lowest_pin_score = prediction['low_score']
                                             lowest_pin_timestamp = prediction['last_modified']
                                         elif current_distance_to_pin == contender_distance_to_pin:
                                             lowest_timestamp_tiebreaker_used = True
@@ -483,7 +479,7 @@ class CalculatePredictions(restful.Resource):
                                             contender_timestamp = float(prediction['last_modified'])
                                             if current_timestamp and current_timestamp > contender_timestamp:
                                                 lowest_pin_winner = username
-                                                lowest_pin_score = score_prediction['low_score']
+                                                lowest_pin_score = prediction['low_score']
                                                 lowest_pin_timestamp = prediction['last_modified']
                                     current_distance_to_pin = abs(round(Decimal(lowest_pin_score), 1) - round(Decimal(matchup_result['low_score']), 1))
                                     if current_distance_to_pin <= 1:
