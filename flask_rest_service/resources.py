@@ -60,9 +60,9 @@ class SavePredictionFromSlack(restful.Resource):
         payload = json.loads(request.form.get('payload', None))
 
         username = payload['user']['name']
-        year_and_week = payload['callback_id']
-        # TODO - I don't know why I combined year and week to make a unique key, split them up
-        database_key = { 'username': username, 'year_and_week': year_and_week }
+        # seemed like the best way to store the year and week inside the prediction form
+        year, week = payload['callback_id'].split("-")
+        database_key = { 'username': username, 'year': year, 'week': week }
         message = payload['original_message']
         actions = payload['actions']
 
@@ -106,11 +106,9 @@ class SavePredictionFromSlack(restful.Resource):
         # so return the form again with any selected buttons styled
         return message
 
-# TODO - I don't know why I have a separate table for scores, combine this with prediction form JSON
 @api.route('/prediction/score/')
 class SaveScorePrediction(restful.Resource):
     def post(self):
-        # block the score submission if it's after the deadline
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() > DEADLINE_TIME:
             return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
@@ -119,9 +117,7 @@ class SaveScorePrediction(restful.Resource):
         # you have to parse the text of the parameters
         text = request.form.get('text', None)
         username = request.form.get('user_name', None)
-        # TODO - I don't know why I combined year and week to make a unique key, split them up
-        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
-        database_key = { 'username': username, 'year_and_week': year_and_week }
+        database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
         param = text.split()
 
         if len(param) < 2:
@@ -158,20 +154,17 @@ class SaveScorePrediction(restful.Resource):
 @api.route('/prediction/submissions/')
 class GetSubmittedPredictions(restful.Resource):
     def post(self):
-        # block the ability to see everyone's predictions unless the submission deadline has passed
-        # TODO - I could respond to a direct Slack command with an error message here
+        # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() < DEADLINE_TIME:
-            return Response()
+            return 'Submitted predictions are not visible until the submission deadline has passed.'
 
-        # TODO - I don't know why I combined year and week to make a unique key, split them up
-        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
         message = {
             'response_type': 'in_channel',
             'text': 'Predictions submitted for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
             'attachments': []
         }
 
-        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
+        for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
             username = prediction['username']
             prediction_string = username + ' picks: '
             winners_string, matchups_string = '', ''
@@ -226,7 +219,7 @@ class SendPredictionForm(restful.Resource):
             message['attachments'].append({
                 'text': matchup[0],
                 'attachment_type': 'default',
-                # TODO - I don't know why I combined year and week to make a unique key, split them up
+                # seemed like the best way to store the year and week inside the prediction form
                 'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
                 'actions': [
                     {
@@ -341,10 +334,10 @@ class SendPredictionForm(restful.Resource):
 @api.route('/prediction/calculations/')
 class CalculatePredictions(restful.Resource):
     def post(self):
+        # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() < WEEK_END_TIME:
-            return Response()
+            return 'Prediction calculations are not available until the morning (8am) after Monday Night Football.'
 
-        year_and_week = LEAGUE_YEAR + '-' + LEAGUE_WEEK
         message = {
             'response_type': 'in_channel',
             'text': 'Prediction calculations for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
@@ -368,7 +361,7 @@ class CalculatePredictions(restful.Resource):
 
         # TODO - I have to enter matchup results by hand each week when scoring is final on Tuesday
         # maybe we can make the scoreboard command load this table
-        matchup_result = mongo.db.matchup_results.find_one({ 'year_and_week': year_and_week })
+        matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })
 
         for winner in matchup_result['winners']:
             results_string += winner + ', '
@@ -376,7 +369,7 @@ class CalculatePredictions(restful.Resource):
         results_string = results_string.rstrip(', ') + '\n'
 
         # loop through each prediction for this week
-        for prediction in mongo.db.predictions.find({ 'year_and_week': year_and_week }):
+        for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
             username = prediction['username']
             user_winners = []
             user_formula = {
@@ -540,7 +533,7 @@ class CalculatePredictions(restful.Resource):
             # VERY IMPORTANT, cause we assume every league member has a row in this table
             users_without_predictions = list(set(LEAGUE_USERNAMES) - set(formula_by_user.keys()))
             for username in users_without_predictions:
-                database_key = { 'username': username, 'year_and_week': year_and_week }
+                database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
                 mongo.db.prediction_standings.update(database_key, {
                     '$set': {
                         'total': 0,
@@ -550,7 +543,7 @@ class CalculatePredictions(restful.Resource):
         # loop through everyone who submitted a prediction this week
         for user_formula in user_formulas:
             formula_total = prediction_formula(user_formula)
-            database_key = { 'username': user_formula['username'], 'year_and_week': year_and_week }
+            database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
             # standings on the first week is trivial and exactly the same as waiver order standings
             if int(LEAGUE_WEEK) == 1:
                 mongo.db.prediction_standings.update(database_key, {
@@ -565,11 +558,10 @@ class CalculatePredictions(restful.Resource):
 
         if int(LEAGUE_WEEK) > 1:
             # go find the standings from last week
-            last_week = int(LEAGUE_WEEK) - 1
-            year_and_last_week = LEAGUE_YEAR + '-' + str(last_week)
-            for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_last_week }):
+            last_week = str(int(LEAGUE_WEEK) - 1)
+            for prediction_record in mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': last_week }):
                 username = prediction_record['username']
-                database_key = { 'username': username, 'year_and_week': year_and_week }
+                database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
 
                 if username in formula_by_user:
                     formula_total = prediction_formula(formula_by_user[username])
@@ -598,7 +590,7 @@ class CalculatePredictions(restful.Resource):
 
         # sort this shit for ease of calculating waiver order standings
         # TODO - factor in tiebreakers from ESPN standings data
-        for prediction_record in mongo.db.prediction_standings.find({ 'year_and_week': year_and_week }).sort([('total', -1), ('low', -1)]):
+        for prediction_record in mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }).sort([('total', -1), ('low', -1)]):
             standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '; LOW: ' + str(prediction_record['low']) + '\n'
         message['attachments'].append({ 'text': standings_string })
 
