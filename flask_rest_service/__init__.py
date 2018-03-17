@@ -54,9 +54,9 @@ LEAGUE_METADATA = mongo.db.league_metadata.find_one({}, sort=[("_id", PyMongo.DE
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 LEAGUE_YEAR = LEAGUE_METADATA['year']
 # python-ish way to return plucked value in array of dictionaries
-LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']
-LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']
-LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']
+LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']]
+LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']]
+LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
 # MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
 LEAGUE_WEEK = '16'
 DEADLINE_STRING = 'December 23rd, 2017, at 4:30PM'
