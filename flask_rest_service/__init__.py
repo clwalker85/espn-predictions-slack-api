@@ -49,13 +49,14 @@ client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
-# TODO - replace this shit with a database table
-LEAGUE_ID = 367562
-LEAGUE_MEMBERS = ['Alexis', 'Bryant', 'Cathy', 'Freddy', 'Ian', 'James', 'Joel', 'Justin', 'Kevin', 'Mike', 'Renato', 'Todd', 'Tom', 'Walker']
-LEAGUE_USERNAMES = ['alexis', 'bernie', 'wildcougar', 'freddy', 'imcguigan', 'jtylee', 'hotdogs-sleep', 'jutsman', 'kevin', 'mikejetmcloughlin', 'ropacak', 'lutedog', 'tom', 'clwalker']
-# same order as arrays above
-LEAGUE_USER_IDS = ['U3P2770FK', 'U3P6D7PT7', 'U3P6LPVLM', 'U3P3NU4E6', 'U6T9Y84LS', 'U5C50S29H', 'U5RV1SGSE', 'U5TQ9NKEX', 'U3P4HLXD0', 'U5SF98KMX', 'U4L7RTJ30', 'U3PHKK00L', 'U3NEWLZFS', 'U3NE3S6CQ']
-LEAGUE_YEAR = '2017'
+# find the last inserted row in league_metadata
+LEAGUE_METADATA = mongo.db.league_metadata.find_one({}, sort=[("_id", PyMongo.DESCENDING)])
+LEAGUE_ID = LEAGUE_METADATA['league_id']
+LEAGUE_YEAR = LEAGUE_METADATA['year']
+# python-ish way to return plucked value in array of dictionaries
+LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']
+LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']
+LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']
 # MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
 LEAGUE_WEEK = '16'
 DEADLINE_STRING = 'December 23rd, 2017, at 4:30PM'
