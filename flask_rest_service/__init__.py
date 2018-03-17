@@ -1,5 +1,6 @@
 import os
 import sys
+import pprint
 import logging
 import types
 from datetime import datetime
@@ -51,12 +52,18 @@ oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
 # apparently, find_one() without any parameters returns the last inserted row
 LEAGUE_METADATA = mongo.db.league_metadata.find_one()
+pprint.pformat(LEAGUE_METADATA)
 LEAGUE_ID = LEAGUE_METADATA['league_id']
+pprint.pformat(LEAGUE_ID)
 LEAGUE_YEAR = LEAGUE_METADATA['year']
+pprint.pformat(LEAGUE_YEAR)
 # python-ish way to return plucked value in array of dictionaries
 LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']]
+pprint.pformat(LEAGUE_MEMBERS)
 LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']]
+pprint.pformat(LEAGUE_USERNAMES)
 LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
+pprint.pformat(LEAGUE_USER_IDS)
 # MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
 LEAGUE_WEEK = '16'
 DEADLINE_STRING = 'December 23rd, 2017, at 4:30PM'
