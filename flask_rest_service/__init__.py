@@ -50,8 +50,10 @@ client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
-# apparently, find_one() without any parameters returns the last inserted row
-LEAGUE_METADATA = mongo.db.league_metadata.find_one()
+LEAGUE_METADATA = {};
+# get the last inserted row in league_metadata
+with app.app_context():
+    LEAGUE_METADATA = mongo.db.league_metadata.find_one(sort=[("_id", -1)])
 pprint.pformat(LEAGUE_METADATA)
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 pprint.pformat(LEAGUE_ID)
