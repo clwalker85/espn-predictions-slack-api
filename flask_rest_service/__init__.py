@@ -50,7 +50,7 @@ client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
 # find the last inserted row in league_metadata
-LEAGUE_METADATA = mongo.db.league_metadata.find_one({}, sort=[('_id', mongo.DESCENDING)])
+LEAGUE_METADATA = mongo.db.league_metadata.find_one({}, sort=[('_id', -1)])
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 LEAGUE_YEAR = LEAGUE_METADATA['year']
 # python-ish way to return plucked value in array of dictionaries
