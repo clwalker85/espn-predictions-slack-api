@@ -81,12 +81,12 @@ WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time']
 MATCHUPS = MATCHUP_METADATA['matchups']
 
 TZ = os.environ.get('TZ')
-tz_object = pytz.timezone(TZ)
-localized_deadline = tz_object.localize(DEADLINE_TIME, is_dst=True)
+timezone = pytz.timezone(TZ)
+local_deadline = DEADLINE_TIME.astimezone(timezone)
 # strftime doesn't provide anything besides zero-padded numbers in formats,
 # so it looks like -------------------------------------> "December 23, 2017, at 04:30PM"
 # TODO - Use a better date formatter, to try and get ---> "December 23rd, 2017, at 4:30PM"
-DEADLINE_STRING = localized_deadline.strftime('%B %d, %Y, at %I:%M%p')
+DEADLINE_STRING = local_deadline.strftime('%B %d, %Y, at %I:%M%p')
 
 ### GENERAL PURPOSE METHODS (not API related) ###
 
