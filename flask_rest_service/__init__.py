@@ -75,9 +75,9 @@ with app.app_context():
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # If you have to insert times into matchup_metadata by hand, use: https://www.worldtimebuddy.com/
 # These are always stored as UTC Date objects in the JSON database row
-DEADLINE_TIME = MATCHUP_METADATA['deadline_time']
+DEADLINE_TIME = MATCHUP_METADATA['deadline_time'].replace(tzinfo=None)
 # UTC version of Tuesday @ 8AM of that week
-WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time']
+WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time'].replace(tzinfo=None)
 MATCHUPS = MATCHUP_METADATA['matchups']
 
 TZ = os.environ.get('TZ')
