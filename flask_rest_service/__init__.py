@@ -70,7 +70,7 @@ LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
 # Might have to handle playoffs in a special way
 with app.app_context():
     MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
-        'start_of_week_time': { '$gte': datetime.now() } }, sort=[('week', -1)])
+        'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # If you have to insert times into matchup_metadata by hand, use: https://www.worldtimebuddy.com/
