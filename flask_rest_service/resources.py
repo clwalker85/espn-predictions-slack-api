@@ -101,7 +101,6 @@ class SavePredictionFromSlack(restful.Resource):
         # insert if you need to, and make sure to guarantee one record per user and year/week
         }, upsert=True, multi=False)
 
-
         # Slack replaces old prediction form with any immediate response,
         # so return the form again with any selected buttons styled
         return message
@@ -217,22 +216,22 @@ class SendPredictionForm(restful.Resource):
         }
         for index, matchup in enumerate(MATCHUPS):
             message['attachments'].append({
-                'text': matchup[0],
+                'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'attachment_type': 'default',
                 # seemed like the best way to store the year and week inside the prediction form
                 'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
                 'actions': [
                     {
                         'name': 'winner' + str(index),
-                        'text': matchup[1],
+                        'text': matchup['team_one'],
                         'type': 'button',
-                        'value': matchup[1]
+                        'value': matchup['team_one']
                     },
                     {
                         'name': 'winner' + str(index),
-                        'text': matchup[2],
+                        'text': matchup['team_two'],
                         'type': 'button',
-                        'value': matchup[2]
+                        'value': matchup['team_two']
                     }
                 ]
             })
@@ -256,8 +255,8 @@ class SendPredictionForm(restful.Resource):
         }
         for matchup in MATCHUPS:
             blowout_dropdown['actions'][0]['options'].append({
-                'text': matchup[0],
-                'value': matchup[0]
+                'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
+                'value': matchup['team_one'] + ' versus ' + matchup['team_two']
             })
         message['attachments'].append(blowout_dropdown)
 
@@ -277,8 +276,8 @@ class SendPredictionForm(restful.Resource):
         }
         for matchup in MATCHUPS:
             closest_dropdown['actions'][0]['options'].append({
-                'text': matchup[0],
-                'value': matchup[0]
+                'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
+                'value': matchup['team_one'] + ' versus ' + matchup['team_two']
             })
         message['attachments'].append(closest_dropdown)
 
@@ -387,6 +386,9 @@ class CalculatePredictions(restful.Resource):
                 for action in attachment['actions']:
                     if action['type'] == 'button' and action['style'] == 'primary':
                         user_winners.append(action['text'])
+                        # under this logic, that button text better match what's listed in the matchup_results table
+                        # TODO - Maybe not store matchup_results using names like "Freddy" or "Walker"
+                        # TODO - Also note the button's text and value can be different things, could use this
                         if action['text'] in matchup_result['winners']:
                             user_formula['matchup_total'] += 1
                     # calculating winners before highest/lowest on purpose, order of original JSON/form matters here

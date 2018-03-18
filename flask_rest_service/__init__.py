@@ -3,16 +3,14 @@ import sys
 import pprint
 import logging
 import types
-from datetime import datetime
+import pytz
+from datetime import datetime, time
 from flask import Flask, jsonify
 from flask.ext import restful
 from flask.ext.pymongo import PyMongo
-from flask import make_response
 from slackclient import SlackClient
 
-MONGO_URL = os.environ.get('MONGODB_URI')
-if not MONGO_URL:
-    MONGO_URL = "mongodb://localhost:27017/rest";
+### APP CONFIG AND SETUP (set it and forget it, nothing to do with business logic)
 
 # see this for the example:
 # https://github.com/jwatson/simple-flask-stacktrace/blob/master/server.py
@@ -28,6 +26,9 @@ handler.formatter = logging.Formatter(
 )
 app.logger.addHandler(handler)
 
+MONGO_URL = os.environ.get('MONGODB_URI')
+if not MONGO_URL:
+    MONGO_URL = "mongodb://localhost:27017/rest";
 app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
 api = restful.Api(app)
@@ -43,39 +44,51 @@ def api_route(self, *args, **kwargs):
         self.add_resource(cls, *args, **kwargs)
         return cls
     return wrapper
-
 api.route = types.MethodType(api_route, api)
 
 client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
 
-# get the last inserted row in league_metadata
+### LEAGUE CONSTANTS (mostly data we need to abstract away from the business logic)
+
+# get the last inserted row in league_metadata (done by hand in the mlab website)
+# TODO - Find a way to fetch some of this through the ESPN API when teams are locked in
+# Might have to always manually link an ESPN user to their Slack user
 with app.app_context():
-    LEAGUE_METADATA = mongo.db.league_metadata.find_one(sort=[("_id", -1)])
+    LEAGUE_METADATA = mongo.db.league_metadata.find_one(sort=[('_id', -1)])
+
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 LEAGUE_YEAR = LEAGUE_METADATA['year']
 # python-ish way to return plucked value in array of dictionaries
 LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']]
 LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']]
 LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
-# MODIFY THIS SHIT BELOW UNTIL WE CAN AUTOMATE THIS THROUGH ESPN API
-LEAGUE_WEEK = '16'
-DEADLINE_STRING = 'December 23rd, 2017, at 4:30PM'
-# UTC version of time above - https://www.worldtimebuddy.com/
-DEADLINE_TIME = datetime.strptime('December 23 2017 09:30PM', '%B %d %Y %I:%M%p')
-# UTC version of Tuesday @ 8AM of that week; remember leading zeroes in days!
-WEEK_END_TIME = datetime.strptime('December 26 2017 01:00PM', '%B %d %Y %I:%M%p')
-MATCHUPS = [
-    ('Bryant versus Todd', 'Bryant', 'Todd'),
-    ('Justin versus Walker', 'Justin', 'Walker'),
-    ('Renato versus Joel', 'Renato', 'Joel'),
-    ('Alexis versus Kevin', 'Alexis', 'Kevin'),
-    ('Freddy versus Tom', 'Freddy', 'Tom'),
-    ('Ian versus Mike', 'Ian', 'Mike'),
-    ('Cathy versus James', 'Cathy', 'James'),
-]
-# END TODO - replace this shit with a database table
+
+# get the matchup data for the current week
+# TODO - Find a way to fetch this through the ESPN API, maybe every time we fetch scores
+# Might have to handle playoffs in a special way
+with app.app_context():
+    MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
+        'start_of_week_time': { '$gte': datetime.now() } }, sort=[('week', -1)])
+
+LEAGUE_WEEK = MATCHUP_METADATA['week']
+# If you have to insert times into matchup_metadata by hand, use: https://www.worldtimebuddy.com/
+# These are always stored as UTC Date objects in the JSON database row
+DEADLINE_TIME = MATCHUP_METADATA['deadline_time']
+# UTC version of Tuesday @ 8AM of that week
+WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time']
+MATCHUPS = MATCHUP_METADATA['matchups']
+
+TZ = os.environ.get('TZ')
+tz_object = pytz.timezone(TZ)
+localized_deadline = tz_object.localize(DEADLINE_TIME, is_dst=True)
+# strftime doesn't provide anything besides zero-padded numbers in formats,
+# so it looks like -------------------------------------> "December 23, 2017, at 04:30PM"
+# TODO - Use a better date formatter, to try and get ---> "December 23rd, 2017, at 4:30PM"
+DEADLINE_STRING = localized_deadline.strftime('%B %d, %Y, at %I:%M%p')
+
+### GENERAL PURPOSE METHODS (not API related) ###
 
 def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
@@ -97,19 +110,6 @@ def post_to_slack(payload):
             )
     return
 
-# NOT IN USE, but here in case it's needed
-@app.route('/auth', methods=['GET', 'POST'])
-def auth():
-    auth_code = request.args['code']
-    sc = SlackClient('')
-    auth_response = sc.api_call(
-        'oauth.access',
-        client_id=client_id,
-        client_secret=client_secret,
-        code=auth_code
-    )
-
-    os.environ['SLACK_USER_TOKEN'] = auth_response['access_token']
-    os.environ['SLACK_BOT_TOKEN'] = auth_response['bot']['bot_access_token']
+### SEE BELOW FOR API ENDPOINT DEFINITIONS ###
 
 import flask_rest_service.resources
