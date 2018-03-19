@@ -51,46 +51,26 @@ class Scoreboard(restful.Resource):
 @api.route('/prediction/')
 class SavePredictionFromSlack(restful.Resource):
     def post(self):
+        payload = json.loads(request.form.get('payload', None))
+        # seemed like the best way to store the year and week inside the prediction form
+        year, week = payload['callback_id'].split("-")
+
         # block the prediction submission if it's after the deadline
         # an empty response to an interactive message action will make sure
         # the original message is unchanged, so it'll appear the form is unchanged and unresponsive
-        if datetime.now() > DEADLINE_TIME:
+        if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
             return Response()
 
-        payload = json.loads(request.form.get('payload', None))
-
         username = payload['user']['name']
-        # seemed like the best way to store the year and week inside the prediction form
-        year, week = payload['callback_id'].split("-")
         database_key = { 'username': username, 'year': year, 'week': week }
         message = payload['original_message']
         actions = payload['actions']
 
-        for attachment in message['attachments']:
-            # loop through each interactive message action, basically what changed
-            for action in actions:
-                # loop through each part of the prediction form
-                for element in attachment['actions']:
-                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] == element['value']:
-                        # color the button green to show it's selected
-                        attachment['color'] = 'good'
-                        element['style'] = 'primary'
-
-                    if element['type'] == 'button' and action['name'] == element['name'] and action['value'] != element['value']:
-                        # remove any coloring if it's not selected
-                        element['style'] = None
-
-                    if element['type'] == 'select' and action['name'] == element['name']:
-                        # color the dropdown green to show it was changed
-                        attachment['color'] = 'good'
-                        element['selected_options'] = []
-                        # only one option should be selected, but Slack supports multiple
-                        for selected in action['selected_options']:
-                            # loop through this dropdown's available options
-                            for option in element['options']:
-                                if option['value'] == selected['value']:
-                                    # this is how you pre-select an option in a dropdown
-                                    element['selected_options'].append(option)
+        # loop through each interactive message action, basically what changed
+        for action in actions:
+            style_form_with_action(element, action, a)
+                # find the prediction form element that matches the action name
+                for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
 
         # save that shit every time, and mark the last time they saved
         mongo.db.predictions.update(database_key, {
@@ -104,6 +84,24 @@ class SavePredictionFromSlack(restful.Resource):
         # Slack replaces old prediction form with any immediate response,
         # so return the form again with any selected buttons styled
         return message
+
+def style_form_with_action(element, action, form_group):
+    # color that portion of the form to show it was changed
+    form_group['color'] = 'good'
+
+    if element['type'] == 'button':
+        if action['value'] == element['value']:
+            # color the button green to show it's selected
+            element['style'] = 'primary'
+        else:
+            # remove coloring on the button if it's not selected
+            element['style'] = None
+    elif element['type'] == 'select' and action['selected_options']):
+        # I guess Slack supports multiple dropdown selections, but just get the "first" selection
+        selected = action['selected_options'][0]
+        # for a dropdown element, this is how you mark something as selected
+        element['selected_options'] = [option
+            for option in element['options'] if option['value'] == selected['value']]
 
 @api.route('/prediction/score/')
 class SaveScorePrediction(restful.Resource):
@@ -163,46 +161,45 @@ class GetSubmittedPredictions(restful.Resource):
             'attachments': []
         }
 
+        # for each submitted prediction that week
         for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
             username = prediction['username']
+            form_groups = prediction['message']['attachments']
             prediction_string = username + ' picks: '
-            winners_string, matchups_string = '', ''
 
-            for attachment in prediction['message']['attachments']:
-                for action in attachment['actions']:
-                    # if a button is marked as 'primary', it's selected, so put it with the winners
-                    if action['type'] == 'button' and action['style'] == 'primary':
-                        winners_string += action['text'] + ', '
-                        
-                    # if a dropdown has a selection
-                    if action['type'] == 'select' and 'selected_options' in action:
-                        # I guess a dropdown can have multiple selections
-                        # but this looks better than picking the first one
-                        # TODO - maybe there's a cleaner/more-Python way to pick the first one
-                        for selected in action['selected_options']:
-                            # I'm counting on the fallback key holding the name of the dropdown,
-                            # so prepend the selection with this name
-                            matchups_string += attachment['fallback'] + ': ' + selected['text']
-                            # if there's a score prediction, add that too
-                            if 'high_score' in prediction and 'low_score' in prediction:
-                                if "highest" in attachment['text']:
-                                    matchups_string += ', ' + prediction['high_score']
-                                elif "lowest" in attachment['text']:
-                                    matchups_string += ', ' + prediction['low_score']
-                            # just an attempt to fit more information on one line
-                            # this assumes that the prediction form I'm looping over
-                            # has an order of blowout/closest/highest/lowest
-                            if "closest" in attachment['text']:
-                                matchups_string += '\n'
-                            else:
-                                matchups_string += ' | '
+            predicted_winners = [element['text']
+                for g in form_groups for element in g['actions'] if is_button_selected(element)]
+            prediction_string += ', '.join(prediction_winners) + '\n'
 
-            # strip the last comma or pipe delimiter
-            prediction_string += winners_string.rstrip(', ') + '\n' + matchups_string.rstrip('| ')
+            dropdown_selections = [format_dropdown_selection(element, g, prediction)
+                for g in form_groups for element in g['actions'] if is_dropdown_selected(element)]
+            prediction_string += ' | '.join(dropdown_selections)
+
             # one message attachment per user
             message['attachments'].append({ 'text': prediction_string })
 
         return message
+
+def is_button_selected(element):
+    return element['type'] == 'button' and element['style'] == 'primary'
+
+def is_dropdown_selected(element):
+    return element['type'] == 'select' and element['selected_options']
+
+def format_dropdown_selection(element, form_group, prediction):
+    selected = element['selected_options'][0]
+    # I'm counting on the fallback key holding the name of the dropdown,
+    # so prepend the selection with this name
+    selected_string = form_group['fallback'] + ': ' + selected['text']
+
+    # if there's a score prediction, add that too
+    if 'high_score' in prediction and 'low_score' in prediction:
+        if "highest" in form_group['text']:
+            selected_string += ', ' + prediction['high_score']
+        elif "lowest" in form_group['text']:
+            selected_string += ', ' + prediction['low_score']
+
+    return selected_string
 
 # This is how the sausage is made. This code is pretty boring, but it lays out pretty explicitly
 # the JSON that makes up the prediction form. See the "interactive message" docs for more details:
@@ -214,14 +211,17 @@ class SendPredictionForm(restful.Resource):
             'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
             'attachments': []
         }
+        # seemed like the best way to store the year and week inside the prediction form
+        callback_id = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+
         for index, matchup in enumerate(MATCHUPS):
             message['attachments'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'attachment_type': 'default',
-                # seemed like the best way to store the year and week inside the prediction form
-                'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+                'callback_id': callback_id,
                 'actions': [
                     {
+                        # buttons in the same form group need to match on name to be styled properly
                         'name': 'winner' + str(index),
                         'text': matchup['team_one'],
                         'type': 'button',
@@ -236,14 +236,14 @@ class SendPredictionForm(restful.Resource):
                 ]
             })
 
-        blowout_dropdown = {
+        dropdown = {
             'text': 'Which matchup will have the biggest blowout?',
             # the intent of 'fallback' seems to be to provide some screenreader/accesibility support,
             # but it also works to support what we display when we report everyone's predictions
-            # for the week, so this is coupled to the functionality in get_submitted_predictions
+            # for the week, so this is coupled to the functionality in GetSubmittedPredictions
             'fallback': 'Blowout',
             'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
+            'callback_id': callback_id,
             'actions': [
                 {
                     'name': 'blowout',
@@ -254,74 +254,27 @@ class SendPredictionForm(restful.Resource):
             ]
         }
         for matchup in MATCHUPS:
-            blowout_dropdown['actions'][0]['options'].append({
+            dropdown['actions'][0]['options'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'value': matchup['team_one'] + ' versus ' + matchup['team_two']
             })
-        message['attachments'].append(blowout_dropdown)
+        message['attachments'].append(dropdown)
 
-        closest_dropdown = {
-            'text': 'Which matchup will have the closest score?',
-            'fallback': 'Closest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'closest',
-                    'text': 'Pick a matchup...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for matchup in MATCHUPS:
-            closest_dropdown['actions'][0]['options'].append({
-                'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
-                'value': matchup['team_one'] + ' versus ' + matchup['team_two']
-            })
-        message['attachments'].append(closest_dropdown)
+        # reuse our existing dropdown object for the rest
+        dropdown['text'] = 'Which matchup will have the closest score?'
+        dropdown['fallback'] = 'Closest'
+        dropdown['actions'][0]['name'] = 'closest'
+        message['attachments'].append(dropdown)
 
-        highest_dropdown = {
-            'text': 'Who will be the highest scorer?',
-            'fallback': 'Highest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'highest',
-                    'text': 'Pick a team...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for team in LEAGUE_MEMBERS:
-            highest_dropdown['actions'][0]['options'].append({
-                'text': team,
-                'value': team
-            })
-        message['attachments'].append(highest_dropdown)
+        dropdown['text'] = 'Who will be the highest scorer?'
+        dropdown['fallback'] = 'Highest'
+        dropdown['actions'][0]['name'] = 'highest'
+        message['attachments'].append(dropdown)
 
-        lowest_dropdown = {
-            'text': 'Who will be the lowest scorer?',
-            'fallback': 'Lowest',
-            'attachment_type': 'default',
-            'callback_id': LEAGUE_YEAR + '-' + LEAGUE_WEEK,
-            'actions': [
-                {
-                    'name': 'lowest',
-                    'text': 'Pick a team...',
-                    'type': 'select',
-                    'options': []
-                }
-            ]
-        }
-        for team in LEAGUE_MEMBERS:
-            lowest_dropdown['actions'][0]['options'].append({
-                'text': team,
-                'value': team
-            })
-        message['attachments'].append(lowest_dropdown)
+        dropdown['text'] = 'Who will be the lowest scorer?'
+        dropdown['fallback'] = 'Lowest'
+        dropdown['actions'][0]['name'] = 'lowest'
+        message['attachments'].append(dropdown)
 
         # defined in __init__.py, this file should only be for defining Slack plugin endpoints
         post_to_slack(message)
