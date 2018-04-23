@@ -59,8 +59,8 @@ class SavePredictionFromSlack(restful.Resource):
         # block the prediction submission if it's after the deadline
         # an empty response to an interactive message action will make sure
         # the original message is unchanged, so it'll appear the form is unchanged and unresponsive
-        #if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
-        #    return Response()
+        if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
+            return Response()
 
         username = payload['user']['name']
         database_key = { 'username': username, 'year': year, 'week': week }
@@ -110,8 +110,8 @@ def style_form_with_action(element, action, form_group):
 class SaveScorePrediction(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
-        #if datetime.now() > DEADLINE_TIME:
-        #    return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.')
+        if datetime.now() > DEADLINE_TIME:
+            return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.')
 
         # for direct Slack commands, you don't get a payload like an interactive message action,
         # you have to parse the text of the parameters
@@ -269,6 +269,9 @@ class SendPredictionForm(restful.Resource):
         dropdown['fallback'] = 'Closest'
         dropdown['actions'][0]['name'] = 'closest'
         message['attachments'].append(dropdown)
+
+        # highest/lowest dropdowns should list teams, not matchups
+        dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in LEAGUE_MEMBERS ]
 
         dropdown = copy.deepcopy(dropdown_template)
         dropdown['text'] = 'Who will be the highest scorer?'
