@@ -69,9 +69,8 @@ class SavePredictionFromSlack(restful.Resource):
 
         # loop through each interactive message action, basically what changed
         for action in actions:
-            style_form_with_action(element, action,
-                # find the prediction form element that matches the action name
-                a) for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
+            # find the prediction form element that matches the action name
+            style_form_with_action(element, action, a) for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
 
         # save that shit every time, and mark the last time they saved
         mongo.db.predictions.update(database_key, {
