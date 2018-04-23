@@ -110,7 +110,7 @@ def style_form_with_action(element, action, form_group):
 class SaveScorePrediction(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
-        if datetime.now() > DEADLINE_TIME:
+        if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
             return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
 
         # for direct Slack commands, you don't get a payload like an interactive message action,
