@@ -271,6 +271,7 @@ class SendPredictionForm(restful.Resource):
         message['attachments'].append(dropdown)
 
         # highest/lowest dropdowns should list teams, not matchups
+        dropdown_template['actions'][0]['text'] = 'Pick a team...'
         dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in LEAGUE_MEMBERS ]
 
         dropdown = copy.deepcopy(dropdown_template)
