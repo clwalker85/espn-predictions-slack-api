@@ -111,7 +111,7 @@ class SaveScorePrediction(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() > DEADLINE_TIME:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.'
+            return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.')
 
         # for direct Slack commands, you don't get a payload like an interactive message action,
         # you have to parse the text of the parameters
@@ -121,7 +121,7 @@ class SaveScorePrediction(restful.Resource):
         param = text.split()
 
         if len(param) < 2:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.'
+            return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.')
 
         try:
             first_score = Decimal(param[0])
@@ -142,11 +142,11 @@ class SaveScorePrediction(restful.Resource):
                 },
             }, upsert=True, multi=False)
 
-            return 'Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score
+            return Response('Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score)
         except:
-            return 'Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.'
+            return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.')
 
-        return 'Prediction not saved for week ' + LEAGUE_WEEK + '.'
+        return Response('Prediction not saved for week ' + LEAGUE_WEEK + '.')
 
 # This method loops through any saved predictions for the current week and posts them
 # in response to whoever ran the command in Slack. It's also a good way to understand the
@@ -156,7 +156,7 @@ class GetSubmittedPredictions(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() < DEADLINE_TIME:
-            return 'Submitted predictions are not visible until the submission deadline has passed.'
+            return Response('Submitted predictions are not visible until the submission deadline has passed.')
 
         message = {
             'response_type': 'in_channel',
@@ -294,7 +294,7 @@ class CalculatePredictions(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() < WEEK_END_TIME:
-            return 'Prediction calculations are not available until the morning (8am) after Monday Night Football.'
+            return Response('Prediction calculations are not available until the morning (8am) after Monday Night Football.')
 
         message = {
             'response_type': 'in_channel',
