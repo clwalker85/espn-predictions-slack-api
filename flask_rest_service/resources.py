@@ -69,8 +69,11 @@ class SavePredictionFromSlack(restful.Resource):
 
         # loop through each interactive message action, basically what changed
         for action in actions:
-            # find the prediction form element that matches the action name
-            style_form_with_action(element, action, a) for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
+            # find the prediction form element that matches the action name and style that bitch
+            for a in message['attachments']:
+                for element in a['actions']:
+                    if action['name'] == element['name']:
+                        style_form_with_action(element, action, a)
 
         # save that shit every time, and mark the last time they saved
         mongo.db.predictions.update(database_key, {
@@ -96,7 +99,7 @@ def style_form_with_action(element, action, form_group):
         else:
             # remove coloring on the button if it's not selected
             element['style'] = None
-    elif element['type'] == 'select' and action['selected_options']):
+    elif element['type'] == 'select' and action['selected_options']:
         # I guess Slack supports multiple dropdown selections, but just get the "first" selection
         selected = action['selected_options'][0]
         # for a dropdown element, this is how you mark something as selected
@@ -299,8 +302,7 @@ class CalculatePredictions(restful.Resource):
             'attachments': []
         }
         blowout_winners, closest_winners, highest_winners, lowest_winners = [], [], [], []
-        bonus_string = blowout_matchup, closest_matchup, highest_pin_winner, lowest_pin_winner, highest_pin_score,
-            lowest_pin_score, highest_pin_timestamp, lowest_pin_timestamp = '', '', '', '', '', '', '', '', ''
+        bonus_string = blowout_matchup, closest_matchup, highest_pin_winner, lowest_pin_winner, highest_pin_score, lowest_pin_score, highest_pin_timestamp, lowest_pin_timestamp = '', '', '', '', '', '', '', '', ''
         highest_timestamp_tiebreaker_used, lowest_timestamp_tiebreaker_used = False, False
         highest_within_one_point, lowest_within_one_point = False, False
 
