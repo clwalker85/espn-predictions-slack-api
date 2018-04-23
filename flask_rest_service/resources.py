@@ -302,7 +302,7 @@ class CalculatePredictions(restful.Resource):
             'attachments': []
         }
         blowout_winners, closest_winners, highest_winners, lowest_winners = [], [], [], []
-        bonus_string = blowout_matchup, closest_matchup, highest_pin_winner, lowest_pin_winner, highest_pin_score, lowest_pin_score, highest_pin_timestamp, lowest_pin_timestamp = '', '', '', '', '', '', '', '', ''
+        bonus_string, blowout_matchup, closest_matchup, highest_pin_winner, lowest_pin_winner, highest_pin_score, lowest_pin_score, highest_pin_timestamp, lowest_pin_timestamp = '', '', '', '', '', '', '', '', ''
         highest_timestamp_tiebreaker_used, lowest_timestamp_tiebreaker_used = False, False
         highest_within_one_point, lowest_within_one_point = False, False
 
