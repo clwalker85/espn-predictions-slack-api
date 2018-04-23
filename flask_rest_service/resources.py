@@ -172,7 +172,7 @@ class GetSubmittedPredictions(restful.Resource):
 
             predicted_winners = [element['text']
                 for g in form_groups for element in g['actions'] if is_button_selected(element)]
-            prediction_string += ', '.join(prediction_winners) + '\n'
+            prediction_string += ', '.join(predicted_winners) + '\n'
 
             dropdown_selections = [format_dropdown_selection(element, g, prediction)
                 for g in form_groups for element in g['actions'] if is_dropdown_selected(element)]
