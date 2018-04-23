@@ -3,13 +3,16 @@ import json
 import pprint
 import requests
 import traceback
+import copy
 from decimal import Decimal
 from datetime import datetime
 from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, WEEK_END_TIME, MATCHUPS
+from flask_rest_service import app, api, mongo, post_to_slack,
+    LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK,
+    DEADLINE_STRING, DEADLINE_TIME, WEEK_END_TIME, MATCHUPS
 
 # simple proof of concept that I could get Mongo working in Heroku
 @api.route('/')
@@ -68,9 +71,9 @@ class SavePredictionFromSlack(restful.Resource):
 
         # loop through each interactive message action, basically what changed
         for action in actions:
-            style_form_with_action(element, action, a)
+            style_form_with_action(element, action,
                 # find the prediction form element that matches the action name
-                for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
+                a) for a in message['attachments'] for element in a['actions'] if action['name'] == element['name']
 
         # save that shit every time, and mark the last time they saved
         mongo.db.predictions.update(database_key, {
@@ -236,7 +239,7 @@ class SendPredictionForm(restful.Resource):
                 ]
             })
 
-        dropdown = {
+        dropdown_template = {
             'text': 'Which matchup will have the biggest blowout?',
             # the intent of 'fallback' seems to be to provide some screenreader/accesibility support,
             # but it also works to support what we display when we report everyone's predictions
@@ -254,29 +257,32 @@ class SendPredictionForm(restful.Resource):
             ]
         }
         for matchup in MATCHUPS:
-            dropdown['actions'][0]['options'].append({
+            dropdown_template['actions'][0]['options'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'value': matchup['team_one'] + ' versus ' + matchup['team_two']
             })
-        message['attachments'].append(dropdown)
+        message['attachments'].append(dropdown_template)
 
         # reuse our existing dropdown object for the rest
+        dropdown = copy.deepcopy(dropdown_template)
         dropdown['text'] = 'Which matchup will have the closest score?'
         dropdown['fallback'] = 'Closest'
         dropdown['actions'][0]['name'] = 'closest'
         message['attachments'].append(dropdown)
 
+        dropdown = copy.deepcopy(dropdown_template)
         dropdown['text'] = 'Who will be the highest scorer?'
         dropdown['fallback'] = 'Highest'
         dropdown['actions'][0]['name'] = 'highest'
         message['attachments'].append(dropdown)
 
+        dropdown = copy.deepcopy(dropdown_template)
         dropdown['text'] = 'Who will be the lowest scorer?'
         dropdown['fallback'] = 'Lowest'
         dropdown['actions'][0]['name'] = 'lowest'
         message['attachments'].append(dropdown)
 
-        # defined in __init__.py, this file should only be for defining Slack plugin endpoints
+        # defined in __init__.py
         post_to_slack(message)
 
         return Response()
@@ -295,14 +301,9 @@ class CalculatePredictions(restful.Resource):
             'text': 'Prediction calculations for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
             'attachments': []
         }
-        results_string = 'Winners: '
-
-        bonus_string = ''
-        blowout_matchup, closest_matchup = '', ''
         blowout_winners, closest_winners, highest_winners, lowest_winners = [], [], [], []
-        highest_pin_winner, lowest_pin_winner = '', ''
-        highest_pin_score, lowest_pin_score = '', ''
-        highest_pin_timestamp, lowest_pin_timestamp = '', ''
+        bonus_string = blowout_matchup, closest_matchup, highest_pin_winner, lowest_pin_winner, highest_pin_score,
+            lowest_pin_score, highest_pin_timestamp, lowest_pin_timestamp = '', '', '', '', '', '', '', '', ''
         highest_timestamp_tiebreaker_used, lowest_timestamp_tiebreaker_used = False, False
         highest_within_one_point, lowest_within_one_point = False, False
 
@@ -311,19 +312,16 @@ class CalculatePredictions(restful.Resource):
 
         standings_string = 'Draft selection standings for the season so far (with lowest score dropped):\n'
 
-        # TODO - I have to enter matchup results by hand each week when scoring is final on Tuesday
+        # TODO - I have to enter matchup results by hand each week when scoring is final on Tuesday;
         # maybe we can make the scoreboard command load this table
         matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })
-
-        for winner in matchup_result['winners']:
-            results_string += winner + ', '
-
-        results_string = results_string.rstrip(', ') + '\n'
+        matchup_winners = matchup_result['winners']
+        results_string = 'Winners: ' + ', '.join(matchup_result['winners']) + '\n'
 
         # loop through each prediction for this week
         for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
             username = prediction['username']
-            user_winners = []
+            form_groups = prediction['message']['attachments']
             user_formula = {
                 'username': username,
                 'matchup_total': 0,
@@ -333,19 +331,19 @@ class CalculatePredictions(restful.Resource):
                 'lowest_bonus': 0
             }
 
-            # loop through each group of buttons or dropdowns
-            for attachment in prediction['message']['attachments']:
+            # under this logic, that button text better match what's listed in the matchup_results table
+            # TODO - Maybe not store matchup_results using names like "Freddy" or "Walker"
+            # TODO - Also note the button's text and value can be different things, could use this
+            user_winners = [element['text']
+                for g in form_groups for element in g['actions'] if is_button_selected(element)]
+            # find intersection of actual and predicted winners, and add that count to the total
+            user_formula['matchup_total'] += len(set(user_winners) & set(matchup_winners))
+
+            for form_group in form_groups:
                 # loop through each button/dropdown in each group
-                for action in attachment['actions']:
-                    if action['type'] == 'button' and action['style'] == 'primary':
-                        user_winners.append(action['text'])
-                        # under this logic, that button text better match what's listed in the matchup_results table
-                        # TODO - Maybe not store matchup_results using names like "Freddy" or "Walker"
-                        # TODO - Also note the button's text and value can be different things, could use this
-                        if action['text'] in matchup_result['winners']:
-                            user_formula['matchup_total'] += 1
+                for action in form_group['actions']:
                     # calculating winners before highest/lowest on purpose, order of original JSON/form matters here
-                    if action['type'] == 'select' and 'blowout' in attachment['text']:
+                    if action['type'] == 'select' and 'blowout' in form_group['text']:
                         if not blowout_matchup:
                             for option in action['options']:
                                 if matchup_result['blowout'] in option['text']:
@@ -356,7 +354,7 @@ class CalculatePredictions(restful.Resource):
                                 if matchup_result['blowout'] in selected['text'] and matchup_result['blowout'] in user_winners and username not in blowout_winners:
                                     blowout_winners.append(username)
                                     user_formula['blowout_bonus'] += 1
-                    if action['type'] == 'select' and 'closest' in attachment['text']:
+                    if action['type'] == 'select' and 'closest' in form_group['text']:
                         if not closest_matchup:
                             for option in action['options']:
                                 if matchup_result['closest'] in option['text']:
@@ -366,7 +364,7 @@ class CalculatePredictions(restful.Resource):
                                 if matchup_result['closest'] in selected['text'] and username not in closest_winners:
                                     closest_winners.append(username)
                                     user_formula['closest_bonus'] += 1
-                    if action['type'] == 'select' and 'highest' in attachment['text'] and 'selected_options' in action:
+                    if action['type'] == 'select' and 'highest' in form_group['text'] and 'selected_options' in action:
                         for selected in action['selected_options']:
                             if matchup_result['highest'] in selected['text'] and username not in highest_winners:
                                 highest_winners.append(username)
@@ -404,7 +402,7 @@ class CalculatePredictions(restful.Resource):
                                     
                     # see comments on highest methodology above
                     # TODO - Is there a way to get rid of this mostly copied code?
-                    if action['type'] == 'select' and 'lowest' in attachment['text'] and 'selected_options' in action:
+                    if action['type'] == 'select' and 'lowest' in form_group['text'] and 'selected_options' in action:
                         for selected in action['selected_options']:
                             if matchup_result['lowest'] in selected['text'] and username not in lowest_winners:
                                 lowest_winners.append(username)
