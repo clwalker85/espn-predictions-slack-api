@@ -490,29 +490,37 @@ def is_blowout_selected(element, form_group):
     return element['type'] == 'select' and 'blowout' in form_group['text']
 
 def is_blowout_winner_predicted(element, form_group, result, winners):
-    selected = element['selected_options'][0]
-    return is_blowout_selected(element, form_group) and result['blowout'] in selected['text'] and result['blowout'] in winners
+    if is_blowout_selected(element, form_group):
+        selected = element['selected_options'][0]
+        return result['blowout'] in selected['text'] and result['blowout'] in winners
+    return False
 
 def is_closest_selected(element, form_group):
     return element['type'] == 'select' and 'closest' in form_group['text']
 
 def is_closest_predicted(element, form_group, result):
-    selected = element['selected_options'][0]
-    return is_closest_selected(element, form_group) and result['closest'] in selected['text']
+    if is_closest_selected(element, form_group):
+        selected = element['selected_options'][0]
+        return result['closest'] in selected['text']
+    return False
 
 def is_highest_selected(element, form_group):
     return element['type'] == 'select' and 'highest' in form_group['text']
 
 def is_highest_predicted(element, form_group, result):
-    selected = element['selected_options'][0]
-    return is_highest_selected(element, form_group) and result['highest'] in selected['text']
+    if is_highest_selected(element, form_group):
+        selected = element['selected_options'][0]
+        return result['highest'] in selected['text']
+    return False
 
 def is_lowest_selected(element, form_group):
     return element['type'] == 'select' and 'lowest' in form_group['text']
 
 def is_lowest_predicted(element, form_group, result):
-    selected = element['selected_options'][0]
-    return is_lowest_selected(element, form_group) and result['lowest'] in selected['text']
+    if is_lowest_selected(element, form_group):
+        selected = element['selected_options'][0]
+        return result['lowest'] in selected['text']
+    return False
 
 def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score, current_winner, current_closest_score):
     candidate_score_decimal = round(Decimal(candidate_score), 1)
