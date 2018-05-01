@@ -418,7 +418,7 @@ def build_prediction_stats(result):
 
         # HACK - Must find matchup string, e.g., "Freddy versus Walker", in the prediction form
         # TODO - Maybe I can store this in matchup_results along with the matchup winner
-        if not stats['blowout_matchup'] or not stats['closest_matchup']:
+        if 'blowout_matchup' not in stats or 'closest_matchup' not in stats:
             stats['blowout_matchup'], stats['closest_matchup'] = (
                 set_matchup_display_strings(form_groups, result))
 
