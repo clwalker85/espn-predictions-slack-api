@@ -402,7 +402,14 @@ def build_standings_string():
     return standings_string
 
 def build_prediction_stats(result):
-    formula_by_user, winners, stats = {}, {}, {}
+    formula_by_user, stats = {}, {}
+    winners = {
+        'matchup': [],
+        'blowout': [],
+        'closest': [],
+        'highest': [],
+        'lowest': []
+    }
     actual_winners = result['winners']
     for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
         username = prediction['username']
