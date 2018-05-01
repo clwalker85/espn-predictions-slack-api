@@ -480,28 +480,28 @@ def set_matchup_display_strings(form_groups, result):
     return (blowout_matchup, closest_matchup)
 
 def is_blowout_selected(element, form_group):
-    return action['type'] == 'select' and 'blowout' in form_group['text']
+    return element['type'] == 'select' and 'blowout' in form_group['text']
 
 def is_blowout_winner_predicted(element, form_group, result, winners):
     selected = element['selected_options'][0]
     return is_blowout_selected(element, form_group) and result['blowout'] in selected['text'] and result['blowout'] in winners
 
 def is_closest_selected(element, form_group):
-    return action['type'] == 'select' and 'closest' in form_group['text']
+    return element['type'] == 'select' and 'closest' in form_group['text']
 
 def is_closest_predicted(element, form_group, result):
     selected = element['selected_options'][0]
     return is_closest_selected(element, form_group) and result['closest'] in selected['text']
 
 def is_highest_selected(element, form_group):
-    return action['type'] == 'select' and 'highest' in form_group['text']
+    return element['type'] == 'select' and 'highest' in form_group['text']
 
 def is_highest_predicted(element, form_group, result):
     selected = element['selected_options'][0]
     return is_highest_selected(element, form_group) and result['highest'] in selected['text']
 
 def is_lowest_selected(element, form_group):
-    return action['type'] == 'select' and 'lowest' in form_group['text']
+    return element['type'] == 'select' and 'lowest' in form_group['text']
 
 def is_lowest_predicted(element, form_group, result):
     selected = element['selected_options'][0]
