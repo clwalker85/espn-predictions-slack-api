@@ -401,7 +401,7 @@ def build_standings_string():
             '; LOW: ' + str(prediction_record['low']) + '\n'
     return standings_string
 
-def build_prediction_stats(predictions, result):
+def build_prediction_stats(result):
     formula_by_user, winners, stats = {}, {}, {}
     actual_winners = result['winners']
     for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
