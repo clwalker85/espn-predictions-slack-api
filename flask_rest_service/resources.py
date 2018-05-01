@@ -469,11 +469,11 @@ def set_matchup_display_strings(form_groups, result):
     for form_group in form_groups:
         # loop through each button/dropdown in each group
         for action in form_group['actions']:
-            if is_blowout_selected(element, g):
+            if is_blowout_selected(action, g):
                 for option in action['options']:
                     if result['blowout'] in option['text']:
                         blowout_matchup = option['text']
-            if is_closest_selected(element, g):
+            if is_closest_selected(action, g):
                 for option in action['options']:
                     if result['closest'] in option['text']:
                         closest_matchup = option['text']
