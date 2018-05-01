@@ -485,7 +485,7 @@ def is_blowout_selected(element, form_group):
 def is_blowout_winner_predicted(element, form_group, result, winners):
     return is_blowout_selected(element, form_group) and result['blowout'] in element['text'] and result['blowout'] in winners
 
-def is_blowout_selected(element, form_group):
+def is_closest_selected(element, form_group):
     return is_dropdown_selected(element) and 'closest' in form_group['text']
 
 def is_closest_predicted(element, form_group, result):
