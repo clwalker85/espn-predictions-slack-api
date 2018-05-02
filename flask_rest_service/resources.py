@@ -402,13 +402,21 @@ def build_standings_string():
     return standings_string
 
 def build_prediction_stats(result):
-    formula_by_user, stats = {}, {}
+    formula_by_user = {}
     winners = {
         'matchup': [],
         'blowout': [],
         'closest': [],
         'highest': [],
         'lowest': []
+    }
+    stats = {
+        'highest_pin_winner': '',
+        'highest_pin_score': '',
+        'highest_within_one_point': False,
+        'lowest_pin_winner': '',
+        'lowest_pin_score': '',
+        'lowest_within_one_point': False
     }
     actual_winners = result['winners']
     for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
