@@ -397,12 +397,10 @@ def build_standings_string():
     standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }).sort(
         # sort this shit for ease of calculating waiver order standings
         # TODO - factor in tiebreakers from ESPN standings data
-        [('total', -1), ('low', -1)])
+        [('total', -1))
     standings_string = 'Draft selection standings for the season so far (with lowest score dropped):\n'
     for prediction_record in standings:
-        standings_string += prediction_record['username'] + \
-            ' - ' + str(prediction_record['total']) + \
-            '; LOW: ' + str(prediction_record['low']) + '\n'
+        standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '\n'
     return standings_string
 
 def build_prediction_stats(result):
@@ -562,22 +560,20 @@ def update_prediction_standings(formula_by_user):
             database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
             mongo.db.prediction_standings.update(database_key, {
                 '$set': {
-                    'total': 0,
-                    'low': 0
+                    'total': 0
                 },
             }, upsert=True, multi=False)
-    # loop through everyone who submitted a prediction this week
-    for user_formula in formula_by_user.values():
-        formula_total = PREDICTION_FORMULA(user_formula)
-        database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
-        # standings on the first week is trivial and exactly the same as waiver order standings
-        if int(LEAGUE_WEEK) == 1:
-            mongo.db.prediction_standings.update(database_key, {
-                '$set': {
-                    'total': 0,
-                    'low': formula_total
-                },
-            }, upsert=True, multi=False)
+        # loop through everyone who submitted a prediction this week
+        for user_formula in formula_by_user.values():
+            formula_total = PREDICTION_FORMULA(user_formula)
+            database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
+            # standings on the first week is trivial and exactly the same as waiver order standings
+            if int(LEAGUE_WEEK) == 1:
+                mongo.db.prediction_standings.update(database_key, {
+                    '$set': {
+                        'total': formula_total
+                    },
+                }, upsert=True, multi=False)
 
     if int(LEAGUE_WEEK) > 1:
         last_week = str(int(LEAGUE_WEEK) - 1)
@@ -591,23 +587,9 @@ def update_prediction_standings(formula_by_user):
             else:
                 formula_total = 0
 
-            # current rules say drop the lowest prediction score, so
-            # if the current prediction is lower, add the previous low instead
-            # and make the current prediction the current low
-            if formula_total < prediction_record['low']:
-                mongo.db.prediction_standings.update(database_key, {
-                    '$set': {
-                        'total': prediction_record['total'] + prediction_record['low'],
-                        'low': formula_total
-                    },
-                }, upsert=True, multi=False)
-            # otherwise, add the current prediction total as normal
-            # and keep the existing low score
-            else:
-                mongo.db.prediction_standings.update(database_key, {
-                    '$set': {
-                        'total': prediction_record['total'] + formula_total,
-                        'low': prediction_record['low']
-                    },
-                }, upsert=True, multi=False)
+            mongo.db.prediction_standings.update(database_key, {
+                '$set': {
+                    'total': prediction_record['total'] + formula_total
+                },
+            }, upsert=True, multi=False)
     return
