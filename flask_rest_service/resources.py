@@ -531,8 +531,11 @@ def is_lowest_predicted(element, form_group, result):
     return False
 
 def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score, current_winner, current_closest_score):
+    pprint.pformat(candidate_score)
     candidate_score_decimal = round(Decimal(candidate_score), 1)
+    pprint.pformat(actual_score)
     actual_score_decimal = round(Decimal(actual_score), 1)
+    pprint.pformat(current_closest_score)
     current_closest_decimal = round(Decimal(current_closest_score), 1)
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
     current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
