@@ -146,6 +146,7 @@ class SaveScorePrediction(restful.Resource):
             }, upsert=True, multi=False)
 
             return Response('Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score)
+        # The predictions table has unique keys to ensure, per week, no one has the same high/low score
         except pymongo.errors.DuplicateKeyError:
             return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Someone else entered one of your scores for this week, and ties are not allowed.')
         except:
