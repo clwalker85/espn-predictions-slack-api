@@ -319,7 +319,7 @@ class CalculatePredictions(restful.Resource):
 
         # first update the standings, then print the results
         update_prediction_standings(formula_by_user)
-        message['attachments'].append({ 'text': build_formula_string(formula_by_user) })
+        message['attachments'].append({ 'text': build_standings_string() })
 
         return message
 
