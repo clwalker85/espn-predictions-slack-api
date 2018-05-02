@@ -314,7 +314,7 @@ class CalculatePredictions(restful.Resource):
         formula_by_user, prediction_winners, closest_to_pin_stats = build_prediction_stats(matchup_result)
 
         message['attachments'].append({ 'text': build_results_string(matchup_result, closest_to_pin_stats) })
-        message['attachments'].append({ 'text': build_bonus_string(prediction_winners, closest_to_pin_stats) })
+        message['attachments'].append({ 'text': build_bonus_string(prediction_winners, closest_to_pin_stats, formula_by_user) })
         message['attachments'].append({ 'text': build_formula_string(formula_by_user) })
 
         # first update the standings, then print the results
@@ -331,7 +331,7 @@ def build_results_string(result, stats):
     results_string += 'Lowest: ' + result['lowest'] + ', ' + result['low_score']
     return results_string
 
-def build_bonus_string(winners, stats):
+def build_bonus_string(winners, stats, formula_by_user):
     bonus_string = ''
 
     if not winners['blowout']:
