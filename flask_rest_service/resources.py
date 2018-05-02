@@ -380,6 +380,7 @@ def build_formula_string(formula_by_user):
     formula_string = 'TOTAL = MATCHUP TOTAL + BLOWOUT BONUS + CLOSEST BONUS + HIGHEST BONUS + LOWEST BONUS\n'
     user_formulas = sorted(formula_by_user.values(), key=PREDICTION_FORMULA, reverse=True)
     for user_formula in user_formulas:
+        formula_total = PREDICTION_FORMULA(user_formula)
         formula_string += user_formula['username'] + \
             ': ' + str(formula_total) + \
             ' = ' + str(user_formula['matchup_total']) + \
