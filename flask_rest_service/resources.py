@@ -533,7 +533,7 @@ def is_lowest_predicted(element, form_group, result):
 def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score, current_winner, current_closest_score):
     candidate_score_decimal = round(Decimal(candidate_score), 1)
     actual_score_decimal = round(Decimal(actual_score), 1)
-    current_closest_decimal = round(Decimal(current_closest_score), 1)
+    current_closest_decimal = round(current_closest_score, 1)
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
     current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
     # we round above because the exact match rule we're resolving below
