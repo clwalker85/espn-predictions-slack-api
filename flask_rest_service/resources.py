@@ -545,7 +545,7 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
         if current_distance_to_pin > candidate_distance_to_pin:
             return (candidate_winner, candidate_score, closest_within_one_point)
         else:
-            return (current_winner, current_score, current_distance_to_pin <= 1)
+            return (current_winner, current_closest_score, current_distance_to_pin <= 1)
     # no highest/lowest recorded so far? you're the winner by default
     return (candidate_winner, candidate_score, closest_within_one_point)
 
