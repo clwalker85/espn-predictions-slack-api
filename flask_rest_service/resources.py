@@ -531,25 +531,23 @@ def is_lowest_predicted(element, form_group, result):
     return False
 
 def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score, current_winner, current_closest_score):
-    pprint.pformat(candidate_score)
     candidate_score_decimal = round(Decimal(candidate_score), 1)
-    pprint.pformat(actual_score)
     actual_score_decimal = round(Decimal(actual_score), 1)
-    pprint.pformat(current_closest_score)
-    current_closest_decimal = round(Decimal(current_closest_score), 1)
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
-    current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
     # we round above because the exact match rule we're resolving below
     # predates the time we changed to decimal scoring
     closest_within_one_point = candidate_distance_to_pin <= 1
 
-    # no highest/lowest recorded so far? you're the winner by default
-    if not current_winner and not current_closest_score:
-        return (candidate_winner, candidate_score, closest_within_one_point)
     # already have a highest/lowest? there can only be one!
-    elif current_distance_to_pin > candidate_distance_to_pin:
-        return (candidate_winner, candidate_score, closest_within_one_point)
-    return (current_winner, current_closest_score, current_distance_to_pin <= 1)
+    if current_winner and current_closest_score:
+        current_closest_decimal = round(Decimal(current_closest_score), 1)
+        current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
+        if current_distance_to_pin > candidate_distance_to_pin:
+            return (candidate_winner, candidate_score, closest_within_one_point)
+        else:
+            return (current_winner, current_score, current_distance_to_pin <= 1)
+    # no highest/lowest recorded so far? you're the winner by default
+    return (candidate_winner, candidate_score, closest_within_one_point)
 
 def update_prediction_standings(formula_by_user):
     if int(LEAGUE_WEEK) == 1:
