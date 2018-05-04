@@ -397,7 +397,7 @@ def build_standings_string():
     standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }).sort(
         # sort this shit for ease of calculating waiver order standings
         # TODO - factor in tiebreakers from ESPN standings data
-        [('total', -1))
+        [('total', -1)])
     standings_string = 'Draft selection standings for the season so far (with lowest score dropped):\n'
     for prediction_record in standings:
         standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '\n'
