@@ -5,6 +5,7 @@ import requests
 import traceback
 import copy
 from decimal import Decimal
+from operator import attrgetter
 from datetime import datetime
 from espnff import League
 from flask import request, abort, Response
@@ -358,9 +359,9 @@ def build_bonus_string(winners, stats, formula_by_user):
     if highest_pin_winner:
         formula_by_user[highest_pin_winner]['highest_bonus'] += 1
         bonus_string += ', with ' + highest_pin_winner + ' getting an extra point for guessing the highest score'
-    if stats['highest_within_one_point']:
+    if stats['highest_exact_match']:
         formula_by_user[highest_pin_winner]['highest_bonus'] += 1
-        bonus_string += '. ' + highest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
+        bonus_string += '. ' + highest_pin_winner + ' got a third point for guessing the score exactly, after rounding'
     bonus_string += '.\n'
 
     if not winners['lowest']:
@@ -372,16 +373,21 @@ def build_bonus_string(winners, stats, formula_by_user):
     if lowest_pin_winner:
         formula_by_user[lowest_pin_winner]['lowest_bonus'] += 1
         bonus_string += ', with ' + lowest_pin_winner + ' getting an extra point for guessing the lowest score'
-    if stats['lowest_within_one_point']:
+    if stats['lowest_exact_match']:
         formula_by_user[lowest_pin_winner]['lowest_bonus'] += 1
-        bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score within a point, after rounding'
+        bonus_string += '. ' + lowest_pin_winner + ' got a third point for guessing the score exactly, after rounding'
     bonus_string += '.\n'
 
     return bonus_string
 
 def build_formula_string(formula_by_user):
     formula_string = 'TOTAL = MATCHUP TOTAL + BLOWOUT BONUS + CLOSEST BONUS + HIGHEST BONUS + LOWEST BONUS\n'
-    user_formulas = sorted(formula_by_user.values(), key=PREDICTION_FORMULA, reverse=True)
+    # sort this shit for ease of calculating waiver order standings
+    # secondary sort on matchup_total is applied first
+    user_formulas = sorted(formula_by_user.values(), key=attrgetter('matchup_total'), reverse=True)
+    # primary sort on total is applied last
+    user_formulas = sorted(user_formulas, key=PREDICTION_FORMULA, reverse=True)
+    # TODO - factor in tiebreakers from ESPN standings data
     for user_formula in user_formulas:
         formula_total = PREDICTION_FORMULA(user_formula)
         formula_string += user_formula['username'] + \
@@ -395,10 +401,9 @@ def build_formula_string(formula_by_user):
 
 def build_standings_string():
     standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }).sort(
-        # sort this shit for ease of calculating waiver order standings
         # TODO - factor in tiebreakers from ESPN standings data
         [('total', -1)])
-    standings_string = 'Draft selection standings for the season so far (with lowest score dropped):\n'
+    standings_string = 'Draft selection standings for the season so far:\n'
     for prediction_record in standings:
         standings_string += prediction_record['username'] + ' - ' + str(prediction_record['total']) + '\n'
     return standings_string
@@ -415,10 +420,10 @@ def build_prediction_stats(result):
     stats = {
         'highest_pin_winner': '',
         'highest_pin_score': '',
-        'highest_within_one_point': False,
+        'highest_exact_match': False,
         'lowest_pin_winner': '',
         'lowest_pin_score': '',
-        'lowest_within_one_point': False
+        'lowest_exact_match': False
     }
     actual_winners = result['winners']
     for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
@@ -465,7 +470,7 @@ def build_prediction_stats(result):
         if username in winners['highest']:
             user_formula['highest_bonus'] += 1
             if 'high_score' in prediction:
-                stats['highest_pin_winner'], stats['highest_pin_score'], stats['highest_within_one_point'] = (
+                stats['highest_pin_winner'], stats['highest_pin_score'], stats['highest_exact_match'] = (
                     set_closest_to_pin_variables(username, prediction['high_score'], result['high_score'], stats['highest_pin_winner'], stats['highest_pin_score']))
 
         winners['lowest'] += [username
@@ -474,7 +479,7 @@ def build_prediction_stats(result):
         if username in winners['lowest']:
             user_formula['lowest_bonus'] += 1
             if 'low_score' in prediction:
-                stats['lowest_pin_winner'], stats['lowest_pin_score'], stats['lowest_within_one_point'] = (
+                stats['lowest_pin_winner'], stats['lowest_pin_score'], stats['lowest_exact_match'] = (
                     set_closest_to_pin_variables(username, prediction['low_score'], result['low_score'], stats['lowest_pin_winner'], stats['lowest_pin_score']))
 
         # after processing all this user's selections
@@ -538,18 +543,18 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
     # we round above because the exact match rule we're resolving below
     # predates the time we changed to decimal scoring
-    closest_within_one_point = candidate_distance_to_pin < 1
+    closest_exact_match = candidate_distance_to_pin < 1
 
     # already have a highest/lowest? there can only be one!
     if current_winner and current_closest_score:
         current_closest_decimal = round(Decimal(current_closest_score), 1)
         current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
         if current_distance_to_pin > candidate_distance_to_pin:
-            return (candidate_winner, candidate_score, closest_within_one_point)
+            return (candidate_winner, candidate_score, closest_exact_match)
         else:
             return (current_winner, current_closest_score, current_distance_to_pin < 1)
     # no highest/lowest recorded so far? you're the winner by default
-    return (candidate_winner, candidate_score, closest_within_one_point)
+    return (candidate_winner, candidate_score, closest_exact_match)
 
 def update_prediction_standings(formula_by_user):
     if int(LEAGUE_WEEK) == 1:
