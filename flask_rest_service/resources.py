@@ -128,8 +128,8 @@ class SaveScorePrediction(restful.Resource):
             return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.')
 
         try:
-            first_score = int(param[0])
-            second_score = int(param[1])
+            first_score = Decimal(param[0])
+            second_score = Decimal(param[1])
             high_score = param[0]
             low_score = param[1]
 
@@ -147,11 +147,8 @@ class SaveScorePrediction(restful.Resource):
             }, upsert=True, multi=False)
 
             return Response('Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score)
-        # The predictions table has unique keys to ensure, per week, no one has the same high/low score
-        except pymongo.errors.DuplicateKeyError:
-            return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Someone else entered one of your scores for this week, and ties are not allowed.')
         except:
-            return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Type in valid integer numbers next time.')
+            return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.')
 
         return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '.')
 
