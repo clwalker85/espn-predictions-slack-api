@@ -80,6 +80,7 @@ DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
 # UTC version of Tuesday @ 8AM of that week
 WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time'].replace(tzinfo=None)
 MATCHUPS = MATCHUP_METADATA['matchups']
+PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two'] for m in MATCHUPS]
 
 TZ = os.environ.get('TZ')
 timezone = pytz.timezone(TZ)
