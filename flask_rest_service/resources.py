@@ -242,7 +242,7 @@ class SendPredictionForm(restful.Resource):
                 ]
             })
 
-        dropdown_template = {
+        matchup_dropdown_template = {
             'text': 'Which matchup will have the biggest blowout?',
             # the intent of 'fallback' seems to be to provide some screenreader/accesibility support,
             # but it also works to support what we display when we report everyone's predictions
@@ -260,30 +260,31 @@ class SendPredictionForm(restful.Resource):
             ]
         }
         for matchup in MATCHUPS:
-            dropdown_template['actions'][0]['options'].append({
+            matchup_dropdown_template['actions'][0]['options'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'value': matchup['team_one'] + ' versus ' + matchup['team_two']
             })
-        message['attachments'].append(dropdown_template)
+        message['attachments'].append(matchup_dropdown_template)
 
         # reuse our existing dropdown object for the rest
-        dropdown = copy.deepcopy(dropdown_template)
+        dropdown = copy.deepcopy(matchup_dropdown_template)
         dropdown['text'] = 'Which matchup will have the closest score?'
         dropdown['fallback'] = 'Closest'
         dropdown['actions'][0]['name'] = 'closest'
         message['attachments'].append(dropdown)
 
         # highest/lowest dropdowns should list teams, not matchups
-        dropdown_template['actions'][0]['text'] = 'Pick a team...'
-        dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in PREDICTION_ELIGIBLE_MEMBERS ]
+        member_dropdown_template = copy.deepcopy(matchup_dropdown_template)
+        member_dropdown_template['actions'][0]['text'] = 'Pick a team...'
+        member_dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in PREDICTION_ELIGIBLE_MEMBERS ]
 
-        dropdown = copy.deepcopy(dropdown_template)
+        dropdown = copy.deepcopy(member_dropdown_template)
         dropdown['text'] = 'Who will be the highest scorer?'
         dropdown['fallback'] = 'Highest'
         dropdown['actions'][0]['name'] = 'highest'
         message['attachments'].append(dropdown)
 
-        dropdown = copy.deepcopy(dropdown_template)
+        dropdown = copy.deepcopy(member_dropdown_template)
         dropdown['text'] = 'Who will be the lowest scorer?'
         dropdown['fallback'] = 'Lowest'
         dropdown['actions'][0]['name'] = 'lowest'
