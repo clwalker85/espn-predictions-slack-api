@@ -72,9 +72,6 @@ with app.app_context():
     MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
-pprint.pprint(LEAGUE_METADATA)
-pprint.pprint(MATCHUP_METADATA)
-
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # If you have to insert times into matchup_metadata by hand, use: https://www.worldtimebuddy.com/
 # These are always stored as UTC Date objects in the JSON database row
@@ -101,7 +98,7 @@ def post_to_slack(payload):
 
     for user_id in LEAGUE_USER_IDS:
 				# uncomment this line to send shit only to Walker
-        #if user_id in [ 'U3NE3S6CQ' ]:
+        if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:
