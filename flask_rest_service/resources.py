@@ -157,8 +157,6 @@ class SaveScorePrediction(restful.Resource):
 @api.route('/prediction/submissions/')
 class GetSubmittedPredictions(restful.Resource):
     def post(self):
-        pprint.pprint(DEADLINE_TIME)
-        pprint.pprint(datetime.now())
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() < DEADLINE_TIME:
             return Response('Submitted predictions are not visible until the submission deadline has passed.')

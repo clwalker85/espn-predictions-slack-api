@@ -73,7 +73,6 @@ with app.app_context():
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
-# trivial comment to maybe trigger build
 tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
 DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
 # UTC version of Tuesday @ 8AM of that week
@@ -85,7 +84,6 @@ PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two']
 # so it looks like -------------------------------------> "December 23, 2017, at 04:30PM"
 # TODO - Use a better date formatter, to try and get ---> "December 23rd, 2017, at 4:30PM"
 DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p')
-pprint.pprint(DEADLINE_STRING)
 
 ### GENERAL PURPOSE METHODS (not API related) ###
 
