@@ -75,7 +75,8 @@ with app.app_context():
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # If you have to insert times into matchup_metadata by hand, use: https://www.worldtimebuddy.com/
 # These are always stored as UTC Date objects in the JSON database row
-DEADLINE_TIME = MATCHUP_METADATA['deadline_time']
+tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
+DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
 # UTC version of Tuesday @ 8AM of that week
 WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time'].replace(tzinfo=None)
 MATCHUPS = MATCHUP_METADATA['matchups']
@@ -83,7 +84,7 @@ PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two']
 
 TZ = os.environ.get('TZ')
 timezone = pytz.timezone(TZ)
-local_deadline = DEADLINE_TIME.astimezone(timezone)
+local_deadline = tz_aware_deadline_time.astimezone(timezone)
 # strftime doesn't provide anything besides zero-padded numbers in formats,
 # so it looks like -------------------------------------> "December 23, 2017, at 04:30PM"
 # TODO - Use a better date formatter, to try and get ---> "December 23rd, 2017, at 4:30PM"
