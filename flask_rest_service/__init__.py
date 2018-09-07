@@ -73,6 +73,7 @@ with app.app_context():
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
+# trivial comment to maybe trigger build
 tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
 DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
 # UTC version of Tuesday @ 8AM of that week
