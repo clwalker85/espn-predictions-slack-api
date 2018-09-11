@@ -10,7 +10,7 @@ from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, WEEK_END_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
+from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
 
 # we gotta reuse this formula in several spots, so defining it here
 PREDICTION_FORMULA = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
@@ -301,17 +301,19 @@ class SendPredictionForm(restful.Resource):
 class CalculatePredictions(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
-        if datetime.now() < WEEK_END_TIME:
+        # can't calculate predictions for the week before in the first week
+        # in practice, __init__.py checks for the latest week to start
+        if LEAGUE_WEEK == '1':
             return Response('Prediction calculations are not available until the morning (8am) after Monday Night Football.')
 
         message = {
             'response_type': 'in_channel',
-            'text': 'Prediction calculations for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'text': 'Prediction calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
             'attachments': []
         }
         # TODO - I have to enter matchup results by hand each week when scoring is final on Tuesday;
         # maybe we can make the scoreboard command load this table
-        matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })
+        matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
         formula_by_user, prediction_winners, closest_to_pin_stats = build_prediction_stats(matchup_result)
 
         message['attachments'].append({ 'text': build_results_string(matchup_result, closest_to_pin_stats) })
@@ -402,7 +404,7 @@ def build_formula_string(formula_by_user):
     return formula_string
 
 def build_standings_string():
-    standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }).sort(
+    standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }).sort(
         # sort this shit for ease of calculating waiver order standings
         # TODO - factor in tiebreakers from ESPN standings data
         [('total', -1)])
@@ -431,7 +433,7 @@ def build_prediction_stats(result):
         'lowest_within_one_point': []
     }
     actual_winners = result['winners']
-    for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
+    for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }):
         username = prediction['username']
         form_groups = prediction['message']['attachments']
         user_formula = {
@@ -542,12 +544,12 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
     return ([candidate_winner], candidate_score, current_winners_within_one_point)
 
 def update_prediction_standings(formula_by_user):
-    if int(LEAGUE_WEEK) == 1:
+    if int(LAST_LEAGUE_WEEK) == 1:
         # put zeroes there for anyone who missed the first prediction
         # VERY IMPORTANT, cause we assume every league member has a row in this table
         users_without_predictions = list(set(LEAGUE_USERNAMES) - set(formula_by_user.keys()))
         for username in users_without_predictions:
-            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
+            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
             mongo.db.prediction_standings.update(database_key, {
                 '$set': {
                     'total': 0
@@ -556,21 +558,20 @@ def update_prediction_standings(formula_by_user):
         # loop through everyone who submitted a prediction this week
         for user_formula in formula_by_user.values():
             formula_total = PREDICTION_FORMULA(user_formula)
-            database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
+            database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
             # standings on the first week is trivial and exactly the same as waiver order standings
-            if int(LEAGUE_WEEK) == 1:
-                mongo.db.prediction_standings.update(database_key, {
-                    '$set': {
-                        'total': formula_total
-                    },
-                }, upsert=True, multi=False)
+            mongo.db.prediction_standings.update(database_key, {
+                '$set': {
+                    'total': formula_total
+                },
+            }, upsert=True, multi=False)
 
-    if int(LEAGUE_WEEK) > 1:
-        last_week = str(int(LEAGUE_WEEK) - 1)
-        last_week_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': last_week })
-        for prediction_record in last_week_standings:
+    if int(LAST_LEAGUE_WEEK) > 1:
+        week_before = str(int(LAST_LEAGUE_WEEK) - 1)
+        week_before_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': week_before })
+        for prediction_record in week_before_standings:
             username = prediction_record['username']
-            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
+            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
 
             if username in formula_by_user:
                 formula_total = PREDICTION_FORMULA(formula_by_user[username])

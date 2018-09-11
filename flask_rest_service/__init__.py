@@ -71,13 +71,17 @@ LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
 with app.app_context():
     MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
+    LAST_MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
+        'end_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
+# we won't find the last matchup in week one, so let's just avoid null pointers
+if not LAST_MATCHUP_METADATA:
+    LAST_MATCHUP_METADATA = MATCHUP_METADATA
 pprint.pprint(LEAGUE_WEEK)
+LAST_LEAGUE_WEEK = LAST_MATCHUP_METADATA['week']
 tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
 DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
-# Tuesday @ 8AM of that week
-WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time'].replace(tzinfo=None)
 MATCHUPS = MATCHUP_METADATA['matchups']
 PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two'] for m in MATCHUPS]
 
