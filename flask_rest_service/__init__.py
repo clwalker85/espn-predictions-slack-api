@@ -73,12 +73,11 @@ with app.app_context():
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
+pprint.pprint(LEAGUE_WEEK)
 tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
 DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
 # Tuesday @ 8AM of that week
 WEEK_END_TIME = MATCHUP_METADATA['end_of_week_time'].replace(tzinfo=None)
-pprint.pprint(WEEK_END_TIME)
-pprint.pprint(datetime.now())
 MATCHUPS = MATCHUP_METADATA['matchups']
 PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two'] for m in MATCHUPS]
 
