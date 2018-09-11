@@ -301,9 +301,8 @@ class SendPredictionForm(restful.Resource):
 class CalculatePredictions(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
-        # REMOVE ME LATER!
-        #if datetime.now() < WEEK_END_TIME:
-            #return Response('Prediction calculations are not available until the morning (8am) after Monday Night Football.')
+        if datetime.now() < WEEK_END_TIME:
+            return Response('Prediction calculations are not available until the morning (8am) after Monday Night Football.')
 
         message = {
             'response_type': 'in_channel',
