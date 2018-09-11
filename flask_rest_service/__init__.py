@@ -78,7 +78,6 @@ LEAGUE_WEEK = MATCHUP_METADATA['week']
 # we won't find the last matchup in week one, so let's just avoid null pointers
 if not LAST_MATCHUP_METADATA:
     LAST_MATCHUP_METADATA = MATCHUP_METADATA
-pprint.pprint(LEAGUE_WEEK)
 LAST_LEAGUE_WEEK = LAST_MATCHUP_METADATA['week']
 tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
 DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
