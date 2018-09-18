@@ -358,13 +358,13 @@ def build_bonus_string(winners, stats, formula_by_user):
     if highest_pin_winners:
         for winner in highest_pin_winners:
             formula_by_user[winner]['highest_bonus'] += 1
-        bonus_string += ', with '.join(highest_pin_winners[:-2] + [' and '.join(highest_pin_winners[-2:])])
+        bonus_string += ', with' + ', '.join(highest_pin_winners[:-2] + [' and '.join(highest_pin_winners[-2:])])
         bonus_string += ' getting an extra point for guessing the highest score'
     winners_within_one_point = stats['highest_within_one_point'];
     if winners_within_one_point:
         for winner in winners_within_one_point:
             formula_by_user[winner]['highest_bonus'] += 1
-        bonus_string += '. '.join(winners_within_one_point[:-2] + [' and '.join(winners_within_one_point[-2:])])
+        bonus_string += '. ' + ', '.join(winners_within_one_point[:-2] + [' and '.join(winners_within_one_point[-2:])])
         bonus_string += ' got a third point for guessing the score within a point'
     bonus_string += '.\n'
 
@@ -377,13 +377,13 @@ def build_bonus_string(winners, stats, formula_by_user):
     if lowest_pin_winners:
         for winner in lowest_pin_winners:
             formula_by_user[winner]['lowest_bonus'] += 1
-        bonus_string += ', with '.join(lowest_pin_winners[:-2] + [' and '.join(lowest_pin_winners[-2:])])
+        bonus_string += ', with ' + ', '.join(lowest_pin_winners[:-2] + [' and '.join(lowest_pin_winners[-2:])])
         bonus_string += ' getting an extra point for guessing the lowest score'
     winners_within_one_point = stats['lowest_within_one_point'];
     if winners_within_one_point:
         for winner in winners_within_one_point:
             formula_by_user[winner]['lowest_bonus'] += 1
-        bonus_string += '. '.join(winners_within_one_point[:-2] + [' and '.join(winners_within_one_point[-2:])])
+        bonus_string += '. ' + ', '.join(winners_within_one_point[:-2] + [' and '.join(winners_within_one_point[-2:])])
         bonus_string += ' got a third point for guessing the score within a point'
     bonus_string += '.\n'
 
