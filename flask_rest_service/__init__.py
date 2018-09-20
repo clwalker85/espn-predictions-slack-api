@@ -66,6 +66,7 @@ LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']]
 LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
 
 # get the matchup data for the current week
+# IF IT DOESN'T EXIST FOR THIS WEEK, THIS APP WILL COME TO A CRASHING HALT
 # TODO - Find a way to fetch this through the ESPN API, maybe every time we fetch scores
 # Might have to handle playoffs in a special way
 with app.app_context():
@@ -97,7 +98,7 @@ def post_to_slack(payload):
 
     for user_id in LEAGUE_USER_IDS:
 				# uncomment this line to send shit only to Walker
-        #if user_id in [ 'U3NE3S6CQ' ]:
+        if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:

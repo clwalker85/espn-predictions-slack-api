@@ -212,7 +212,16 @@ def format_dropdown_selection(element, form_group, prediction):
 # https://api.slack.com/interactive-messages
 @api.route('/prediction/form/')
 class SendPredictionForm(restful.Resource):
-    def get(self):
+    def post(self):
+        # since it's a direct Slack command, you'll need to respond with an error message
+        if datetime.now() > DEADLINE_TIME:
+            return Response('Prediction forms cannot be sent before the start of the next week.')
+
+        # if anyone has submitted a prediction for the week, that means we've sent a form already
+        # block any second form (if it's really necessary, it'll require a programmer to circumvent)
+        if mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
+            return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
+
         message = {
             'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
             'attachments': []
