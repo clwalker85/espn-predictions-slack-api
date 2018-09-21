@@ -187,7 +187,7 @@ class GetSubmittedPredictions(restful.Resource):
         return message
 
 def is_button_selected(element):
-    return element['type'] == 'button' and element['style'] == 'primary'
+    return element['type'] == 'button' and 'style' in element and element['style'] == 'primary'
 
 def is_dropdown_selected(element):
     return element['type'] == 'select' and 'selected_options' in element
