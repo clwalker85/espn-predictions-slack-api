@@ -190,7 +190,7 @@ def is_button_selected(element):
     return element['type'] == 'button' and element['style'] == 'primary'
 
 def is_dropdown_selected(element):
-    return element['type'] == 'select' and element['selected_options']
+    return element['type'] == 'select' and 'selected_options' in element
 
 def format_dropdown_selection(element, form_group, prediction):
     selected = element['selected_options'][0]
