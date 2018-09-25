@@ -219,7 +219,7 @@ class SendPredictionForm(restful.Resource):
 
         # if anyone has submitted a prediction for the week, that means we've sent a form already
         # block any second form (if it's really necessary, it'll require a programmer to circumvent)
-        if mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
+        if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })):
             return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
 
         message = {
