@@ -302,7 +302,7 @@ class SendPredictionForm(restful.Resource):
         # defined in __init__.py
         post_to_slack(message)
 
-        return Response()
+        return Response('Prediction forms successfully sent.')
 
 # WARNING - I saved the most complicated code for the end. If you skipped the stuff above,
 # fucking stop and go reread that shit.
