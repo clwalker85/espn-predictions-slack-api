@@ -71,9 +71,9 @@ LEAGUE_USER_IDS = [m['slack_user_id'] for m in LEAGUE_METADATA['members']]
 # Might have to handle playoffs in a special way
 with app.app_context():
     MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
-        'start_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
+        'start_of_week_time': { '$lte': datetime.now() } }, sort=[('start_of_week_time', -1)])
     LAST_MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
-        'end_of_week_time': { '$lte': datetime.now() } }, sort=[('week', -1)])
+        'end_of_week_time': { '$lte': datetime.now() } }, sort=[('end_of_week_time', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # we won't find the last matchup in week one, so let's just avoid null pointers
