@@ -32,7 +32,7 @@ class Scoreboard(restful.Resource):
         #league = League(LEAGUE_ID, LEAGUE_YEAR)
         #pprint.pformat(league)
         #pprint.pformat(league.scoreboard())
-        return Response()
+        return Response("Bernie was here")
 
 # FIRST TIME LOOKING AT THIS CODE??? Good. Start looking here.
 # Understanding the JSON structure sent back and forth to Slack is key to understanding this code.
