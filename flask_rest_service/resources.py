@@ -213,6 +213,9 @@ def format_dropdown_selection(element, form_group, prediction):
 @api.route('/prediction/form/')
 class SendPredictionForm(restful.Resource):
     def post(self):
+        pprint.pformat(LEAGUE_WEEK)
+        pprint.pformat(DEADLINE_TIME)
+        pprint.pformat(datetime.now())
         # since it's a direct Slack command, you'll need to respond with an error message
         if datetime.now() > DEADLINE_TIME:
             return Response('Prediction forms cannot be sent before the start of the next week.')
