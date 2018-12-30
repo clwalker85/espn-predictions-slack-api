@@ -538,6 +538,9 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
     if candidate_distance_to_pin <= 1:
         current_winners_within_one_point.append(candidate_winner)
+    print(candidate_score)
+    print(candidate_winner)
+    print(current_winners)
 
     if current_winners and current_closest_score:
         current_closest_decimal = Decimal(current_closest_score)
@@ -550,11 +553,6 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
         else:
             return (current_winners, current_closest_score, current_winners_within_one_point)
     # no highest/lowest recorded so far? you're the winner by default
-    print("Default!")
-    print(current_winners)
-    print(current_closest_score)
-    print(candidate_score)
-    print(candidate_winner)
     return ([candidate_winner], candidate_score, current_winners_within_one_point)
 
 def update_prediction_standings(formula_by_user):
