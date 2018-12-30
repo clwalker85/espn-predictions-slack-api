@@ -482,8 +482,6 @@ def build_prediction_stats(result):
             if 'high_score' in prediction:
                 stats['highest_pin_winners'], stats['highest_pin_score'], stats['highest_within_one_point'] = (
                     set_closest_to_pin_variables(username, prediction['high_score'], result['high_score'], stats['highest_pin_winners'], stats['highest_pin_score'], stats['highest_within_one_point']))
-                # TODO - remove this print statement
-                pprint.pformat(stats)
 
         winners['lowest'] += [username
             for g in form_groups for element in g['actions']
@@ -540,18 +538,22 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
     candidate_distance_to_pin = abs(candidate_score_decimal - actual_score_decimal)
     if candidate_distance_to_pin <= 1:
         current_winners_within_one_point.append(candidate_winner)
+    print current_closest_score
 
     if current_winners and current_closest_score:
         current_closest_decimal = Decimal(current_closest_score)
         current_distance_to_pin = abs(current_closest_decimal - actual_score_decimal)
         # rules conference says we should support ties, make it so
         if current_distance_to_pin == candidate_distance_to_pin:
+            print "Tie!"
             return (current_winners.append(candidate_winner), current_closest_score, current_winners_within_one_point)
         elif current_distance_to_pin > candidate_distance_to_pin:
+            print "Someone had a closer score!"
             return ([candidate_winner], candidate_score, current_winners_within_one_point)
         else:
             return (current_winners, current_closest_score, current_winners_within_one_point)
     # no highest/lowest recorded so far? you're the winner by default
+    print "Default!"
     return ([candidate_winner], candidate_score, current_winners_within_one_point)
 
 def update_prediction_standings(formula_by_user):
