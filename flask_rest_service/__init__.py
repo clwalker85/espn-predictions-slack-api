@@ -114,4 +114,4 @@ def post_to_slack(payload):
 
 ### SEE BELOW FOR API ENDPOINT DEFINITIONS ###
 
-import flask_rest_service.resources
+import flask_rest_service.predictions
