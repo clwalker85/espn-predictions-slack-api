@@ -134,7 +134,7 @@ def handle_dialog_submission(payload):
 
 def get_score_text(message):
     return next((a['text']
-        for a in message['attachments'] if a['name'] == 'score_submission' ), '')
+        for a in message['attachments'] if 'fallback' in a and a['fallback'] == 'Enter Scores' ), '')
 
 def get_form_from_database(payload):
     username = payload['user']['name']
@@ -348,6 +348,7 @@ class SendPredictionForm(restful.Resource):
 
         message['attachments'].append({
             'text': ':x: No submission for high/low score yet',
+            'fallback': 'Enter Scores',
             'attachment_type': 'default',
             'callback_id': callback_id,
             'actions': [
