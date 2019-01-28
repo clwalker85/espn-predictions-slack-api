@@ -92,13 +92,14 @@ DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p')
 
 ### GENERAL PURPOSE METHODS (not API related) ###
 
+# requires 'text' (string) and 'attachments' (JSON) to be defined in the payload
 def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = SlackClient(slack_token)
 
     for user_id in LEAGUE_USER_IDS:
 				# uncomment this line to send shit only to Walker
-        #if user_id in [ 'U3NE3S6CQ' ]:
+        if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.api_call('im.open', user=user_id)
 
             if 'channel' in channel:
@@ -112,6 +113,34 @@ def post_to_slack(payload):
             )
     return
 
+# requires 'trigger_id' (string) and 'dialog' (JSON) to be defined in the payload
+def open_dialog(payload):
+    slack_token = os.environ['SLACK_API_TOKEN']
+    sc = SlackClient(slack_token)
+
+    sc.api_call("dialog.open",
+        trigger_id=payload['trigger_id'],
+        dialog=payload['dialog']
+    )
+    return
+
+# requires 'user_id', 'message_ts', 'text' (all strings),
+# and 'attachments' (JSON) to be defined in the payload
+def update_message(payload):
+    slack_token = os.environ['SLACK_API_TOKEN']
+    sc = SlackClient(slack_token)
+
+    channel = sc.api_call('im.open', user=payload['user_id'])
+
+    sc.api_call("chat.update",
+        channel=channel['id'],
+        ts=payload['message_ts'],
+        text=payload['text'],
+        attachments=payload['attachments']
+    )
+    return
+
 ### SEE BELOW FOR API ENDPOINT DEFINITIONS ###
 
 import flask_rest_service.predictions
+import flask_rest_service.scoreboard

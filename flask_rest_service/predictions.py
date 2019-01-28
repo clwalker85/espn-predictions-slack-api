@@ -10,29 +10,10 @@ from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
+from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
 
 # we gotta reuse this formula in several spots, so defining it here
 PREDICTION_FORMULA = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
-
-# simple proof of concept that I could get Mongo working in Heroku
-@api.route('/')
-class Root(restful.Resource):
-    def get(self):
-        return {
-            'status': 'OK',
-            'mongo': str(mongo.db),
-        }
-
-# TODO - Add a scoreboard command when the ESPN API can be used with our league
-# https://github.com/rbarton65/espnff/pull/41
-@api.route('/scoreboard/')
-class Scoreboard(restful.Resource):
-    def post(self):
-        #league = League(LEAGUE_ID, LEAGUE_YEAR)
-        #pprint.pformat(league)
-        #pprint.pformat(league.scoreboard())
-        return Response("Bernie was here")
 
 # FIRST TIME LOOKING AT THIS CODE??? Good. Start looking here.
 # Understanding the JSON structure sent back and forth to Slack is key to understanding this code.
@@ -61,35 +42,50 @@ class SavePredictionFromSlack(restful.Resource):
 
         # block the prediction submission if it's after the deadline
         # an empty response to an interactive message action will make sure
-        # the original message is unchanged, so it'll appear the form is unchanged and unresponsive
+        # the original message is unchanged, so it'll appear the form is unresponsive
         if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
             return Response()
 
-        username = payload['user']['name']
-        database_key = { 'username': username, 'year': year, 'week': week }
-        message = payload['original_message']
+        message_type = payload['type']
         actions = payload['actions']
 
-        # loop through each interactive message action, basically what changed
-        for action in actions:
-            # find the prediction form element that matches the action name and style that bitch
-            for a in message['attachments']:
-                for element in a['actions']:
-                    if action['name'] == element['name']:
-                        style_form_with_action(element, action, a)
+        # dialog open/submit are the only reasons to not return an immediate response
+        # see the return at the bottom of this method for more details
+        if message_type == 'dialog_submission':
+            handle_dialog_submission(payload)
+            return Response()
+        elif any(a['name'] == 'score_submission' for a in actions):
+            handle_dialog_display(payload)
+            return Response()
 
-        # save that shit every time, and mark the last time they saved
-        mongo.db.predictions.update(database_key, {
-            '$set': {
-                'message': message,
-                'last_modified': datetime.now()
-            },
-        # insert if you need to, and make sure to guarantee one record per user and year/week
-        }, upsert=True, multi=False)
+        add_styling_to_prediction_form(payload)
+
+        save_form_to_database(payload)
 
         # Slack replaces old prediction form with any immediate response,
         # so return the form again with any selected buttons styled
-        return message
+        return payload['original_message']
+
+def handle_dialog_display(payload):
+    trigger_id = payload['trigger_id']
+
+    # defined in __init__.py
+    open_dialog({
+        'trigger_id': trigger_id,
+        'dialog': build_dialog(payload)
+    })
+
+def add_styling_to_prediction_form(payload):
+    actions = payload['actions']
+    message = payload['original_message']
+
+    # loop through each interactive message action, basically what changed
+    for action in actions:
+        # find the prediction form element that matches the action name and style that bitch
+        for a in message['attachments']:
+            for element in a['actions']:
+                if action['name'] == element['name']:
+                    style_form_with_action(element, action, a)
 
 def style_form_with_action(element, action, form_group):
     # color that portion of the form to show it was changed
@@ -109,49 +105,75 @@ def style_form_with_action(element, action, form_group):
         element['selected_options'] = [option
             for option in element['options'] if option['value'] == selected['value']]
 
-@api.route('/prediction/score/')
-class SaveScorePrediction(restful.Resource):
-    def post(self):
-        # since it's a direct Slack command, you'll need to respond with an error message
-        if datetime.now() > DEADLINE_TIME:
-            return Response('Prediction not saved for week ' + LEAGUE_WEEK + '. Deadline of ' + DEADLINE_STRING + ' has passed.')
+def handle_dialog_submission(payload):
+    user_id = payload['user']['id']
+    message = get_form_from_database(payload)
+    score_text = get_score_text(payload)
+    high_score = payload['submission']['high_score']
+    low_score = payload['submission']['low_score']
 
-        # for direct Slack commands, you don't get a payload like an interactive message action,
-        # you have to parse the text of the parameters
-        text = request.form.get('text', None)
-        username = request.form.get('user_name', None)
-        database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }
-        param = text.split()
+    try:
+        high_decimal = Decimal(param[0])
+        low_decimal = Decimal(param[1])
 
-        if len(param) < 2:
-            return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Type in two numbers to the score-prediction command for highest and lowest score next time.')
+        score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
+        save_scores_to_database(payload, message, high_decimal, low_decimal)
+    except:
+        score_text = ':x: Prediction *NOT* saved. Type in valid decimal numbers next time.'
+        save_form_to_database(payload)
 
-        try:
-            first_score = Decimal(param[0])
-            second_score = Decimal(param[1])
-            high_score = param[0]
-            low_score = param[1]
+    # defined in __init__.py
+    update_message({
+        'user_id': user_id,
+        # we passed the message_ts when the dialog was built through 'state'
+        'message_ts': payload['state'],
+        'text': message['text'],
+        'attachments': message['attachments']
+    })
 
-            # we don't care about the order of these params
-            if first_score < second_score:
-                high_score = param[1]
-                low_score = param[0]
+def get_score_text(payload):
+    return next((a['text']
+        for a in message['attachments'] if a['name'] == 'score_submission' ), '')
 
-            mongo.db.predictions.update(database_key, {
-                '$set': {
-                    'high_score': high_score,
-                    'low_score': low_score,
-                    'last_modified': datetime.now()
-                },
-            }, upsert=True, multi=False)
+def get_form_from_database(payload):
+    username = payload['user']['name']
+    # seemed like the best way to store the year and week inside the prediction form
+    year, week = payload['callback_id'].split("-")
+    database_key = { 'username': username, 'year': year, 'week': week }
+    return mongo.db.predictions.find(database_key)
 
-            return Response('Prediction successfully saved for week ' + LEAGUE_WEEK + '! High score: ' + high_score + ', low score: ' + low_score)
-        except:
-            return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '. Type in valid decimal numbers next time.')
+def save_form_to_database(payload):
+    message = payload['original_message']
+    username = payload['user']['name']
+    # seemed like the best way to store the year and week inside the prediction form
+    year, week = payload['callback_id'].split("-")
+    database_key = { 'username': username, 'year': year, 'week': week }
 
-        return Response('Prediction *NOT* saved for week ' + LEAGUE_WEEK + '.')
+    mongo.db.predictions.update(database_key, {
+        '$set': {
+            'message': message,
+            'last_modified': datetime.now()
+        },
+    # insert if you need to, and make sure to guarantee one record per user and year/week
+    }, upsert=True, multi=False)
 
-# This method loops through any saved predictions for the current week and posts them
+def save_scores_to_database(payload, message, high_score, low_score):
+    username = payload['user']['name']
+    # seemed like the best way to store the year and week inside the prediction form
+    year, week = payload['callback_id'].split("-")
+    database_key = { 'username': username, 'year': year, 'week': week }
+
+    mongo.db.predictions.update(database_key, {
+        '$set': {
+            'message': message,
+            'high_score': high_score,
+            'low_score': low_score,
+            'last_modified': datetime.now()
+        },
+    # insert if you need to, and make sure to guarantee one record per user and year/week
+    }, upsert=True, multi=False)
+
+# This endpoint loops through any saved predictions for the current week and posts them
 # in response to whoever ran the command in Slack. It's also a good way to understand the
 # JSON object that's passed back and forth (and saved) for predictions.
 @api.route('/prediction/submissions/')
@@ -206,6 +228,30 @@ def format_dropdown_selection(element, form_group, prediction):
             selected_string += ', ' + prediction['low_score']
 
     return selected_string
+
+def build_dialog(payload):
+    return {
+        'callback_id': payload['callback_id'],
+        'title': 'Enter your score predictions here:',
+        'submit_label': 'Submit Scores',
+        # state is the best way to pass internal data to the dialog;
+        # in this case, I'm passing the message_ts so the original message can be updated
+        'state': payload['message_ts'],
+        'elements': [
+            {
+                'type': 'text',
+                'subtype': 'number',
+                'label': 'High Score',
+                'name': 'high_score'
+            },
+            {
+                'type': 'text',
+                'subtype': 'number',
+                'label': 'Low Score',
+                'name': 'low_score'
+            }
+        ]
+    }
 
 # This is how the sausage is made. This code is pretty boring, but it lays out pretty explicitly
 # the JSON that makes up the prediction form. See the "interactive message" docs for more details:
@@ -298,6 +344,20 @@ class SendPredictionForm(restful.Resource):
         dropdown['fallback'] = 'Lowest'
         dropdown['actions'][0]['name'] = 'lowest'
         message['attachments'].append(dropdown)
+
+        message['attachments'].append({
+            'text': ':x: No submission for high/low score yet',
+            'attachment_type': 'default',
+            'callback_id': callback_id,
+            'actions': [
+                {
+                    'name': 'score_submission',
+                    'text': 'Enter Scores',
+                    'type': 'button',
+                    'value': 'score_submission'
+                }
+            ]
+        })
 
         # defined in __init__.py
         post_to_slack(message)
