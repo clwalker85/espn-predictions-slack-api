@@ -46,7 +46,7 @@ class SavePredictionFromSlack(restful.Resource):
             return Response()
 
         message_type = payload['type']
-        actions = payload['actions']
+        actions = payload['actions'] if 'actions' in payload else []
 
         # dialog open/submit are the only reasons to not return an immediate response
         # see the return at the bottom of this method for more details
