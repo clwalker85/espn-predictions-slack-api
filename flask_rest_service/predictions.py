@@ -107,7 +107,7 @@ def style_element_with_action(element, action, form_group):
 def handle_dialog_submission(payload):
     user_id = payload['user']['id']
     message = get_form_from_database(payload)
-    score_text = get_score_text(payload)
+    score_text = get_score_text(message)
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
@@ -130,7 +130,7 @@ def handle_dialog_submission(payload):
         'attachments': message['attachments']
     })
 
-def get_score_text(payload):
+def get_score_text(message):
     return next((a['text']
         for a in message['attachments'] if a['name'] == 'score_submission' ), '')
 
