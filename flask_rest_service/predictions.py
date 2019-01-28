@@ -113,12 +113,12 @@ def handle_dialog_submission(payload):
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
-    print(high_score)
-    print(low_score)
-
     try:
+        print('before decimal conversion')
         high_decimal = Decimal(high_score)
         low_decimal = Decimal(low_score)
+        print(high_decimal)
+        print(low_decimal)
 
         score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
         save_scores_to_database(payload, message, high_decimal, low_decimal)
