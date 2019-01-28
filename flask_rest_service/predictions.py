@@ -121,7 +121,7 @@ def handle_dialog_submission(payload):
         save_scores_to_database(payload, message, high_decimal, low_decimal)
     except:
         score_text = ':x: Prediction *NOT* saved. Type in valid decimal numbers next time.'
-        save_form_to_database(payload)
+        save_scores_to_database(payload, message)
 
     # defined in __init__.py
     update_message({
