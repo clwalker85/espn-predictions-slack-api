@@ -231,8 +231,8 @@ def format_dropdown_selection(element, form_group, prediction):
 def build_dialog(payload):
     return {
         'callback_id': payload['callback_id'],
-        'title': 'Enter your score predictions here:',
-        'submit_label': 'Submit Scores',
+        'title': 'Score Predictions',
+        'submit_label': 'Submit',
         # state is the best way to pass internal data to the dialog;
         # in this case, I'm passing the message_ts so the original message can be updated
         'state': payload['message_ts'],
