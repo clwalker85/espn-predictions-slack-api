@@ -129,6 +129,8 @@ def update_message(payload):
     sc = SlackClient(slack_token)
 
     channel = sc.api_call('im.open', user=payload['user_id'])
+    if 'channel' in channel:
+        channel = channel['channel']
 
     sc.api_call("chat.update",
         channel=channel['id'],
