@@ -20,8 +20,8 @@ PREDICTION_FORMULA = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['clos
 
 # First, we send an "interactive message" to slack, which ends up looking like the prediction form:
 # - https://api.slack.com/interactive-messages
-# - See the send_prediction_form function for more details on how this JSON structure is built.
-# - See the post_to_slack function in __init__.py for details on how this is sent to people in Slack.
+# - See the send_prediction_form function for more details on how this JSON structure is built
+# - See the post_to_slack function in __init__.py for details on how this is sent to people in Slack
 
 # Second, when someone clicks on a button in this prediction form, the response is sent to this
 # function. This code is a guide to finding the important info in the JSON, particularly how to
