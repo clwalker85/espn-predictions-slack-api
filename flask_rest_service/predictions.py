@@ -48,6 +48,8 @@ class SavePredictionFromSlack(restful.Resource):
 
         message_type = payload['type']
         actions = payload['actions']
+        print(message_type)
+        print(actions)
 
         # dialog open/submit are the only reasons to not return an immediate response
         # see the return at the bottom of this method for more details
@@ -85,9 +87,9 @@ def add_styling_to_prediction_form(payload):
         for a in message['attachments']:
             for element in a['actions']:
                 if action['name'] == element['name']:
-                    style_form_with_action(element, action, a)
+                    style_element_with_action(element, action, a)
 
-def style_form_with_action(element, action, form_group):
+def style_element_with_action(element, action, form_group):
     # color that portion of the form to show it was changed
     form_group['color'] = 'good'
 
