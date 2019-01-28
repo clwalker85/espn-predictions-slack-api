@@ -114,8 +114,8 @@ def handle_dialog_submission(payload):
     low_score = payload['submission']['low_score']
 
     try:
-        high_decimal = Decimal(param[0])
-        low_decimal = Decimal(param[1])
+        high_decimal = Decimal(high_score)
+        low_decimal = Decimal(low_score)
 
         score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
         save_scores_to_database(payload, message, high_decimal, low_decimal)
@@ -133,8 +133,9 @@ def handle_dialog_submission(payload):
     })
 
 def get_score_text(message):
-    return next((a['text']
-        for a in message['attachments'] if 'fallback' in a and a['fallback'] == 'Enter Scores' ), '')
+    attachments = [a['text'] for a in message['attachments']]
+    # HACK - this code assumes the scores button is at the bottom of the form
+    return attachments[-1] if attachments else ''
 
 def get_form_from_database(payload):
     username = payload['user']['name']
