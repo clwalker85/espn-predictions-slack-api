@@ -229,8 +229,6 @@ def format_dropdown_selection(element, form_group, prediction):
     return selected_string
 
 def build_dialog(payload):
-    print(payload['callback_id'])
-    print(payload['message_ts'])
     return {
         'callback_id': payload['callback_id'],
         'title': 'Enter your score predictions here:',

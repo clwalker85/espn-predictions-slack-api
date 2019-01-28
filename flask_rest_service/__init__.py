@@ -119,10 +119,13 @@ def open_dialog(payload):
 
     print(payload)
 
-    sc.api_call("dialog.open",
+    open_dialog = sc.api_call("dialog.open",
         trigger_id=payload['trigger_id'],
         dialog=payload['dialog']
     )
+
+    print('open_dialog call')
+    print(open_dialog)
 
 # requires 'user_id', 'message_ts', 'text' (all strings),
 # and 'attachments' (JSON) to be defined in the payload
@@ -132,12 +135,15 @@ def update_message(payload):
 
     channel = sc.api_call('im.open', user=payload['user_id'])
 
-    sc.api_call("chat.update",
+    update = sc.api_call("chat.update",
         channel=channel['id'],
         ts=payload['message_ts'],
         text=payload['text'],
         attachments=payload['attachments']
     )
+
+    print('update_message call')
+    print(update)
 
 ### SEE BELOW FOR API ENDPOINT DEFINITIONS ###
 
