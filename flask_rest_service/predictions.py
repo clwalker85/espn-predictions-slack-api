@@ -113,6 +113,9 @@ def handle_dialog_submission(payload):
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
+    print(high_score)
+    print(low_score)
+
     try:
         high_decimal = Decimal(high_score)
         low_decimal = Decimal(low_score)
@@ -120,7 +123,7 @@ def handle_dialog_submission(payload):
         score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
         save_scores_to_database(payload, message, high_decimal, low_decimal)
     except:
-        score_text = ':x: Prediction *NOT* saved. Type in valid decimal numbers next time.'
+        score_text = ':x: Type in valid decimal numbers next time. No score predictions currently saved.'
         save_scores_to_database(payload, message, None, None)
 
     # defined in __init__.py
