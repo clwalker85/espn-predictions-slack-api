@@ -1,6 +1,5 @@
 import os
 import json
-import pprint
 import requests
 import traceback
 import copy
@@ -48,8 +47,6 @@ class SavePredictionFromSlack(restful.Resource):
 
         message_type = payload['type']
         actions = payload['actions']
-        print(message_type)
-        print(actions)
 
         # dialog open/submit are the only reasons to not return an immediate response
         # see the return at the bottom of this method for more details
@@ -232,6 +229,8 @@ def format_dropdown_selection(element, form_group, prediction):
     return selected_string
 
 def build_dialog(payload):
+    print(payload['callback_id'])
+    print(payload['message_ts'])
     return {
         'callback_id': payload['callback_id'],
         'title': 'Enter your score predictions here:',

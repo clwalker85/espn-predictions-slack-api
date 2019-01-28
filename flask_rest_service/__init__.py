@@ -111,18 +111,18 @@ def post_to_slack(payload):
                 attachments=payload['attachments'],
                 as_user=False
             )
-    return
 
 # requires 'trigger_id' (string) and 'dialog' (JSON) to be defined in the payload
 def open_dialog(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = SlackClient(slack_token)
 
+    print(payload)
+
     sc.api_call("dialog.open",
         trigger_id=payload['trigger_id'],
         dialog=payload['dialog']
     )
-    return
 
 # requires 'user_id', 'message_ts', 'text' (all strings),
 # and 'attachments' (JSON) to be defined in the payload
@@ -138,7 +138,6 @@ def update_message(payload):
         text=payload['text'],
         attachments=payload['attachments']
     )
-    return
 
 ### SEE BELOW FOR API ENDPOINT DEFINITIONS ###
 
