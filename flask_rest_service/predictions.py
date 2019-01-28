@@ -106,7 +106,9 @@ def style_element_with_action(element, action, form_group):
 
 def handle_dialog_submission(payload):
     user_id = payload['user']['id']
-    message = get_form_from_database(payload)
+    prediction_cursor = get_form_from_database(payload)
+    prediction = next(prediction)
+    message = prediction['message']
     score_text = get_score_text(next(message))
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
