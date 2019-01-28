@@ -109,7 +109,7 @@ def handle_dialog_submission(payload):
     prediction_cursor = get_form_from_database(payload)
     prediction = next(prediction_cursor)
     message = prediction['message']
-    score_text = get_score_text(next(message))
+    score_text = get_score_text(message)
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
