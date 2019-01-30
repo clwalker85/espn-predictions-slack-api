@@ -113,6 +113,9 @@ def handle_dialog_submission(payload):
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
+    # color that portion of the form to show it was changed
+    score_button['color'] = 'good'
+
     try:
         high_decimal = Decimal(high_score)
         low_decimal = Decimal(low_score)
