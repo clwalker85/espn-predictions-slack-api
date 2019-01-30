@@ -109,7 +109,7 @@ def handle_dialog_submission(payload):
     prediction_cursor = get_form_from_database(payload)
     prediction = next(prediction_cursor)
     message = prediction['message']
-    score_text = get_score_text(message)
+    score_button = get_score_button(message)
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
 
@@ -117,17 +117,13 @@ def handle_dialog_submission(payload):
         high_decimal = Decimal(high_score)
         low_decimal = Decimal(low_score)
 
-        score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
+        score_button['text'] = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
         save_scores_to_database(payload, message, high_score, low_score)
     except:
-        score_text = ':x: Type in valid decimal numbers next time. No score predictions currently saved.'
+        score_button['text'] = ':x: Type in valid decimal numbers next time. No score predictions currently saved.'
         save_scores_to_database(payload, message, None, None)
 
     # defined in __init__.py
-    print(user_id)
-    print(payload['state'])
-    print(message)
-    print(score_text)
     update_message({
         'user_id': user_id,
         # we passed the message_ts when the dialog was built through 'state'
@@ -136,8 +132,8 @@ def handle_dialog_submission(payload):
         'attachments': message['attachments']
     })
 
-def get_score_text(message):
-    attachments = [a['text'] for a in message['attachments']]
+def get_score_button(message):
+    attachments = [a for a in message['attachments']]
     # HACK - this code assumes the scores button is at the bottom of the form
     return attachments[-1] if attachments else ''
 
