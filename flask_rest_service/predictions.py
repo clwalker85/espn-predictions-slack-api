@@ -121,7 +121,7 @@ def handle_dialog_submission(payload):
         print(low_decimal)
 
         score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
-        save_scores_to_database(payload, message, high_decimal, low_decimal)
+        save_scores_to_database(payload, message, high_score, low_score)
     except:
         score_text = ':x: Type in valid decimal numbers next time. No score predictions currently saved.'
         save_scores_to_database(payload, message, None, None)
