@@ -114,11 +114,8 @@ def handle_dialog_submission(payload):
     low_score = payload['submission']['low_score']
 
     try:
-        print('before decimal conversion')
         high_decimal = Decimal(high_score)
         low_decimal = Decimal(low_score)
-        print(high_decimal)
-        print(low_decimal)
 
         score_text = ':heavy_check_mark: High score: ' + high_score + ', low score: ' + low_score
         save_scores_to_database(payload, message, high_score, low_score)
@@ -127,6 +124,9 @@ def handle_dialog_submission(payload):
         save_scores_to_database(payload, message, None, None)
 
     # defined in __init__.py
+    print(user_id)
+    print(payload['state'])
+    print(message)
     update_message({
         'user_id': user_id,
         # we passed the message_ts when the dialog was built through 'state'
