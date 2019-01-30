@@ -127,6 +127,7 @@ def handle_dialog_submission(payload):
     print(user_id)
     print(payload['state'])
     print(message)
+    print(score_text)
     update_message({
         'user_id': user_id,
         # we passed the message_ts when the dialog was built through 'state'
