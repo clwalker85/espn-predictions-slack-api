@@ -130,6 +130,7 @@ def handle_dialog_submission(payload):
     update_message({
         'user_id': user_id,
         # we passed the message_ts when the dialog was built through 'state'
+        # see build_dialog for more details
         'message_ts': payload['state'],
         'text': message['text'],
         'attachments': message['attachments']
@@ -352,7 +353,6 @@ class SendPredictionForm(restful.Resource):
 
         message['attachments'].append({
             'text': ':x: No submission for high/low score yet',
-            'fallback': 'Enter Scores',
             'attachment_type': 'default',
             'callback_id': callback_id,
             'actions': [
