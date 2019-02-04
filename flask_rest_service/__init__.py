@@ -76,7 +76,6 @@ with app.app_context():
         'end_of_week_time': { '$lte': datetime.now() } }, sort=[('end_of_week_time', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
-print(MATCHUP_METADATA)
 # we won't find the last matchup in week one, so let's just avoid null pointers
 if not LAST_MATCHUP_METADATA:
     LAST_MATCHUP_METADATA = MATCHUP_METADATA
