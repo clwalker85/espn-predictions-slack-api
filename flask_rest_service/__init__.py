@@ -60,7 +60,6 @@ with app.app_context():
 
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 LEAGUE_YEAR = LEAGUE_METADATA['year']
-print(LEAGUE_METADATA)
 # python-ish way to return plucked value in array of dictionaries
 LEAGUE_MEMBERS = [m['display_name'] for m in LEAGUE_METADATA['members']]
 LEAGUE_USERNAMES = [m['slack_username'] for m in LEAGUE_METADATA['members']]
@@ -77,6 +76,7 @@ with app.app_context():
         'end_of_week_time': { '$lte': datetime.now() } }, sort=[('end_of_week_time', -1)])
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
+print(MATCHUP_METADATA)
 # we won't find the last matchup in week one, so let's just avoid null pointers
 if not LAST_MATCHUP_METADATA:
     LAST_MATCHUP_METADATA = MATCHUP_METADATA
