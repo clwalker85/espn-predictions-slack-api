@@ -48,14 +48,15 @@ class SavePredictionFromSlack(restful.Resource):
         message_type = payload['type']
         actions = payload['actions'] if 'actions' in payload else []
 
-        # dialog open/submit are the only reasons to not return an immediate response
+        # dialog submit is the only reason to not return an immediate response
         # see the return at the bottom of this method for more details
         if message_type == 'dialog_submission':
             handle_dialog_submission(payload)
             return Response()
+        # we still want to style and save the form on dialog open
+        # HACK - this saves a form with no selections if dialog open is first action
         elif any(a['name'] == 'score_submission' for a in actions):
             handle_dialog_display(payload)
-            return Response()
 
         add_styling_to_prediction_form(payload)
 
@@ -112,9 +113,6 @@ def handle_dialog_submission(payload):
     score_button = get_score_button(message)
     high_score = payload['submission']['high_score']
     low_score = payload['submission']['low_score']
-
-    # color that portion of the form to show it was changed
-    score_button['color'] = 'good'
 
     try:
         high_decimal = Decimal(high_score)
@@ -271,8 +269,9 @@ class SendPredictionForm(restful.Resource):
 
         # if anyone has submitted a prediction for the week, that means we've sent a form already
         # block any second form (if it's really necessary, it'll require a programmer to circumvent)
-        if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })):
-            return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
+        # TODO - remove this comment below
+        #if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })):
+        #    return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
 
         message = {
             'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
