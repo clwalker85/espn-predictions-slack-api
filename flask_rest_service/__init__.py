@@ -8,7 +8,7 @@ from datetime import datetime, time
 from flask import Flask, jsonify
 from flask.ext import restful
 from flask.ext.pymongo import PyMongo
-from slackclient import SlackClient
+from slack import SlackClient
 
 ### APP CONFIG AND SETUP (set it and forget it, nothing to do with business logic)
 
