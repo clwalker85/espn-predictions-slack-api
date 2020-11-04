@@ -101,12 +101,7 @@ def post_to_slack(payload):
 	# uncomment this line to send shit only to Walker
         if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.conversations_open(users=user_id)
-
-            if 'channel' in channel:
-                channel = channel['channel']
-
-            print(channel)
-            print(channel['channel'])
+            channel = channel['channel']
 
             sc.chat_postMessage(
                 channel=channel['id'],
@@ -132,11 +127,7 @@ def update_message(payload):
     sc = WebClient(token=slack_token)
 
     channel = sc.conversations_open(users=payload['user_id'])
-
-    if 'channel' in channel:
-        channel = channel['channel']
-
-    print(channel)
+    channel = channel['channel']
 
     sc.chat_update(
         channel=channel['id'],
