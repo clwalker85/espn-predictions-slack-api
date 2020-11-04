@@ -101,6 +101,7 @@ def post_to_slack(payload):
 	# uncomment this line to send shit only to Walker
         if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.conversations_open(users=user_id)
+            print(channel)
 
             if 'channel' in channel:
                 channel = channel['channel']
@@ -109,7 +110,7 @@ def post_to_slack(payload):
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
-                #as_user=False
+                as_user=False
             )
 
 # requires 'trigger_id' (string) and 'dialog' (JSON) to be defined in the payload
