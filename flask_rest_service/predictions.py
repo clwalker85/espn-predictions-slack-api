@@ -236,7 +236,6 @@ def format_dropdown_selection(element, form_group, prediction):
 
 def build_dialog(payload):
     return {
-        'type': 'modal',
         'callback_id': payload['callback_id'],
         'title': 'Score Predictions',
         'submit_label': 'Submit',
