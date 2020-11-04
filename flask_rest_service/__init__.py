@@ -104,14 +104,12 @@ def post_to_slack(payload):
 
             if 'channel' in channel:
                 channel = channel['channel']
-                print(channel)
-                sys.stdout.flush()
 
             sc.chat_postMessage(
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
-                as_user=False
+                #as_user=False
             )
 
 # requires 'trigger_id' (string) and 'dialog' (JSON) to be defined in the payload
@@ -133,8 +131,6 @@ def update_message(payload):
     channel = sc.conversations_open(users=payload['user_id'])
     if 'channel' in channel:
         channel = channel['channel']
-        print(channel)
-        sys.stdout.flush()
 
     sc.chat_update(
         channel=channel['id'],
