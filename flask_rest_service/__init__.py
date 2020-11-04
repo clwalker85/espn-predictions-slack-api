@@ -100,7 +100,7 @@ def post_to_slack(payload):
     for user_id in LEAGUE_USER_IDS:
 	# uncomment this line to send shit only to Walker
         if user_id in [ 'U3NE3S6CQ' ]:
-            channel = sc.im_open(user=user_id)
+            channel = sc.conversations_open(user=user_id)
 
             if 'channel' in channel:
                 channel = channel['channel']
@@ -128,7 +128,7 @@ def update_message(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = WebClient(token=slack_token)
 
-    channel = sc.im_open(user=payload['user_id'])
+    channel = sc.conversations_open(user=payload['user_id'])
     if 'channel' in channel:
         channel = channel['channel']
 
