@@ -105,7 +105,7 @@ def post_to_slack(payload):
             if 'channel' in channel:
                 channel = channel['channel']
 
-            sc.api_call("chat.postMessage",
+            sc.chat_postMessage(
                 channel=channel['id'],
                 text=payload['text'],
                 attachments=payload['attachments'],
@@ -117,7 +117,7 @@ def open_dialog(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = RTMClient(token=slack_token)
 
-    sc.api_call("dialog.open",
+    sc.dialog_open(
         trigger_id=payload['trigger_id'],
         dialog=payload['dialog']
     )
@@ -128,11 +128,11 @@ def update_message(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = RTMClient(token=slack_token)
 
-    channel = sc.api_call('im.open', user=payload['user_id'])
+    channel = sc.im_open(user=payload['user_id'])
     if 'channel' in channel:
         channel = channel['channel']
 
-    sc.api_call("chat.update",
+    sc.chat_update(
         channel=channel['id'],
         ts=payload['message_ts'],
         text=payload['text'],
