@@ -7,7 +7,7 @@ Werkzeug==0.9.6
 aniso8601==0.82
 gunicorn==19.0.0
 itsdangerous==0.24
-pymongo==2.8.0
+pymongo==3.9.0
 pytz==2014.4
 six==1.7.2
 requests
