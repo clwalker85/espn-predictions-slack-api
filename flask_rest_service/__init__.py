@@ -105,6 +105,7 @@ def post_to_slack(payload):
             if 'channel' in channel:
                 channel = channel['channel']
                 print(channel)
+                sys.stdout.flush()
 
             sc.chat_postMessage(
                 channel=channel['id'],
@@ -133,6 +134,7 @@ def update_message(payload):
     if 'channel' in channel:
         channel = channel['channel']
         print(channel)
+        sys.stdout.flush()
 
     sc.chat_update(
         channel=channel['id'],
