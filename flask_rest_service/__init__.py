@@ -99,7 +99,7 @@ def post_to_slack(payload):
 
     for user_id in LEAGUE_USER_IDS:
 	# uncomment this line to send shit only to Walker
-        if user_id in [ 'U3NE3S6CQ' ]:
+        #if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.conversations_open(users=user_id)
             channel = channel['channel']
 
