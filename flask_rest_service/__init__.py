@@ -8,7 +8,7 @@ from datetime import datetime, time
 from flask import Flask, jsonify
 from flask.ext import restful
 from flask.ext.pymongo import PyMongo
-from slack import RTMClient
+from slack import WebClient
 
 ### APP CONFIG AND SETUP (set it and forget it, nothing to do with business logic)
 
@@ -95,7 +95,7 @@ DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p')
 # requires 'text' (string) and 'attachments' (JSON) to be defined in the payload
 def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
-    sc = RTMClient(token=slack_token)
+    sc = WebClient(token=slack_token)
 
     for user_id in LEAGUE_USER_IDS:
 	# uncomment this line to send shit only to Walker
@@ -115,7 +115,7 @@ def post_to_slack(payload):
 # requires 'trigger_id' (string) and 'dialog' (JSON) to be defined in the payload
 def open_dialog(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
-    sc = RTMClient(token=slack_token)
+    sc = WebClient(token=slack_token)
 
     sc.views_open(
         trigger_id=payload['trigger_id'],
@@ -126,7 +126,7 @@ def open_dialog(payload):
 # and 'attachments' (JSON) to be defined in the payload
 def update_message(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
-    sc = RTMClient(token=slack_token)
+    sc = WebClient(token=slack_token)
 
     channel = sc.conversations_open(user=payload['user_id'])
     if 'channel' in channel:
