@@ -26,7 +26,7 @@ handler.formatter = logging.Formatter(
 )
 app.logger.addHandler(handler)
 
-MONGO_URL = os.environ.get('MONGODB_URI')
+MONGO_URL = os.environ.get('MONGOATLASDB_URI')
 if not MONGO_URL:
     MONGO_URL = "mongodb://localhost:27017/rest";
 app.config['MONGO_URI'] = MONGO_URL
