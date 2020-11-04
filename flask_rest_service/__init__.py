@@ -106,6 +106,7 @@ def post_to_slack(payload):
                 channel = channel['channel']
 
             print(channel)
+            print(channel['channel'])
 
             sc.chat_postMessage(
                 channel=channel['id'],
