@@ -24,6 +24,22 @@ class Root(restful.Resource):
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
     def post(self):
+        # for direct Slack commands, you don't get a payload like an interactive message action,
+        # you have to parse the text of the parameters
+        text = request.form.get('text', None)
+        param = text.split()
+        query_type = param[0]
+
+        message = {
+            'response_type': 'in_channel',
+            'text': '',
+            'attachments': []
+        }
+
+        #if query_type == 'help':
+        #message['attachments'].append({ 'text': prediction_string })
+
+
         #league = League(LEAGUE_ID, LEAGUE_YEAR)
         #pprint.pformat(league)
         #pprint.pformat(league.scoreboard())
