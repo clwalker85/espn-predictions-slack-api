@@ -114,9 +114,9 @@ class GetHeadToHeadHistory(restful.Resource):
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
                 if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + str(manager_one_consolation_wins) + '-' + manager_two_consolation_wins + 'in consolation'
+                    matchup_string += ', ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + 'in consolation'
                 else:
-                    matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + manager_one_consolation_wins + 'in consolation'
+                    matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + 'in consolation'
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
