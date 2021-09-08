@@ -79,9 +79,9 @@ class GetHeadToHeadHistory(restful.Resource):
             matchup_string = ''
 
             if manager_one_wins > manager_two_wins:
-                matchup_string += manager_one + ' ' + manager_one_wins + '-' + manager_two_wins + ' ' + manager_two
+                matchup_string += manager_one + ' ' + str(manager_one_wins) + '-' + str(manager_two_wins) + ' ' + manager_two
             else:
-                matchup_string += manager_two + ' ' + manager_two_wins + '-' + manager_one_wins + ' ' + manager_one
+                matchup_string += manager_two + ' ' + str(manager_two_wins) + '-' + str(manager_one_wins) + ' ' + manager_one
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
