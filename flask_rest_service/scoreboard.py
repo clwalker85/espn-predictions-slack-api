@@ -67,39 +67,35 @@ class GetHeadToHeadHistory(restful.Resource):
 
             # this matches co-owners stored as an array, too
             # TODO - reuse a dictionary we modify over and over for the filters below
-            manager_one_reg_season_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            manager_one_reg_season_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
                     'loser': manager_two_id,
-                }, 'playoffs': False } }).count()
-            manager_one_playoff_wins = 0
-#            manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-#                    'winner': manager_one_id,
-#                    'loser': manager_two_id,
-#                    'consolation': { '$in': [ None, False ] }
-#                }, 'playoffs': True } }).count()
-            manager_one_consolation_wins = 0
-#            manager_one_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-#                    'winner': manager_one_id,
-#                    'loser': manager_two_id,
-#                    'consolation': True
-#                }, 'playoffs': True } }).count()
+                }, 'playoffs': False } ] }).count()
+            manager_one_playoff_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
+                    'winner': manager_one_id,
+                    'loser': manager_two_id,
+                    'consolation': { '$in': [ None, False ] }
+                }, 'playoffs': True } ] }).count()
+            manager_one_consolation_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
+                    'winner': manager_one_id,
+                    'loser': manager_two_id,
+                    'consolation': True
+                }, 'playoffs': True } ] }).count()
 
-            manager_two_reg_season_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            manager_two_reg_season_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
                     'loser': manager_one_id
-                }, 'playoffs': False } }).count()
-            manager_two_playoff_wins = 0
-#            manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-#                    'winner': manager_two_id,
-#                    'loser': manager_one_id,
-#                    'consolation': { '$in': [ None, False ] }
-#                }, 'playoffs': True } }).count()
-            manager_two_consolation_wins = 0
-#            manager_two_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-#                    'winner': manager_two_id,
-#                    'loser': manager_one_id,
-#                    'consolation': true
-#                }, 'playoffs': True } }).count()
+                }, 'playoffs': False } ] }).count()
+            manager_two_playoff_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
+                    'winner': manager_two_id,
+                    'loser': manager_one_id,
+                    'consolation': { '$in': [ None, False ] }
+                }, 'playoffs': True } ] }).count()
+            manager_two_consolation_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
+                    'winner': manager_two_id,
+                    'loser': manager_one_id,
+                    'consolation': true
+                }, 'playoffs': True } ] }).count()
 
             matchup_string = ''
 
