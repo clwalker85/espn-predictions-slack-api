@@ -66,7 +66,7 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_two_id = manager_two_metadata['player_id']
 
             # this matches co-owners stored as an array, too
-            # TODO - reuse a dictionary we modify over and over for the filters below
+            # TODO - reuse a dictionary we modify over and over for the filters below, this is hard to read
             manager_one_reg_season_wins = mongo.db.scores.find({ '$and': [ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
                     'loser': manager_two_id,
