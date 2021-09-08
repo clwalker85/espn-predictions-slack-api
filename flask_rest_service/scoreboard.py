@@ -72,8 +72,8 @@ class GetHeadToHeadHistory(restful.Resource):
                 } } }).count()
 
             manager_two_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-                    'winner': manager_one_id,
-                    'loser': manager_two_id
+                    'winner': manager_two_id,
+                    'loser': manager_one_id
                 } } }).count()
 
             matchup_string = ''
