@@ -8,7 +8,7 @@ from espnff import League
 from flask import request, abort, Response
 from flask.ext import restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
+from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
 
 # simple proof of concept that I could get Mongo working in Heroku
 @api.route('/')
@@ -44,3 +44,46 @@ class Scoreboard(restful.Resource):
         #pprint.pformat(league)
         #pprint.pformat(league.scoreboard())
         return Response("Bernie was here")
+
+@api.route('/scoreboard/headtohead/')
+class GetHeadToHeadHistory(restful.Resource):
+    def post(self):
+        message = {
+            'response_type': 'in_channel',
+            'text': 'All-time head-to-head history for week ' + LEAGUE_WEEK + ' matchups:',
+            'attachments': []
+        }
+
+        for index, matchup in enumerate(MATCHUPS):
+            manager_one = matchup['team_one']
+            # HACK - mapping display_name to player_id is not ideal;
+            # joins are not ideal in a non-relational DB either, so maybe we store both everywhere
+            # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+            manager_one_metadata = mongo.db.player_metadata.find({ 'display_name': manager_one})
+            manager_one_id = manager_one_metadata['player_id']
+            manager_two = matchup['team_two']
+            manager_two_metadata = mongo.db.player_metadata.find({ 'display_name': manager_two})
+            manager_two_id = manager_two_metadata['player_id']
+
+            # this matches co-owners stored as an array, too
+            manager_one_wins = mongo.db.scores.find({ '$and': [
+                    { 'matchups.winner': manager_one_id },
+                    { 'matchups.loser': manager_two_id }
+                ] }).count()
+
+            manager_two_wins = mongo.db.scores.find({ '$and': [
+                    { 'matchups.winner': manager_two_id },
+                    { 'matchups.loser': manager_one_id }
+                ] }).count()
+
+            matchup_string = ''
+
+            if manager_one_wins > manager_two_wins:
+                matchup_string += manager_one + ' ' + manager_one_wins + '-' + manager_two_wins + ' ' + manager_two
+            else:
+                matchup_string += manager_two + ' ' + manager_two_wins + '-' + manager_one_wins + ' ' + manager_one
+
+            # one message attachment per matchup
+            message['attachments'].append({ 'text': matchup_string })
+
+        return message
