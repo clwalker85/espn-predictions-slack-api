@@ -72,7 +72,7 @@ class GetHeadToHeadHistory(restful.Resource):
                     { '$elemMatch': {
                         'winner': manager_one_id,
                         'loser': manager_two_id
-                    }
+                    } }
                 }, { 'playoffs': False } ] }).count()
             manager_one_playoff_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -80,7 +80,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_one_id,
                         'loser': manager_two_id,
                         'consolation': { '$in': [ None, False ] }
-                    }
+                    } }
                 }, { 'playoffs': True } ] }).count()
             manager_one_consolation_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -88,7 +88,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_one_id,
                         'loser': manager_two_id,
                         'consolation': True
-                    }
+                    } }
                 }, { 'playoffs': True } ] }).count()
 
             manager_two_reg_season_wins = mongo.db.scores.find({ '$and': [
@@ -96,7 +96,7 @@ class GetHeadToHeadHistory(restful.Resource):
                     { '$elemMatch': {
                         'winner': manager_two_id,
                         'loser': manager_one_id
-                    }
+                    } }
                 }, { 'playoffs': False } ] }).count()
             manager_two_playoff_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -104,7 +104,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_two_id,
                         'loser': manager_one_id,
                         'consolation': { '$in': [ None, False ] }
-                    }
+                    } }
                 }, { 'playoffs': True } ] }).count()
             manager_two_consolation_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -112,7 +112,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_two_id,
                         'loser': manager_one_id,
                         'consolation': True
-                    }
+                    } }
                 }, { 'playoffs': True } ] }).count()
 
             matchup_string = ''
