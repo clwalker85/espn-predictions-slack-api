@@ -71,11 +71,11 @@ class GetHeadToHeadHistory(restful.Resource):
                     'winner': manager_one_id,
                     'loser': manager_two_id,
                 }, 'playoffs': False } }).count()
-            manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-                    'winner': manager_one_id,
-                    'loser': manager_two_id,
-                    'consolation': { '$in': [ null, False ] }
-                }, 'playoffs': true } }).count()
+            #manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            #        'winner': manager_one_id,
+            #        'loser': manager_two_id,
+            #        'consolation': { '$in': [ null, False ] }
+            #    }, 'playoffs': true } }).count()
             manager_one_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
                     'loser': manager_two_id,
@@ -86,11 +86,11 @@ class GetHeadToHeadHistory(restful.Resource):
                     'winner': manager_two_id,
                     'loser': manager_one_id
                 }, 'playoffs': False } }).count()
-            manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-                    'winner': manager_two_id,
-                    'loser': manager_one_id,
-                    'consolation': { '$in': [ null, False ] }
-                }, 'playoffs': true } }).count()
+            #manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            #        'winner': manager_two_id,
+            #        'loser': manager_one_id,
+            #        'consolation': { '$in': [ null, False ] }
+            #    }, 'playoffs': true } }).count()
             manager_two_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
                     'loser': manager_one_id,
@@ -104,12 +104,12 @@ class GetHeadToHeadHistory(restful.Resource):
             else:
                 matchup_string += manager_two + ' ' + str(manager_two_reg_season_wins) + '-' + str(manager_one_reg_season_wins) + ' ' + manager_one
 
-            if (manager_one_playoff_wins + manager_two_playoff_wins) > 0:
-                # keep same order as regular season record
-                if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + manager_one_playoff_wins + '-' + manager_two_playoff_wins + 'in playoffs'
-                else:
-                    matchup_string += ', ' + manager_two_playoff_wins + '-' + manager_one_playoff_wins + 'in playoffs'
+            #if (manager_one_playoff_wins + manager_two_playoff_wins) > 0:
+            #    # keep same order as regular season record
+            #    if manager_one_reg_season_wins > manager_two_reg_season_wins:
+            #        matchup_string += ', ' + manager_one_playoff_wins + '-' + manager_two_playoff_wins + 'in playoffs'
+            #    else:
+            #        matchup_string += ', ' + manager_two_playoff_wins + '-' + manager_one_playoff_wins + 'in playoffs'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
