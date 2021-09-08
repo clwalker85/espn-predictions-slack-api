@@ -59,10 +59,10 @@ class GetHeadToHeadHistory(restful.Resource):
             # HACK - mapping display_name to player_id is not ideal;
             # joins are not ideal in a non-relational DB either, so maybe we store both everywhere
             # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
-            manager_one_metadata = mongo.db.player_metadata.find({ 'display_name': manager_one})
+            manager_one_metadata = mongo.db.player_metadata.find_one({ 'display_name': manager_one})
             manager_one_id = manager_one_metadata['player_id']
             manager_two = matchup['team_two']
-            manager_two_metadata = mongo.db.player_metadata.find({ 'display_name': manager_two})
+            manager_two_metadata = mongo.db.player_metadata.find_one({ 'display_name': manager_two})
             manager_two_id = manager_two_metadata['player_id']
 
             # this matches co-owners stored as an array, too
