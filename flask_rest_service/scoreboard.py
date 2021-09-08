@@ -66,22 +66,63 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_two_id = manager_two_metadata['player_id']
 
             # this matches co-owners stored as an array, too
-            manager_one_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            # TODO - reuse a dictionary we modify over and over for the filters below
+            manager_one_reg_season_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
                     'loser': manager_two_id
-                } } }).count()
+                }, 'playoffs': false } }).count()
+            manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+                    'winner': manager_one_id,
+                    'loser': manager_two_id
+                    'consolation': { '$in': [ null, false] }
+                }, 'playoffs': true } }).count()
+            manager_one_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+                    'winner': manager_one_id,
+                    'loser': manager_two_id
+                    'consolation': true
+                }, 'playoffs': true } }).count()
 
-            manager_two_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+            manager_two_reg_season_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
                     'loser': manager_one_id
-                } } }).count()
+                }, 'playoffs': false } }).count()
+            manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+                    'winner': manager_two_id,
+                    'loser': manager_one_id
+                    'consolation': { '$in': [ null, false] }
+                }, 'playoffs': true } }).count()
+            manager_two_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
+                    'winner': manager_two_id,
+                    'loser': manager_one_id
+                    'consolation': true
+                }, 'playoffs': true } }).count()
 
             matchup_string = ''
 
-            if manager_one_wins > manager_two_wins:
-                matchup_string += manager_one + ' ' + str(manager_one_wins) + '-' + str(manager_two_wins) + ' ' + manager_two
+            if manager_one_reg_season_wins > manager_two_reg_season_wins:
+                matchup_string += manager_one + ' ' + str(manager_one_reg_season_wins) + '-'
+                    + str(manager_two_reg_season_wins) + ' ' + manager_two
             else:
-                matchup_string += manager_two + ' ' + str(manager_two_wins) + '-' + str(manager_one_wins) + ' ' + manager_one
+                matchup_string += manager_two + ' ' + str(manager_two_reg_season_wins) + '-'
+                    + str(manager_one_reg_season_wins) + ' ' + manager_one
+
+            if (manager_one_playoff_wins + manager_two_playoff_wins) + 0:
+                # keep same order as regular season record
+                if manager_one_reg_season_wins > manager_two_reg_season_wins:
+                    matchup_string += ', ' + manager_one_playoff_wins + '-'
+                        + manager_two_playoff_wins + 'in playoffs'
+                else:
+                    matchup_string += ', ' + manager_two_playoff_wins + '-'
+                        + manager_one_playoff_wins + 'in playoffs'
+
+            if (manager_one_consolation_wins + manager_two_consolation_wins) + 0:
+                # keep same order as regular season record
+                if manager_one_reg_season_wins > manager_two_reg_season_wins:
+                    matchup_string += ', ' + manager_one_consolation_wins + '-'
+                        + manager_two_consolation_wins + 'in consolation'
+                else:
+                    matchup_string += ', ' + manager_two_consolation_wins + '-'
+                        + manager_one_consolation_wins + 'in consolation'
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
