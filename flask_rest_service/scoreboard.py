@@ -67,13 +67,13 @@ class GetHeadToHeadHistory(restful.Resource):
 
             # this matches co-owners stored as an array, too
             manager_one_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-                    { 'winner': manager_one_id },
-                    { 'loser': manager_two_id }
+                    'winner': manager_one_id,
+                    'loser': manager_two_id
                 } } }).count()
 
             manager_two_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
-                    { 'winner': manager_two_id },
-                    { 'loser': manager_one_id }
+                    'winner': manager_one_id,
+                    'loser': manager_two_id
                 } } }).count()
 
             matchup_string = ''
