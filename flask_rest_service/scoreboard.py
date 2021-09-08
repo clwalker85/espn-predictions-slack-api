@@ -74,7 +74,7 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
                     'loser': manager_two_id,
-                    'consolation': { '$in': [ null, False ] }
+                    'consolation': { '$in': [ None, False ] }
                 }, 'playoffs': True } }).count()
             manager_one_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
@@ -89,7 +89,7 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
                     'loser': manager_one_id,
-                    'consolation': { '$in': [ null, False ] }
+                    'consolation': { '$in': [ None, False ] }
                 }, 'playoffs': True } }).count()
             manager_two_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
