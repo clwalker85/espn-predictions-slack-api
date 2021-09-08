@@ -69,16 +69,16 @@ class GetHeadToHeadHistory(restful.Resource):
             # TODO - reuse a dictionary we modify over and over for the filters below
             manager_one_reg_season_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
-                    'loser': manager_two_id
+                    'loser': manager_two_id,
                 }, 'playoffs': false } }).count()
             manager_one_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
-                    'loser': manager_two_id
+                    'loser': manager_two_id,
                     'consolation': { '$in': [ null, false] }
                 }, 'playoffs': true } }).count()
             manager_one_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_one_id,
-                    'loser': manager_two_id
+                    'loser': manager_two_id,
                     'consolation': true
                 }, 'playoffs': true } }).count()
 
@@ -88,12 +88,12 @@ class GetHeadToHeadHistory(restful.Resource):
                 }, 'playoffs': false } }).count()
             manager_two_playoff_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
-                    'loser': manager_one_id
+                    'loser': manager_one_id,
                     'consolation': { '$in': [ null, false] }
                 }, 'playoffs': true } }).count()
             manager_two_consolation_wins = mongo.db.scores.find({ 'matchups': { '$elemMatch': {
                     'winner': manager_two_id,
-                    'loser': manager_one_id
+                    'loser': manager_one_id,
                     'consolation': true
                 }, 'playoffs': true } }).count()
 
