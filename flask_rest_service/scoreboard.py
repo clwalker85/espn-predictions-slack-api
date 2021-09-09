@@ -67,13 +67,14 @@ class GetHeadToHeadHistory(restful.Resource):
 
             # this matches co-owners stored as an array, too
             # TODO - this code looks like ass, reuse a dictionary we modify over and over for the filters below
-            manager_one_reg_season_wins = mongo.db.scores.find({ '$and': [
+            manager_one_reg_season_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_one_id,
                         'loser': manager_two_id
                     } }
-                }, { 'playoffs': False } ] }).count()
+                }, { 'playoffs': False } ] }, { 'year': 1, '_id': 0})
+            manager_one_reg_season_wins = manager_one_reg_season_query.count()
             manager_one_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -93,13 +94,14 @@ class GetHeadToHeadHistory(restful.Resource):
                 }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
             manager_one_consolation_wins = manager_one_consolation_query.count()
 
-            manager_two_reg_season_wins = mongo.db.scores.find({ '$and': [
+            manager_two_reg_season_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_two_id,
                         'loser': manager_one_id
                     } }
-                }, { 'playoffs': False } ] }).count()
+                }, { 'playoffs': False } ] }, { 'year': 1, '_id': 0})
+            manager_two_reg_season_wins = manager_two_reg_season_query.count()
             manager_two_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
