@@ -66,7 +66,7 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_two_id = manager_two_metadata['player_id']
 
             # this matches co-owners stored as an array, too
-            # TODO - reuse a dictionary we modify over and over for the filters below, this is hard to read
+            # TODO - this code looks like ass, reuse a dictionary we modify over and over for the filters below
             manager_one_reg_season_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -74,22 +74,24 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_two_id
                     } }
                 }, { 'playoffs': False } ] }).count()
-            manager_one_playoff_wins = mongo.db.scores.find({ '$and': [
+            manager_one_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_one_id,
                         'loser': manager_two_id,
                         'consolation': { '$in': [ None, False ] }
                     } }
-                }, { 'playoffs': True } ] }).count()
-            manager_one_consolation_wins = mongo.db.scores.find({ '$and': [
+                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+            manager_one_playoff_wins = manager_one_playoff_query.count()
+            manager_one_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_one_id,
                         'loser': manager_two_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] }).count()
+                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+            manager_one_consolation_wins = manager_one_consolation_query.count()
 
             manager_two_reg_season_wins = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -98,22 +100,24 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_one_id
                     } }
                 }, { 'playoffs': False } ] }).count()
-            manager_two_playoff_wins = mongo.db.scores.find({ '$and': [
+            manager_two_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_two_id,
                         'loser': manager_one_id,
                         'consolation': { '$in': [ None, False ] }
                     } }
-                }, { 'playoffs': True } ] }).count()
-            manager_two_consolation_wins = mongo.db.scores.find({ '$and': [
+                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+            manager_two_playoff_wins = manager_two_playoff_query.count()
+            manager_two_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
                         'winner': manager_two_id,
                         'loser': manager_one_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] }).count()
+                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+            manager_two_consolation_wins = manager_two_consolation_query.count()
 
             matchup_string = ''
 
@@ -125,16 +129,20 @@ class GetHeadToHeadHistory(restful.Resource):
             if (manager_one_playoff_wins + manager_two_playoff_wins) > 0:
                 # keep same order as regular season record
                 if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + str(manager_one_playoff_wins) + '-' + str(manager_two_playoff_wins) + 'in playoffs'
+                    matchup_string += ', ' + str(manager_one_playoff_wins) + '-' + str(manager_two_playoff_wins) + ' in playoffs'
                 else:
-                    matchup_string += ', ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + 'in playoffs'
+                    matchup_string += ', ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
+                playoff_years_list = list(manager_one_playoff_query) + list(manager_two_playoff_query)
+                matchup_string += ' (' + ', '.join(str(e['year']) for e in playoff_years_list) + ')'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
                 if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + 'in consolation'
+                    matchup_string += ', ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + ' in consolation'
                 else:
-                    matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + 'in consolation'
+                    matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + ' in consolation'
+                consolation_years_list = list(manager_one_consolation_query) + list(manager_two_consolation_query)
+                matchup_string += ' (' + ', '.join(str(e['year']) for e in consolation_years_list) + ')'
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
