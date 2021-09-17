@@ -192,4 +192,4 @@ def build_consolation_history_string(element):
     return str(element['year']) + consolation_detail(element)
 
 def consolation_detail(element):
-    return element['finals'] ? " breckfast bowl" : ""
+    return " breckfast bowl" if element['finals'] else ""
