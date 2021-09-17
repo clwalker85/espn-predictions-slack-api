@@ -98,7 +98,12 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_two_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+                }, { 'playoffs': True } ] },
+                {
+                    'year': 1,
+                    'finals': 1,
+                    '_id': 0
+                })
             manager_one_consolation_wins = manager_one_consolation_query.count()
 
             manager_two_reg_season_query = mongo.db.scores.find({ '$and': [
@@ -132,7 +137,12 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_one_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] }, { 'year': 1, '_id': 0})
+                }, { 'playoffs': True } ] },
+                {
+                    'year': 1,
+                    'finals': 1,
+                    '_id': 0
+                })
             manager_two_consolation_wins = manager_two_consolation_query.count()
 
             matchup_string = ''
@@ -182,4 +192,4 @@ def build_consolation_history_string(element):
     return str(element['year']) + consolation_detail(element)
 
 def consolation_detail(element):
-    return ""
+    return element['finals'] ? " breckfast bowl" : ""
