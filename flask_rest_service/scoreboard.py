@@ -135,7 +135,7 @@ class GetHeadToHeadHistory(restful.Resource):
                 else:
                     matchup_string += ', ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
                 playoff_years_list = list(manager_one_playoff_query) + list(manager_two_playoff_query)
-                matchup_string += ' (' + ', '.join(str(e['year']) for e in playoff_years_list) + ')'
+                matchup_string += ' (' + ', '.join(build_playoff_history_string(e)) for e in playoff_years_list) + ')'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
@@ -144,9 +144,28 @@ class GetHeadToHeadHistory(restful.Resource):
                 else:
                     matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + ' in consolation'
                 consolation_years_list = list(manager_one_consolation_query) + list(manager_two_consolation_query)
-                matchup_string += ' (' + ', '.join(str(e['year']) for e in consolation_years_list) + ')'
+                matchup_string += ' (' + ', '.join(build_consolation_history_string(e)) for e in consolation_years_list) + ')'
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
 
         return message
+
+def build_playoff_history_string(element):
+    return str(element['year']) + playoff_detail(element)
+
+def playoff_detail(element):
+    if element['quarterfinals']:
+        return " - quarterfinals"
+    elif element['semifinals']:
+        return " - semifinals"
+    elif element['finals']:
+        return " - finals"
+    else:
+        return ""
+
+def build_consolation_history_string(element):
+    return str(element['year']) + consolation_detail(element)
+
+def consolation_detail(element):
+    return ""
