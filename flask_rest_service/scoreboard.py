@@ -55,10 +55,8 @@ class MatchupResults(restful.Resource):
 
         # TODO - return error if no scores are found
         pprint.pformat("CLW was here")
-        sys.stdout.flush()
         scores_result = mongo.db.scores.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
         pprint.pformat(scores_result)
-        sys.stdout.flush()
         # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
         player_lookup_by_id = {}
         for p in mongo.db.player_metadata.find():
