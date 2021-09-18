@@ -129,21 +129,50 @@ class GetHeadToHeadHistory(restful.Resource):
             else:
                 matchup_string += manager_two + ' ' + str(manager_two_reg_season_wins) + '-' + str(manager_one_reg_season_wins) + ' ' + manager_one
 
+            # loop backwards through time to track winning streak
+            if (manager_one_reg_season_wins + manager_two_reg_season_wins) > 0:
+                reg_season_list = list(manager_one_reg_season_query) + list(manager_two_reg_season_query)
+                reg_season_list.sort(key=lambda x: x['year'], reverse=True)
+
+                last_manager_to_win = None
+                number_of_wins_in_streak = 0
+                for e in reg_season_list:
+                    for m in e['matchups']:
+                        if m['winner'] in manager_ids and m['loser'] in manager_ids:
+                            if last_manager_to_win == None:
+                                last_manager_to_win = m['winner']
+                            if m['winner'] != last_manager_to_win:
+                                break
+                            number_of_wins_in_streak++
+                    else:
+                        continue
+                    break
+
+                if (number_of_wins_in_streak == 1):
+                    matchup_string += " (last game won by "
+                else:
+                    matchup_string += " (" + str(number_of_wins_in_streak) + " last games won by "
+
+                if last_manager_to_win == manager_one_id:
+                    matchup_string += manager_one + ")"
+                else:
+                    matchup_string += manager_two + ")"
+
             if (manager_one_playoff_wins + manager_two_playoff_wins) > 0:
                 # keep same order as regular season record
                 if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + str(manager_one_playoff_wins) + '-' + str(manager_two_playoff_wins) + ' in playoffs'
+                    matchup_string += '\n- ' + str(manager_one_playoff_wins) + '-' + str(manager_two_playoff_wins) + ' in playoffs'
                 else:
-                    matchup_string += ', ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
+                    matchup_string += '\n- ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
                 playoff_years_list = list(manager_one_playoff_query) + list(manager_two_playoff_query)
                 matchup_string += ' (' + ', '.join(build_playoff_history_string(e, manager_ids) for e in playoff_years_list) + ')'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
                 if manager_one_reg_season_wins > manager_two_reg_season_wins:
-                    matchup_string += ', ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + ' in consolation'
+                    matchup_string += '\n- ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + ' in consolation'
                 else:
-                    matchup_string += ', ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + ' in consolation'
+                    matchup_string += '\n- ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + ' in consolation'
                 consolation_years_list = list(manager_one_consolation_query) + list(manager_two_consolation_query)
                 matchup_string += ' (' + ', '.join(build_consolation_history_string(e) for e in consolation_years_list) + ')'
 
@@ -162,7 +191,7 @@ def playoff_detail(element):
         return " semifinals"
     elif element['finals']:
         for m in element['matchups']:
-            if m['winner'] in manager_ids or m['loser'] in manager_ids:
+            if m['winner'] in manager_ids and m['loser'] in manager_ids:
                 if m['championship']:
                     return " championship"
                 if m['third_place']:
