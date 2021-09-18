@@ -151,7 +151,7 @@ class GetHeadToHeadHistory(restful.Resource):
                 if (number_of_wins_in_streak == 1):
                     matchup_string += " (last game won by "
                 else:
-                    matchup_string += " (" + str(number_of_wins_in_streak) + " last games won by "
+                    matchup_string += " (last " + str(number_of_wins_in_streak) + " games won by "
 
                 if last_manager_to_win == manager_one_id:
                     matchup_string += manager_one + ")"
