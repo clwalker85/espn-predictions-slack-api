@@ -106,8 +106,8 @@ class MatchupResults(restful.Resource):
                 'closest_matchup': closest_matchup,
                 'highest': highest_scorer,
                 'lowest': lowest_scorer,
-                'high_score': high_score,
-                'low_score': low_score,
+                'high_score': str(high_score),
+                'low_score': str(low_score),
                 'year': LEAGUE_YEAR,
                 'week': LAST_LEAGUE_WEEK
             },
