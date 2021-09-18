@@ -143,7 +143,7 @@ class GetHeadToHeadHistory(restful.Resource):
                                 last_manager_to_win = m['winner']
                             if m['winner'] != last_manager_to_win:
                                 break
-                            number_of_wins_in_streak++
+                            number_of_wins_in_streak += 1
                     else:
                         continue
                     break
