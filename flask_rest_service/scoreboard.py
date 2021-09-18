@@ -162,7 +162,7 @@ def playoff_detail(element):
         return " semifinals"
     elif element['finals']:
         for m in element['matchups']:
-            if m['winner'] in manager_ids or m['loser'] in manager_ids
+            if m['winner'] in manager_ids or m['loser'] in manager_ids:
                 if m['championship']:
                     return " championship"
                 if m['third_place']:
