@@ -64,6 +64,7 @@ class GetHeadToHeadHistory(restful.Resource):
             manager_two = matchup['team_two']
             manager_two_metadata = mongo.db.player_metadata.find_one({ 'display_name': manager_two})
             manager_two_id = manager_two_metadata['player_id']
+            manager_ids = [manager_one_id, manager_two_id]
 
             # this matches co-owners stored as an array, too
             # TODO - this code looks like ass, reuse a dictionary we modify over and over for the filters below
@@ -73,7 +74,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_one_id,
                         'loser': manager_two_id
                     } }
-                }, { 'playoffs': False } ] }, { 'year': 1, '_id': 0})
+                }, { 'playoffs': False } ] })
             manager_one_reg_season_wins = manager_one_reg_season_query.count()
             manager_one_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -82,14 +83,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_two_id,
                         'consolation': { '$in': [ None, False ] }
                     } }
-                }, { 'playoffs': True } ] },
-                {
-                    'year': 1,
-                    'quarterfinals': 1,
-                    'semifinals': 1,
-                    'finals': 1,
-                    '_id': 0
-                })
+                }, { 'playoffs': True } ] })
             manager_one_playoff_wins = manager_one_playoff_query.count()
             manager_one_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -98,12 +92,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_two_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] },
-                {
-                    'year': 1,
-                    'finals': 1,
-                    '_id': 0
-                })
+                }, { 'playoffs': True } ] })
             manager_one_consolation_wins = manager_one_consolation_query.count()
 
             manager_two_reg_season_query = mongo.db.scores.find({ '$and': [
@@ -112,7 +101,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'winner': manager_two_id,
                         'loser': manager_one_id
                     } }
-                }, { 'playoffs': False } ] }, { 'year': 1, '_id': 0})
+                }, { 'playoffs': False } ] })
             manager_two_reg_season_wins = manager_two_reg_season_query.count()
             manager_two_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -121,14 +110,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_one_id,
                         'consolation': { '$in': [ None, False ] }
                     } }
-                }, { 'playoffs': True } ] },
-                {
-                    'year': 1,
-                    'quarterfinals': 1,
-                    'semifinals': 1,
-                    'finals': 1,
-                    '_id': 0
-                })
+                }, { 'playoffs': True } ] })
             manager_two_playoff_wins = manager_two_playoff_query.count()
             manager_two_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -137,12 +119,7 @@ class GetHeadToHeadHistory(restful.Resource):
                         'loser': manager_one_id,
                         'consolation': True
                     } }
-                }, { 'playoffs': True } ] },
-                {
-                    'year': 1,
-                    'finals': 1,
-                    '_id': 0
-                })
+                }, { 'playoffs': True } ] })
             manager_two_consolation_wins = manager_two_consolation_query.count()
 
             matchup_string = ''
@@ -159,7 +136,7 @@ class GetHeadToHeadHistory(restful.Resource):
                 else:
                     matchup_string += ', ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
                 playoff_years_list = list(manager_one_playoff_query) + list(manager_two_playoff_query)
-                matchup_string += ' (' + ', '.join(build_playoff_history_string(e) for e in playoff_years_list) + ')'
+                matchup_string += ' (' + ', '.join(build_playoff_history_string(e, manager_ids) for e in playoff_years_list) + ')'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
                 # keep same order as regular season record
@@ -175,7 +152,7 @@ class GetHeadToHeadHistory(restful.Resource):
 
         return message
 
-def build_playoff_history_string(element):
+def build_playoff_history_string(element, manager_ids):
     return str(element['year']) + playoff_detail(element)
 
 def playoff_detail(element):
@@ -184,7 +161,13 @@ def playoff_detail(element):
     elif element['semifinals']:
         return " semifinals"
     elif element['finals']:
-        return " finals"
+        for m in element['matchups']:
+            if m['winner'] in manager_ids or m['loser'] in manager_ids
+                if m['championship']:
+                    return " championship"
+                if m['third_place']:
+                    return " third place game"
+        return ""
     else:
         return ""
 
