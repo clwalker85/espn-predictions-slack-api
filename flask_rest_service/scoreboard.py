@@ -45,8 +45,77 @@ class Scoreboard(restful.Resource):
         #pprint.pformat(league.scoreboard())
         return Response("Bernie was here")
 
+@api.route('/scoreboard/matchupresults')
+class MatchupResults(restful.Resource):
+    def post(self):
+        # can't calculate matchup results for the week before in the first week
+        # in practice, __init__.py checks for the latest week to start
+        if LEAGUE_WEEK == '1':
+            return Response('Matchup result calculations are not available until the morning (8am) after Monday Night Football.')
+
+        # TODO - return error if no scores are found
+        scores_result = mongo.db.scores.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
+        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+        player_lookup_by_id = {}
+        for p in mongo.db.player_metadata.find():
+            player_lookup_by_id[p['player_id']] = p
+
+        winners = []
+        blowout_matchup_winner, blowout_matchup = '', ''
+        closest_matchup_winner, closest_matchup = '', ''
+        biggest_margin, smallest_margin = 0, 9999
+        highest_scorer, lowest_scorer = '', ''
+        high_score, low_score = 0, 9999
+
+        for matchup in scores_result['matchups']:
+            margin = matchup['winning_score'] - matchup['losing_score']
+            winner_name = player_lookup_by_id[matchup['winner']]
+            loser_name = player_lookup_by_id[matchup['loser']]
+
+            winners.append(winner_name)
+
+            if matchup['winning_score'] > high_score:
+                high_score = matchup['winning_score']
+                highest_scorer = winner_name
+
+            if matchup['losing_score'] > low_score:
+                low_score = matchup['losing_score']
+                lowest_scorer = loser_name
+
+            if margin > biggest_margin:
+                biggest_margin = margin
+                blowout_matchup_winner = winner_name
+                # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
+                # this should not affect logic and only be for display purposes
+                blowout_matchup = winner_name + " " + loser_name
+
+            if margin < smallest_margin:
+                smallest_margin = margin
+                closest_matchup_winner = winner_name
+                # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
+                # this should not affect logic and only be for display purposes
+                closest_matchup = winner_name + " " + loser_name
+
+        database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+        mongo.db.matchup_results.update(database_key, {
+            '$set': {
+                'winners': winners,
+                'blowout': blowout_matchup_winner,
+                'blowout_matchup': blowout_matchup,
+                'closest': closest_matchup_winner,
+                'closest_matchup': closest_matchup,
+                'highest': highest_scorer,
+                'lowest': lowest_scorer,
+                'high_score': high_score,
+                'low_score': low_score,
+                'year': LEAGUE_YEAR,
+                'week': LAST_LEAGUE_WEEK
+            },
+        # insert if you need to, and make sure to guarantee one record per year/week
+        }, Upsert=True, multi=False)
+
 @api.route('/scoreboard/headtohead/')
-class GetHeadToHeadHistory(restful.Resource):
+class HeadToHeadHistory(restful.Resource):
     def post(self):
         message = {
             'response_type': 'in_channel',
