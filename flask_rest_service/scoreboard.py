@@ -109,7 +109,8 @@ class MatchupResults(restful.Resource):
                 'high_score': str(high_score),
                 'low_score': str(low_score),
                 'year': LEAGUE_YEAR,
-                'week': LAST_LEAGUE_WEEK
+                'week': LAST_LEAGUE_WEEK,
+                'temp': "CLW was here"
             },
         # insert if you need to, and make sure to guarantee one record per year/week
         }, Upsert=True, multi=False)
