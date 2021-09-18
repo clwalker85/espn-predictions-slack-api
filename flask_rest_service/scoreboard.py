@@ -114,18 +114,14 @@ class MatchupResults(restful.Resource):
         # insert if you need to, and make sure to guarantee one record per year/week
         }, Upsert=True, multi=False)
 
-        results_string = 'Winners: ' + ', '.join(winners) + '\n'
+        results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
+        results_string += 'Winners: ' + ', '.join(winners) + '\n'
         results_string += 'Blowout: ' + blowout_matchup
         results_string += ' | Closest: ' + closest_matchup + '\n'
         results_string += 'Highest: ' + highest_scorer + ', ' + high_score + ' | '
         results_string += 'Lowest: ' + lowest_scorer + ', ' + low_score
 
-        message = {
-            'response_type': 'in_channel',
-            'text': 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
-            'attachments': [ { 'text': results_string } ]
-        }
-        return message
+        return Response(results_string)
 
 @api.route('/scoreboard/headtohead/')
 class HeadToHeadHistory(restful.Resource):
