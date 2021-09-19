@@ -43,6 +43,7 @@ class Scoreboard(restful.Resource):
         #league = League(LEAGUE_ID, LEAGUE_YEAR)
         #pprint.pformat(league)
         #pprint.pformat(league.scoreboard())
+        #app.logger.debug("metadata")
         return Response("Bernie was here")
 
 @api.route('/scoreboard/matchupresults/')
@@ -60,7 +61,6 @@ class MatchupResults(restful.Resource):
         player_lookup_by_id = {}
         for p in mongo.db.player_metadata.find():
             player_lookup_by_id[p['player_id']] = p
-        app.logger.debug("metadata")
 
         winners = []
         blowout_matchup_winner, blowout_matchup = '', ''
@@ -116,7 +116,6 @@ class MatchupResults(restful.Resource):
             },
         # insert if you need to, and make sure to guarantee one record per year/week
         }, upsert=True, multi=False)
-        app.logger.debug("update")
 
         results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
         results_string += 'Winners: ' + ', '.join(winners) + '\n'
