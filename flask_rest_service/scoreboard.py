@@ -115,7 +115,7 @@ class MatchupResults(restful.Resource):
                 'week': LAST_LEAGUE_WEEK
             },
         # insert if you need to, and make sure to guarantee one record per year/week
-        }, Upsert=True, multi=False)
+        }, upsert=True, multi=False)
         app.logger.debug("update")
 
         results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
