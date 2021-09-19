@@ -45,7 +45,7 @@ class Scoreboard(restful.Resource):
         #pprint.pformat(league.scoreboard())
         return Response("Bernie was here")
 
-@api.route('/scoreboard/matchupresults')
+@api.route('/scoreboard/matchupresults/')
 class MatchupResults(restful.Resource):
     def post(self):
         # can't calculate matchup results for the week before in the first week
@@ -54,9 +54,7 @@ class MatchupResults(restful.Resource):
             return Response('Matchup result calculations are not available until the morning (8am) after Monday Night Football.')
 
         # TODO - return error if no scores are found
-        app.logger.debug("CLW was here")
         scores_result = mongo.db.scores.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
-        app.logger.debug("scores_result")
         # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
         player_lookup_by_id = {}
         for p in mongo.db.player_metadata.find():
