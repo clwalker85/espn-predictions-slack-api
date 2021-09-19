@@ -80,7 +80,7 @@ class MatchupResults(restful.Resource):
                 high_score = matchup['winning_score']
                 highest_scorer = winner_name
 
-            if matchup['losing_score'] > low_score:
+            if matchup['losing_score'] < low_score:
                 low_score = matchup['losing_score']
                 lowest_scorer = loser_name
 
@@ -89,14 +89,14 @@ class MatchupResults(restful.Resource):
                 blowout_matchup_winner = winner_name
                 # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
                 # this should not affect logic and only be for display purposes
-                blowout_matchup = winner_name + " " + loser_name
+                blowout_matchup = winner_name + " versus " + loser_name
 
             if margin < smallest_margin:
                 smallest_margin = margin
                 closest_matchup_winner = winner_name
                 # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
                 # this should not affect logic and only be for display purposes
-                closest_matchup = winner_name + " " + loser_name
+                closest_matchup = winner_name + " versus " + loser_name
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
@@ -122,8 +122,8 @@ class MatchupResults(restful.Resource):
         results_string += 'Winners: ' + ', '.join(winners) + '\n'
         results_string += 'Blowout: ' + blowout_matchup
         results_string += ' | Closest: ' + closest_matchup + '\n'
-        results_string += 'Highest: ' + highest_scorer + ', ' + high_score + ' | '
-        results_string += 'Lowest: ' + lowest_scorer + ', ' + low_score
+        results_string += 'Highest: ' + highest_scorer + ', ' + str(high_score) + ' | '
+        results_string += 'Lowest: ' + lowest_scorer + ', ' + str(low_score)
 
         return Response(results_string)
 
