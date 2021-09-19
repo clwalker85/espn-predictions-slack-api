@@ -54,7 +54,8 @@ class MatchupResults(restful.Resource):
             return Response('Matchup result calculations are not available until the morning (8am) after Monday Night Football.')
 
         # TODO - return error if no scores are found
-        scores_result = mongo.db.scores.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
+        # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
+        scores_result = mongo.db.scores.find_one({ 'year': int(LEAGUE_YEAR), 'week': int(LAST_LEAGUE_WEEK) })
         # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
         player_lookup_by_id = {}
         for p in mongo.db.player_metadata.find():
