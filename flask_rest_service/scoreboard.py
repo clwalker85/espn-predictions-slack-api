@@ -71,8 +71,8 @@ class MatchupResults(restful.Resource):
 
         for matchup in scores_result['matchups']:
             margin = matchup['winning_score'] - matchup['losing_score']
-            winner_name = player_lookup_by_id[matchup['winner']]
-            loser_name = player_lookup_by_id[matchup['loser']]
+            winner_name = player_lookup_by_id[matchup['winner']]['display_name']
+            loser_name = player_lookup_by_id[matchup['loser']]['display_name']
 
             winners.append(winner_name)
 
@@ -98,6 +98,7 @@ class MatchupResults(restful.Resource):
                 # this should not affect logic and only be for display purposes
                 closest_matchup = winner_name + " " + loser_name
 
+        # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
         mongo.db.matchup_results.update(database_key, {
             '$set': {
