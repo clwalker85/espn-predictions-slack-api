@@ -263,9 +263,9 @@ class HeadToHeadHistory(restful.Resource):
         return message
 
 def build_playoff_history_string(element, manager_ids):
-    return str(element['year']) + playoff_detail(element)
+    return str(element['year']) + playoff_detail(element, manager_ids)
 
-def playoff_detail(element):
+def playoff_detail(element, manager_ids):
     if element['quarterfinals']:
         return " quarterfinals"
     elif element['semifinals']:
