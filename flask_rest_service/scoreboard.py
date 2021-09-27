@@ -4,11 +4,11 @@ import pprint
 import requests
 from decimal import Decimal
 from datetime import datetime
-from espnff import League
+from espn_api import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
+from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
 
 # simple proof of concept that I could get Mongo working in Heroku
 @api.route('/')
@@ -19,16 +19,17 @@ class Root(restful.Resource):
             'mongo': str(mongo.db),
         }
 
-# TODO - Add a scoreboard command when the ESPN API can be used with our league
-# https://github.com/rbarton65/espnff/pull/41
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
     def post(self):
         # for direct Slack commands, you don't get a payload like an interactive message action,
         # you have to parse the text of the parameters
-        text = request.form.get('text', None)
-        param = text.split()
-        query_type = param[0]
+        #text = request.form.get('text', None)
+        #param = text.split()
+        #query_type = param[0]
+
+        #if query_type == 'help':
+        #message['attachments'].append({ 'text': prediction_string })
 
         message = {
             'response_type': 'in_channel',
@@ -36,15 +37,14 @@ class Scoreboard(restful.Resource):
             'attachments': []
         }
 
-        #if query_type == 'help':
-        #message['attachments'].append({ 'text': prediction_string })
+        league = League(league_id=LEAGUE_ID, year=LEAGUE_YEAR, espn_s2=ESPN_S2, swid=ESPN_SWID)
+        box_scores = league.box_scores(LEAGUE_WEEK)
+        for s in box_scores:
+            matchup_string = s.home_team + ' (' + s.home_score + ') versus ' + s.away_team + ' (' + s.away_score + ')'
+            message['attachments'].append({ 'text': matchup_string })
 
-
-        #league = League(LEAGUE_ID, LEAGUE_YEAR)
-        #pprint.pformat(league)
-        #pprint.pformat(league.scoreboard())
         #app.logger.debug("metadata")
-        return Response("Bernie was here")
+        return message
 
 @api.route('/scoreboard/matchupresults/')
 class MatchupResults(restful.Resource):

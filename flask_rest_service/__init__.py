@@ -54,6 +54,8 @@ api.route = types.MethodType(api_route, api)
 client_id = os.environ.get('SLACK_CLIENT_ID')
 client_secret = os.environ.get('SLACK_CLIENT_SECRET')
 oauth_scope = os.environ.get('SLACK_BOT_SCOPE')
+ESPN_SWID = os.environ.get('ESPN_SWID')
+ESPN_S2 = os.environ.get('ESPN_S2')
 
 ### LEAGUE CONSTANTS (mostly data we need to abstract away from the business logic)
 
