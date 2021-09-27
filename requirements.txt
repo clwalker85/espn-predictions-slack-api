@@ -11,7 +11,7 @@ pymongo==3.9.0
 pytz==2014.4
 six==1.7.2
 requests
-espnff
 datetime
 slackclient
 dnspython
+espn_api
