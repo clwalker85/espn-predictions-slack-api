@@ -5,7 +5,6 @@ import traceback
 import copy
 from decimal import Decimal
 from datetime import datetime
-from espnff import League
 from flask import request, abort, Response
 import flask_restful as restful
 
