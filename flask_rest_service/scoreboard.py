@@ -40,7 +40,7 @@ class Scoreboard(restful.Resource):
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
         box_scores = league.box_scores(int(LEAGUE_WEEK))
         for s in box_scores:
-            matchup_string = s.home_team.team_name + ' (' + s.home_score + ') versus ' + s.away_team.team_name + ' (' + s.away_score + ')'
+            matchup_string = s.home_team.team_name + ' (' + str(s.home_score) + ') versus ' + s.away_team.team_name + ' (' + str(s.away_score) + ')'
             message['attachments'].append({ 'text': matchup_string })
 
         #app.logger.debug("metadata")
