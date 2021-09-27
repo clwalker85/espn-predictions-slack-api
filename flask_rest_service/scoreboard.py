@@ -4,7 +4,7 @@ import pprint
 import requests
 from decimal import Decimal
 from datetime import datetime
-from espn_api import League
+from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
