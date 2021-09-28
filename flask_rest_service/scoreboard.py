@@ -88,7 +88,7 @@ class Scoreboard(restful.Resource):
         mongo.db.scores.update(database_key, {
             '$set': {
                 'year': int(LEAGUE_YEAR),
-                'week': int(week_shown)
+                'week': int(week_shown),
                 'matchups': matchups,
                 # TODO - Find out how to set these flags based on ESPN API data
                 'playoffs': False,
