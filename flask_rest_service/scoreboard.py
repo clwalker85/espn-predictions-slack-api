@@ -65,14 +65,14 @@ class Scoreboard(restful.Resource):
 
             message['attachments'].append({ 'text': matchup_string })
 
-            winner = player_lookup_by_espn_name[s.home_team.owner]['player_id'],
-            loser = player_lookup_by_espn_name[s.away_team.owner]['player_id'],
-            winning_score = s.home_score,
+            winner = player_lookup_by_espn_name[s.home_team.owner]['player_id']
+            loser = player_lookup_by_espn_name[s.away_team.owner]['player_id']
+            winning_score = s.home_score
             losing_score = s.away_score
             if (s.away_score > s.home_score):
-                winner = player_lookup_by_espn_name[s.away_team.owner]['player_id'],
-                loser = player_lookup_by_espn_name[s.home_team.owner]['player_id'],
-                winning_score = s.away_score,
+                winner = player_lookup_by_espn_name[s.away_team.owner]['player_id']
+                loser = player_lookup_by_espn_name[s.home_team.owner]['player_id']
+                winning_score = s.away_score
                 losing_score = s.home_score
 
             matchups.append({
