@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import pprint
 import requests
 from decimal import Decimal
@@ -40,7 +41,14 @@ class Scoreboard(restful.Resource):
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
         box_scores = league.box_scores(int(LEAGUE_WEEK))
         for s in box_scores:
-            matchup_string = s.home_team.team_name + ' (' + str(s.home_score) + ') versus ' + s.away_team.team_name + ' (' + str(s.away_score) + ')'
+            matchup_string = s.home_team.owner + ' - ' + str(s.home_score)
+            if (s.home_projected != -1 and !math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
+                matchup_string += ' (' + str(s.home_projected) + ')'
+
+            matchup_string += ' versus ' + s.away_team.owner + ' - ' + str(s.away_score)
+            if (s.away_projected != -1 and !math.isclose(s.away_score, s.away_projected, abs_tol=0.01)):
+                matchup_string += ' (' + str(s.away_projected) + ')'
+
             message['attachments'].append({ 'text': matchup_string })
 
         #app.logger.debug("metadata")
