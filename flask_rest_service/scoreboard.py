@@ -6,7 +6,7 @@ from decimal import Decimal
 from datetime import datetime
 from espnff import League
 from flask import request, abort, Response
-from flask.ext import restful
+import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
 

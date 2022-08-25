@@ -6,9 +6,14 @@ import types
 import pytz
 from datetime import datetime, time
 from flask import Flask, jsonify
-from flask.ext import restful
-from flask.ext.pymongo import PyMongo
+#from flask.ext import restful
+import flask_restful
+#from flask.ext.pymongo import PyMongo
+from flask_pymongo import PyMongo
 from slack import WebClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ### APP CONFIG AND SETUP (set it and forget it, nothing to do with business logic)
 
@@ -31,7 +36,7 @@ if not MONGO_URL:
     MONGO_URL = "mongodb://localhost:27017/rest";
 app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
-api = restful.Api(app)
+api = flask_restful.Api(app)
 
 @api.representation('application/json')
 def output_json(obj, code, headers=None):
