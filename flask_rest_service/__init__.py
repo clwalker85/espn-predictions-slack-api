@@ -33,7 +33,7 @@ app.logger.addHandler(handler)
 
 MONGO_URL = os.environ.get('MONGOATLASDB_URI')
 if not MONGO_URL:
-    MONGO_URL = "mongodb://localhost:27017/rest";
+    MONGO_URL = "mongodb://localhost:27017/rest"
 app.config['MONGO_URI'] = MONGO_URL
 mongo = PyMongo(app)
 api = flask_restful.Api(app)
