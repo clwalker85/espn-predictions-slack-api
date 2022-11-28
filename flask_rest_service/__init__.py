@@ -13,7 +13,7 @@ from flask_pymongo import PyMongo
 from slack import WebClient
 from dotenv import load_dotenv
 
-load_dotenv(encoding='utf8')
+load_dotenv()
 
 ### APP CONFIG AND SETUP (set it and forget it, nothing to do with business logic)
 
