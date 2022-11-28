@@ -6,7 +6,8 @@ import copy
 from decimal import Decimal
 from datetime import datetime
 from flask import request, abort, Response
-from flask.ext import restful
+#from flask.ext import restful
+import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
 
@@ -152,13 +153,13 @@ def save_form_to_database(payload):
     year, week = payload['callback_id'].split("-")
     database_key = { 'username': username, 'year': year, 'week': week }
 
-    mongo.db.predictions.update(database_key, {
+    mongo.db.predictions.update_one(database_key, {
         '$set': {
             'message': message,
             'last_modified': datetime.now()
         },
     # insert if you need to, and make sure to guarantee one record per user and year/week
-    }, upsert=True, multi=False)
+    }, upsert=True)
 
 def save_scores_to_database(payload, message, high_score, low_score):
     username = payload['user']['name']
@@ -166,7 +167,7 @@ def save_scores_to_database(payload, message, high_score, low_score):
     year, week = payload['callback_id'].split("-")
     database_key = { 'username': username, 'year': year, 'week': week }
 
-    mongo.db.predictions.update(database_key, {
+    mongo.db.predictions.update_one(database_key, {
         '$set': {
             'message': message,
             'high_score': high_score,
@@ -174,7 +175,7 @@ def save_scores_to_database(payload, message, high_score, low_score):
             'last_modified': datetime.now()
         },
     # insert if you need to, and make sure to guarantee one record per user and year/week
-    }, upsert=True, multi=False)
+    }, upsert=True)
 
 # This endpoint loops through any saved predictions for the current week and posts them
 # in response to whoever ran the command in Slack. It's also a good way to understand the
@@ -210,6 +211,8 @@ class GetSubmittedPredictions(restful.Resource):
             message['attachments'].append({ 'text': prediction_string })
 
         return message
+    def get(self):
+        return GetSubmittedPredictions.post(self)
 
 def is_button_selected(element):
     return (element['type'] == 'button' and 'style' in element and element['style'] == 'primary'
@@ -398,6 +401,8 @@ class CalculatePredictions(restful.Resource):
         message['attachments'].append({ 'text': build_standings_string() })
 
         return message
+    def get(self):
+        return CalculatePredictions.post(self)
 
 def build_results_string(result, stats):
     results_string = 'Winners: ' + ', '.join(result['winners']) + '\n'
@@ -624,21 +629,21 @@ def update_prediction_standings(formula_by_user):
         users_without_predictions = list(set(LEAGUE_USERNAMES) - set(formula_by_user.keys()))
         for username in users_without_predictions:
             database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
-            mongo.db.prediction_standings.update(database_key, {
+            mongo.db.prediction_standings.update_one(database_key, {
                 '$set': {
                     'total': 0
                 },
-            }, upsert=True, multi=False)
+            }, upsert=True)
         # loop through everyone who submitted a prediction this week
         for user_formula in formula_by_user.values():
             formula_total = PREDICTION_FORMULA(user_formula)
             database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
             # standings on the first week is trivial and exactly the same as waiver order standings
-            mongo.db.prediction_standings.update(database_key, {
+            mongo.db.prediction_standings.update_one(database_key, {
                 '$set': {
                     'total': formula_total
                 },
-            }, upsert=True, multi=False)
+            }, upsert=True)
 
     if int(LAST_LEAGUE_WEEK) > 1:
         week_before = str(int(LAST_LEAGUE_WEEK) - 1)
@@ -652,9 +657,9 @@ def update_prediction_standings(formula_by_user):
             else:
                 formula_total = 0
 
-            mongo.db.prediction_standings.update(database_key, {
+            mongo.db.prediction_standings.update_one(database_key, {
                 '$set': {
                     'total': prediction_record['total'] + formula_total
                 },
-            }, upsert=True, multi=False)
+            }, upsert=True)
     return

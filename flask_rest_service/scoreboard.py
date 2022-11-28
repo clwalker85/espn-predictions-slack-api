@@ -7,7 +7,8 @@ from decimal import Decimal
 from datetime import datetime
 from espn_api.football import League
 from flask import request, abort, Response
-from flask.ext import restful
+#from flask.ext import restful
+import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
 
@@ -85,7 +86,7 @@ class Scoreboard(restful.Resource):
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': int(LEAGUE_YEAR), 'week': int(week_shown) }
-        mongo.db.scores.update(database_key, {
+        mongo.db.scores.update_one(database_key, {
             '$set': {
                 'year': int(LEAGUE_YEAR),
                 'week': int(week_shown),
@@ -97,10 +98,12 @@ class Scoreboard(restful.Resource):
                 'finals': False,
             },
         # insert if you need to, and make sure to guarantee one record per year/week
-        }, upsert=True, multi=False)
+        }, upsert=True)
 
         #app.logger.debug("metadata")
         return message
+    def get(self):
+        return Scoreboard.post(self)
 
 @api.route('/scoreboard/matchupresults/')
 class MatchupResults(restful.Resource):
@@ -156,7 +159,7 @@ class MatchupResults(restful.Resource):
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
-        mongo.db.matchup_results.update(database_key, {
+        mongo.db.matchup_results.update_one(database_key, {
             '$set': {
                 'winners': winners,
                 'blowout': blowout_matchup_winner,
@@ -171,7 +174,7 @@ class MatchupResults(restful.Resource):
                 'week': LAST_LEAGUE_WEEK
             },
         # insert if you need to, and make sure to guarantee one record per year/week
-        }, upsert=True, multi=False)
+        }, upsert=True)
 
         results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
         results_string += 'Winners: ' + ', '.join(winners) + '\n'
@@ -181,6 +184,8 @@ class MatchupResults(restful.Resource):
         results_string += 'Lowest: ' + lowest_scorer + ', ' + str(low_score)
 
         return Response(results_string)
+    def get(self):
+        return MatchupResults.post(self)
 
 @api.route('/scoreboard/headtohead/')
 class HeadToHeadHistory(restful.Resource):
@@ -212,7 +217,8 @@ class HeadToHeadHistory(restful.Resource):
                         'loser': manager_two_id
                     } }
                 }, { 'playoffs': False } ] })
-            manager_one_reg_season_wins = manager_one_reg_season_query.count()
+            manager_one_reg_season_list = list(manager_one_reg_season_query)
+            manager_one_reg_season_wins = len(manager_one_reg_season_list)
             manager_one_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -221,7 +227,8 @@ class HeadToHeadHistory(restful.Resource):
                         'consolation': { '$in': [ None, False ] }
                     } }
                 }, { 'playoffs': True } ] })
-            manager_one_playoff_wins = manager_one_playoff_query.count()
+            manager_one_playoff_list = list(manager_one_playoff_query)
+            manager_one_playoff_wins = len(manager_one_playoff_list)
             manager_one_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -230,7 +237,8 @@ class HeadToHeadHistory(restful.Resource):
                         'consolation': True
                     } }
                 }, { 'playoffs': True } ] })
-            manager_one_consolation_wins = manager_one_consolation_query.count()
+            manager_one_consolation_list = list(manager_one_consolation_query)
+            manager_one_consolation_wins = len(manager_one_consolation_list)
 
             manager_two_reg_season_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
@@ -239,7 +247,8 @@ class HeadToHeadHistory(restful.Resource):
                         'loser': manager_one_id
                     } }
                 }, { 'playoffs': False } ] })
-            manager_two_reg_season_wins = manager_two_reg_season_query.count()
+            manager_two_reg_season_list = list(manager_two_reg_season_query)
+            manager_two_reg_season_wins = len(manager_two_reg_season_list)
             manager_two_playoff_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -248,7 +257,8 @@ class HeadToHeadHistory(restful.Resource):
                         'consolation': { '$in': [ None, False ] }
                     } }
                 }, { 'playoffs': True } ] })
-            manager_two_playoff_wins = manager_two_playoff_query.count()
+            manager_two_playoff_list = list(manager_two_playoff_query)
+            manager_two_playoff_wins = len(manager_two_playoff_list)
             manager_two_consolation_query = mongo.db.scores.find({ '$and': [
                 { 'matchups':
                     { '$elemMatch': {
@@ -257,7 +267,8 @@ class HeadToHeadHistory(restful.Resource):
                         'consolation': True
                     } }
                 }, { 'playoffs': True } ] })
-            manager_two_consolation_wins = manager_two_consolation_query.count()
+            manager_two_consolation_list = list(manager_two_consolation_query)
+            manager_two_consolation_wins = len(manager_two_consolation_list)
 
             matchup_string = ''
 
@@ -268,7 +279,7 @@ class HeadToHeadHistory(restful.Resource):
 
             # loop backwards through time to track winning streak
             if (manager_one_reg_season_wins + manager_two_reg_season_wins) > 0:
-                reg_season_list = list(manager_one_reg_season_query) + list(manager_two_reg_season_query)
+                reg_season_list = manager_one_reg_season_list + manager_two_reg_season_list
                 reg_season_list.sort(key=lambda x: x['year'], reverse=True)
 
                 last_manager_to_win = None
@@ -301,7 +312,7 @@ class HeadToHeadHistory(restful.Resource):
                     matchup_string += '\n- ' + str(manager_one_playoff_wins) + '-' + str(manager_two_playoff_wins) + ' in playoffs'
                 else:
                     matchup_string += '\n- ' + str(manager_two_playoff_wins) + '-' + str(manager_one_playoff_wins) + ' in playoffs'
-                playoff_years_list = list(manager_one_playoff_query) + list(manager_two_playoff_query)
+                playoff_years_list = manager_one_playoff_list + manager_two_playoff_list
                 matchup_string += ' (' + ', '.join(build_playoff_history_string(e, manager_ids) for e in playoff_years_list) + ')'
 
             if (manager_one_consolation_wins + manager_two_consolation_wins) > 0:
@@ -310,13 +321,15 @@ class HeadToHeadHistory(restful.Resource):
                     matchup_string += '\n- ' + str(manager_one_consolation_wins) + '-' + str(manager_two_consolation_wins) + ' in consolation'
                 else:
                     matchup_string += '\n- ' + str(manager_two_consolation_wins) + '-' + str(manager_one_consolation_wins) + ' in consolation'
-                consolation_years_list = list(manager_one_consolation_query) + list(manager_two_consolation_query)
+                consolation_years_list = manager_one_consolation_list + manager_two_consolation_list
                 matchup_string += ' (' + ', '.join(build_consolation_history_string(e) for e in consolation_years_list) + ')'
 
             # one message attachment per matchup
             message['attachments'].append({ 'text': matchup_string })
 
         return message
+    def get(self):
+        return HeadToHeadHistory.post(self)
 
 def build_playoff_history_string(element, manager_ids):
     return str(element['year']) + playoff_detail(element, manager_ids)
