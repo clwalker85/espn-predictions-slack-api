@@ -1,3 +1,4 @@
+import copy
 import os
 import json
 import math
@@ -10,7 +11,7 @@ from flask import request, abort, Response
 #from flask.ext import restful
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
+from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
 
 # simple proof of concept that I could get Mongo working in Heroku
 @api.route('/')
@@ -98,32 +99,31 @@ class Scoreboard(restful.Resource):
                 winning_team = s.away_team
                 losing_team = s.home_team
 
-            matchup_result = {
+            score_result = {
                 'winner': winner,
                 'loser': loser,
                 'winning_score': winning_score,
                 'losing_score': losing_score
-                # TODO - Find out how to set playoff-specific flags based on ESPN API data
             }
 
             if s.is_playoff:
-                matchup_result['winning_seed'] = winning_team.standing
-                matchup_result['losing_seed'] = losing_team.standing
-                matchup_result['consolation'] = s.matchup_type == 'LOSERS_CONSOLATION_LADDER'
+                score_result['winning_seed'] = winning_team.standing
+                score_result['losing_seed'] = losing_team.standing
+                score_result['consolation'] = s.matchup_type == 'LOSERS_CONSOLATION_LADDER'
 
-            if is_consolation_finals and matchup_result['consolation']:
-                matchup_result['championship'] = True
-                matchup_result['third_place'] = False
+            if is_consolation_finals and score_result['consolation']:
+                score_result['championship'] = True
+                score_result['third_place'] = False
 
             if is_finals:
                 if s.matchup_type == 'THIRD_PLACE_GAME':
-                    matchup_result['championship'] = False
-                    matchup_result['third_place'] = True
+                    score_result['championship'] = False
+                    score_result['third_place'] = True
                 else:
-                    matchup_result['championship'] = True
-                    matchup_result['third_place'] = False
+                    score_result['championship'] = True
+                    score_result['third_place'] = False
 
-            matchups.append(matchup_result)
+            matchups.append(score_result)
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': int(LEAGUE_YEAR), 'week': week }
@@ -132,7 +132,6 @@ class Scoreboard(restful.Resource):
                 'year': int(LEAGUE_YEAR),
                 'week': week,
                 'matchups': matchups,
-                # TODO - Find out how to set these flags based on ESPN API data
                 'playoffs': is_playoff,
                 'quarterfinals': is_quarterfinals,
                 'semifinals': is_semifinals,
@@ -149,6 +148,9 @@ class Scoreboard(restful.Resource):
 @api.route('/scoreboard/matchupresults/')
 class MatchupResults(restful.Resource):
     def post(self):
+        # previously, this only ran when the server started; now we can make sure week metadata is up to date here
+        refresh_week_constants()
+
         # can't calculate matchup results for the week before in the first week
         # in practice, __init__.py checks for the latest week to start
         if LEAGUE_WEEK == '1':
@@ -227,6 +229,98 @@ class MatchupResults(restful.Resource):
         return Response(results_string)
     def get(self):
         return MatchupResults.post(self)
+
+@api.route('/scoreboard/tiebreakers/')
+class Tiebreakers(restful.Resource):
+    def post(self):
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Tiebreaker calculations for week ' + LEAGUE_WEEK + ' (waivers by fewest wins/points, draft standings by most):',
+            'attachments': []
+        }
+
+        # can't calculate tiebreakers for the week before in the first week
+        # in practice, __init__.py checks for the latest week to start
+        if LEAGUE_WEEK == '1':
+            return Response('Tiebreaker calculations are not available until the morning (8am) after Monday Night Football.')
+
+        # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
+        week_before = int(LAST_LEAGUE_WEEK) - 1
+        previous_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': str(week_before) }) if week_before > 0 else []
+        # TODO - return error if no prediction standings are found
+        current_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
+        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+        player_lookup_by_username = {}
+        for p in mongo.db.player_metadata.find():
+            player_lookup_by_username[p['slack_username']] = p
+
+        league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+        team_lookup_by_espn_name = {}
+        for t in league.teams:
+            team_lookup_by_espn_name[t.owner] = t
+
+        previous_standings_lookup_by_username = {}
+        if week_before > 0:
+            for ps in previous_standings:
+                previous_standings_lookup_by_username[ps['username']] = ps
+
+        season_standings_to_sort = []
+        week_standings_to_sort = []
+        for team in current_standings:
+            total = team['total'] or 0
+            username = team['username']
+            espn_owner_name = player_lookup_by_username[username]['espn_owner_name']
+            # TODO - need to factor in playoff wins/points (bye weeks count as wins, and points count)
+            team_wins = team_lookup_by_espn_name[espn_owner_name].wins
+            team_points = team_lookup_by_espn_name[espn_owner_name].points_for
+            season_standings_to_sort.append({
+                    'username': username,
+                    'total': total,
+                    'wins': team_wins,
+                    'points': team_points
+                })
+
+            if week_before > 0:
+                week_total = total - previous_standings_lookup_by_username[username]['total']
+                week_standings_to_sort.append({
+                        'username': username,
+                        'total': week_total,
+                        'wins': team_wins,
+                        'points': team_points
+                    })
+
+        if week_before == 0:
+            week_standings_grouped_by_total = copy.deepcopy(season_standings_grouped_by_total)
+
+        week_string = 'Week ' + LEAGUE_WEEK + ' Waiver Order:\n'
+
+        # break ties by least wins, then least points
+        # TODO - need to implement coin flip and show explicit results
+        for team in sorted(week_standings_to_sort, key=lambda t: (-t['total'], t['wins'], t['points'])):
+            week_string += str(team['total']) + ' - ' + team['username']
+            if sum(t['total'] == team['total'] for t in week_standings_to_sort) > 1:
+                week_string += ' (' + str(team['wins']) + ' wins'
+            if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in week_standings_to_sort) > 1:
+                week_string += ' , ' + str(team['points']) + ' points'
+            week_string += ')\n'
+
+        message['attachments'].append({ 'text': week_string })
+        season_string = 'Draft Selection Standings for ' + LEAGUE_YEAR + ':\n'
+
+        # TODO - need champ/H2H info; for now, break ties by most wins, then most points
+        # TODO - need to implement coin flip and show explicit results
+        for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], -t['wins'], -t['points'])):
+            season_string += str(team['total']) + ' - ' + team['username']
+            if sum(t['total'] == team['total'] for t in season_standings_to_sort) > 1:
+                season_string += ' (' + str(team['wins']) + ' wins'
+            if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in season_standings_to_sort) > 1:
+                season_string += ' , ' + str(team['points']) + ' points'
+            season_string += ')\n'
+
+        message['attachments'].append({ 'text': season_string })
+        return message
+    def get(self):
+        return Tiebreakers.post(self)
 
 @api.route('/scoreboard/headtohead/')
 class HeadToHeadHistory(restful.Resource):

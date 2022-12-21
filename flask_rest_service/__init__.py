@@ -95,7 +95,24 @@ PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two']
 # strftime doesn't provide anything besides zero-padded numbers in formats,
 # so it looks like -------------------------------------> "December 23, 2017, at 04:30PM"
 # TODO - Use a better date formatter, to try and get ---> "December 23rd, 2017, at 4:30PM"
-DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p')
+DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p ')
+
+def refresh_week_constants():
+    with app.app_context():
+        MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
+            'start_of_week_time': { '$lte': datetime.now() } }, sort=[('start_of_week_time', -1)])
+        LAST_MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
+            'end_of_week_time': { '$lte': datetime.now() } }, sort=[('end_of_week_time', -1)])
+
+    LEAGUE_WEEK = MATCHUP_METADATA['week']
+    if not LAST_MATCHUP_METADATA:
+        LAST_MATCHUP_METADATA = MATCHUP_METADATA
+    LAST_LEAGUE_WEEK = LAST_MATCHUP_METADATA['week']
+    tz_aware_deadline_time = MATCHUP_METADATA['deadline_time']
+    DEADLINE_TIME = tz_aware_deadline_time.replace(tzinfo=None)
+    MATCHUPS = MATCHUP_METADATA['matchups']
+    PREDICTION_ELIGIBLE_MEMBERS = [m['team_one'] for m in MATCHUPS] + [m['team_two'] for m in MATCHUPS]
+    DEADLINE_STRING = DEADLINE_TIME.strftime('%B %d, %Y, at %I:%M%p ')
 
 ### GENERAL PURPOSE METHODS (not API related) ###
 
