@@ -52,7 +52,22 @@ class Scoreboard(restful.Resource):
 
         matchups = []
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
-        box_scores = league.box_scores(int(week_shown))
+        week = int(week_shown)
+        box_scores = league.box_scores(week)
+
+        last_week_of_regular_season = league.settings.reg_season_count
+        number_of_teams_in_league = league.settings.team_count
+        number_of_playoff_teams = league.settings.playoff_team_count
+
+        is_playoff = week > last_week_of_regular_season
+        is_round_one = last_week_of_regular_season + 1 == week
+        is_round_two = last_week_of_regular_season + 2 == week
+        is_round_three = last_week_of_regular_season + 3 == week
+        is_quarterfinals = number_of_playoff_teams > 4 and is_round_one
+        is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
+        is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
+        is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
+
         for s in box_scores:
             if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
                 continue
@@ -73,32 +88,55 @@ class Scoreboard(restful.Resource):
             loser = player_lookup_by_espn_name[s.away_team.owner]['player_id']
             winning_score = s.home_score
             losing_score = s.away_score
+            winning_team = s.home_team
+            losing_team = s.away_team
             if (s.away_score > s.home_score):
                 winner = player_lookup_by_espn_name[s.away_team.owner]['player_id']
                 loser = player_lookup_by_espn_name[s.home_team.owner]['player_id']
                 winning_score = s.away_score
                 losing_score = s.home_score
+                winning_team = s.away_team
+                losing_team = s.home_team
 
-            matchups.append({
+            matchup_result = {
                 'winner': winner,
                 'loser': loser,
                 'winning_score': winning_score,
                 'losing_score': losing_score
                 # TODO - Find out how to set playoff-specific flags based on ESPN API data
-            })
+            }
+
+            if s.is_playoff:
+                matchup_result['winning_seed'] = winning_team.standing
+                matchup_result['losing_seed'] = losing_team.standing
+                matchup_result['consolation'] = s.matchup_type == 'LOSERS_CONSOLATION_LADDER'
+
+            if is_consolation_finals and matchup_result['consolation']:
+                matchup_result['championship'] = True
+                matchup_result['third_place'] = False
+
+            if is_finals:
+                if s.matchup_type == 'THIRD_PLACE_GAME':
+                    matchup_result['championship'] = False
+                    matchup_result['third_place'] = True
+                else:
+                    matchup_result['championship'] = True
+                    matchup_result['third_place'] = False
+
+            matchups.append(matchup_result)
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        database_key = { 'year': int(LEAGUE_YEAR), 'week': int(week_shown) }
+        database_key = { 'year': int(LEAGUE_YEAR), 'week': week }
         mongo.db.scores.update_one(database_key, {
             '$set': {
                 'year': int(LEAGUE_YEAR),
-                'week': int(week_shown),
+                'week': week,
                 'matchups': matchups,
                 # TODO - Find out how to set these flags based on ESPN API data
-                'playoffs': False,
-                'quarterfinals': False,
-                'semifinals': False,
-                'finals': False,
+                'playoffs': is_playoff,
+                'quarterfinals': is_quarterfinals,
+                'semifinals': is_semifinals,
+                'finals': is_finals,
             },
         # insert if you need to, and make sure to guarantee one record per year/week
         }, upsert=True)
