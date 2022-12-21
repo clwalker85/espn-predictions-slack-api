@@ -54,6 +54,9 @@ class Scoreboard(restful.Resource):
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
         box_scores = league.box_scores(int(week_shown))
         for s in box_scores:
+            if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
+                continue
+
             home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
             matchup_string = home_name + ' - ' + str(s.home_score)
             if (s.home_projected != -1 and not math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
