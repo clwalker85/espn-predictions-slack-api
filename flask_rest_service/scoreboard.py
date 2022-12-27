@@ -68,22 +68,14 @@ class Scoreboard(restful.Resource):
         is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
         is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
         is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
+        is_consolation_over = is_round_three and not is_consolation_finals
 
         for s in box_scores:
             if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
                 continue
 
-            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
-            matchup_string = home_name + ' - ' + str(s.home_score)
-            if (s.home_projected != -1 and not math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
-                matchup_string += ' (' + str(s.home_projected) + ')'
-
-            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
-            matchup_string += ' versus ' + away_name + ' - ' + str(s.away_score)
-            if (s.away_projected != -1 and not math.isclose(s.away_score, s.away_projected, abs_tol=0.01)):
-                matchup_string += ' (' + str(s.away_projected) + ')'
-
-            message['attachments'].append({ 'text': matchup_string })
+            if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
+                continue
 
             winner = player_lookup_by_espn_name[s.home_team.owner]['player_id']
             loser = player_lookup_by_espn_name[s.away_team.owner]['player_id']
@@ -98,6 +90,28 @@ class Scoreboard(restful.Resource):
                 losing_score = s.home_score
                 winning_team = s.away_team
                 losing_team = s.home_team
+
+            if s.matchup_type == 'LOSERS_CONSOLATION_LADDER':
+                if is_consolation_over:
+                   continue
+                elif not is_round_one:
+                    # HACK - if they won the last completed consolation game, ignore them
+                    last_game = losing_team.outcomes[-1]
+                    penultimate_game = losing_team.outcomes[-2]
+                    if last_game == 'W' or (last_game == 'U' and penultimate_game == 'W'):
+                        continue
+
+            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
+            matchup_string = home_name + ' - ' + str(s.home_score)
+            if (s.home_projected != -1 and not math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
+                matchup_string += ' (' + str(s.home_projected) + ')'
+
+            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
+            matchup_string += ' versus ' + away_name + ' - ' + str(s.away_score)
+            if (s.away_projected != -1 and not math.isclose(s.away_score, s.away_projected, abs_tol=0.01)):
+                matchup_string += ' (' + str(s.away_projected) + ')'
+
+            message['attachments'].append({ 'text': matchup_string })
 
             score_result = {
                 'winner': winner,
@@ -115,7 +129,8 @@ class Scoreboard(restful.Resource):
                 score_result['championship'] = True
                 score_result['third_place'] = False
 
-            if is_finals:
+            if is_finals and not score_result['consolation']:
+                #if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                 if s.matchup_type == 'THIRD_PLACE_GAME':
                     score_result['championship'] = False
                     score_result['third_place'] = True
@@ -245,7 +260,8 @@ class Tiebreakers(restful.Resource):
             return Response('Tiebreaker calculations are not available until the morning (8am) after Monday Night Football.')
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        week_before = int(LAST_LEAGUE_WEEK) - 1
+        week = int(LAST_LEAGUE_WEEK)
+        week_before = week - 1
         previous_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': str(week_before) }) if week_before > 0 else []
         # TODO - return error if no prediction standings are found
         current_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
@@ -255,6 +271,21 @@ class Tiebreakers(restful.Resource):
             player_lookup_by_username[p['slack_username']] = p
 
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+
+        last_week_of_regular_season = league.settings.reg_season_count
+        number_of_teams_in_league = league.settings.team_count
+        number_of_playoff_teams = league.settings.playoff_team_count
+
+        is_playoff = week > last_week_of_regular_season
+        is_round_one = last_week_of_regular_season + 1 == week
+        is_round_two = last_week_of_regular_season + 2 == week
+        is_round_three = last_week_of_regular_season + 3 == week
+        is_quarterfinals = number_of_playoff_teams > 4 and is_round_one
+        is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
+        is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
+        is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
+        is_consolation_over = is_round_three and not is_consolation_finals
+
         team_lookup_by_espn_name = {}
         for t in league.teams:
             team_lookup_by_espn_name[t.owner] = t
@@ -270,9 +301,32 @@ class Tiebreakers(restful.Resource):
             total = team['total'] or 0
             username = team['username']
             espn_owner_name = player_lookup_by_username[username]['espn_owner_name']
-            # TODO - need to factor in playoff wins/points (bye weeks count as wins, and points count)
-            team_wins = team_lookup_by_espn_name[espn_owner_name].wins
-            team_points = team_lookup_by_espn_name[espn_owner_name].points_for
+            espn_team = team_lookup_by_espn_name[espn_owner_name]
+            team_wins = espn_team.wins
+            team_points = espn_team.points_for
+
+            # ESPN doesn't factor in playoff wins/points, so we have to add those ourselves
+            if is_playoff:
+                if last_week_of_regular_season + 1 <= week:
+                    index = last_week_of_regular_season
+                    outcome = espn_team.outcomes[index]
+                    # (bye weeks count as wins, and bye week points count)
+                    if (outcome == 'W' or outcome == 'U'):
+                        team_wins += 1
+                    team_points += espn_team.scores[index]
+                if last_week_of_regular_season + 2 <= week:
+                    index = last_week_of_regular_season + 1
+                    outcome = espn_team.outcomes[index]
+                    if (outcome == 'W' or outcome == 'U'):
+                        team_wins += 1
+                    team_points += espn_team.scores[index]
+                if last_week_of_regular_season + 3 <= week:
+                    index = last_week_of_regular_season + 2
+                    outcome = espn_team.outcomes[index]
+                    if (outcome == 'W' or outcome == 'U'):
+                        team_wins += 1
+                    team_points += espn_team.scores[index]
+
             season_standings_to_sort.append({
                     'username': username,
                     'total': total,
@@ -301,7 +355,8 @@ class Tiebreakers(restful.Resource):
             if sum(t['total'] == team['total'] for t in week_standings_to_sort) > 1:
                 week_string += ' (' + str(team['wins']) + ' wins'
             if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in week_standings_to_sort) > 1:
-                week_string += ' , ' + str(team['points']) + ' points'
+                pprint.pprint(team['points'])
+                week_string += ', ' + str(team['points']) + ' points'
             week_string += ')\n'
 
         message['attachments'].append({ 'text': week_string })
