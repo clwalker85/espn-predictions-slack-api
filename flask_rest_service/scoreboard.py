@@ -556,3 +556,31 @@ def build_consolation_history_string(element):
 
 def consolation_detail(element):
     return " breckfast bowl" if element['finals'] else ""
+
+@api.route('/history/podium/')
+class Podium(restful.Resource):
+    def post(self):
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Podium finish for every league year:',
+            'attachments': []
+        }
+
+        championship_query = mongo.db.scores_per_matchup.find({ 'consolation': False, 'championship': True, 'third_place': False })
+        championship_list = list(championship_query)
+        third_place_query = mongo.db.scores_per_matchup.find({ 'consolation': False, 'championship': False, 'third_place': True })
+        third_place_list = list(third_place_query)
+        podium_list = championship_list + third_place_list
+
+        podium_string = ''
+        for m in sorted(podium_list, key=lambda t: (-t['year'], -t['championship'])):
+            if m['championship']:
+                podium_string += str(m['year']) + ' CHAMPION: ' + m['winner'] + ' (' + str(m['winning_score']) + ')'
+                podium_string += ', 2nd: ' + m['loser'] + ' (' + str(m['losing_score']) + ')'
+            elif m['third_place']:
+                podium_string += ', 3rd: ' + m['winner'] + '\n'
+
+        message['attachments'].append({ 'text': podium_string })
+        return message
+    def get(self):
+        return Podium.post(self)
