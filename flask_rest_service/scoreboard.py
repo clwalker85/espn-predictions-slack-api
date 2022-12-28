@@ -95,11 +95,20 @@ class Scoreboard(restful.Resource):
             if s.matchup_type == 'LOSERS_CONSOLATION_LADDER':
                 if is_consolation_over:
                    continue
-                elif not is_round_one:
-                    # HACK - if they won the last completed consolation game, ignore them
-                    last_game = losing_team.outcomes[-1]
-                    penultimate_game = losing_team.outcomes[-2]
-                    if last_game == 'W' or (last_game == 'U' and penultimate_game == 'W'):
+
+                # HACK - if they won any completed consolation game, ignore the box score
+                index_for_round_two = last_week_of_regular_season + 2 - 1
+                if is_round_three:
+                    round_two_winners_game = winning_team.outcomes[index_for_round_two]
+                    round_two_losers_game = losing_team.outcomes[index_for_round_two]
+                    if round_two_winners_game == 'W' or round_two_losers_game == 'W':
+                        continue
+
+                index_for_round_one = last_week_of_regular_season + 1 - 1
+                if not is_round_one:
+                    round_one_winners_game = winning_team.outcomes[index_for_round_one]
+                    round_one_losers_game = losing_team.outcomes[index_for_round_one]
+                    if round_one_winners_game == 'W' or round_one_losers_game == 'W':
                         continue
 
             home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
