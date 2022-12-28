@@ -3,6 +3,7 @@ import os
 import json
 import math
 import pprint
+import random
 import requests
 from decimal import Decimal
 from datetime import datetime
@@ -273,18 +274,12 @@ class Tiebreakers(restful.Resource):
         league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
 
         last_week_of_regular_season = league.settings.reg_season_count
-        number_of_teams_in_league = league.settings.team_count
         number_of_playoff_teams = league.settings.playoff_team_count
 
         is_playoff = week > last_week_of_regular_season
-        is_round_one = last_week_of_regular_season + 1 == week
         is_round_two = last_week_of_regular_season + 2 == week
         is_round_three = last_week_of_regular_season + 3 == week
-        is_quarterfinals = number_of_playoff_teams > 4 and is_round_one
-        is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
         is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
-        is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
-        is_consolation_over = is_round_three and not is_consolation_finals
 
         team_lookup_by_espn_name = {}
         for t in league.teams:
@@ -330,8 +325,7 @@ class Tiebreakers(restful.Resource):
             season_standings_to_sort.append({
                     'username': username,
                     'total': total,
-                    'wins': team_wins,
-                    'points': team_points
+                    'final_standing': espn_team.final_standing
                 })
 
             if week_before > 0:
@@ -340,37 +334,45 @@ class Tiebreakers(restful.Resource):
                         'username': username,
                         'total': week_total,
                         'wins': team_wins,
-                        'points': team_points
+                        'points': Decimal(team_points),
+                        'random': random.randint(0, 100)
                     })
 
         if week_before == 0:
             week_standings_grouped_by_total = copy.deepcopy(season_standings_grouped_by_total)
 
-        week_string = 'Week ' + LEAGUE_WEEK + ' Waiver Order:\n'
+        if not is_finals:
+            week_string = 'Week ' + LEAGUE_WEEK + ' Waiver Order:\n'
 
-        # break ties by least wins, then least points
-        # TODO - need to implement coin flip and show explicit results
-        for team in sorted(week_standings_to_sort, key=lambda t: (-t['total'], t['wins'], t['points'])):
-            week_string += str(team['total']) + ' - ' + team['username']
-            if sum(t['total'] == team['total'] for t in week_standings_to_sort) > 1:
-                week_string += ' (' + str(team['wins']) + ' wins'
-            if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in week_standings_to_sort) > 1:
-                pprint.pprint(team['points'])
-                week_string += ', ' + str(team['points']) + ' points'
-            week_string += ')\n'
+            # break ties by least wins, then least points, then coin flip
+            for team in sorted(week_standings_to_sort, key=lambda t: (-t['total'], t['wins'], t['points'], t['random'])):
+                week_string += str(team['total']) + ' - ' + team['username']
+                if sum(t['total'] == team['total'] for t in week_standings_to_sort) > 1:
+                    week_string += ' (' + str(team['wins']) + ' wins'
 
-        message['attachments'].append({ 'text': week_string })
-        season_string = 'Draft Selection Standings for ' + LEAGUE_YEAR + ':\n'
+                    if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in week_standings_to_sort) > 1:
+                        week_string += ', ' + str(round(team['points'], 2)) + ' points'
 
-        # TODO - need champ/H2H info; for now, break ties by most wins, then most points
-        # TODO - need to implement coin flip and show explicit results
-        for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], -t['wins'], -t['points'])):
+                    week_string += ')'
+
+                    number_of_remaining_teams = sum((t['total'], t['wins'], t['points']) == (team['total'], team['wins'], team['points']) for t in week_standings_to_sort)
+                    if number_of_remaining_teams > 1:
+                        week_string += '\n' + '***COIN FLIP TIEBREAKER APPLIED WITH RANDOM NUMBER***'
+                week_string += '\n'
+
+            message['attachments'].append({ 'text': week_string })
+
+        season_string = 'Final ' if is_finals else ''
+        season_string += 'Draft Selection Standings for ' + LEAGUE_YEAR + ':\n'
+
+        for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], t['final_standing'])):
             season_string += str(team['total']) + ' - ' + team['username']
             if sum(t['total'] == team['total'] for t in season_standings_to_sort) > 1:
-                season_string += ' (' + str(team['wins']) + ' wins'
-            if sum((t['total'], t['wins']) == (team['total'], team['wins']) for t in season_standings_to_sort) > 1:
-                season_string += ' , ' + str(team['points']) + ' points'
-            season_string += ')\n'
+                if team['final_standing']:
+                    rank = team['final_standing']
+                    ordinal_suffix = ['th', 'st', 'nd', 'rd', 'th'][min(rank % 10, 4)]
+                    season_string += '(finished ' + str(rank) + ordinal_suffix + ')'
+            season_string += '\n'
 
         message['attachments'].append({ 'text': season_string })
         return message
