@@ -164,3 +164,4 @@ def update_message(payload):
 
 import flask_rest_service.predictions
 import flask_rest_service.scoreboard
+import flask_rest_service.history
