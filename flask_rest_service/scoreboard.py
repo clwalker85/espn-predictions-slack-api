@@ -75,9 +75,6 @@ class Scoreboard(restful.Resource):
             if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
                 continue
 
-            if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
-                continue
-
             winner = player_lookup_by_espn_name[s.home_team.owner]['player_id']
             loser = player_lookup_by_espn_name[s.away_team.owner]['player_id']
             winning_score = s.home_score
@@ -91,6 +88,17 @@ class Scoreboard(restful.Resource):
                 losing_score = s.home_score
                 winning_team = s.away_team
                 losing_team = s.home_team
+
+            if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
+                if is_round_three:
+                    index_for_round_two = last_week_of_regular_season + 2 - 1
+                    round_two_winners_game = winning_team.outcomes[index_for_round_two]
+                    round_two_losers_game = losing_team.outcomes[index_for_round_two]
+                    # if either team won the last game, this isn't the third place game
+                    if round_two_winners_game == 'W' or round_two_losers_game == 'W':
+                        continue
+                else:
+                    continue
 
             if s.matchup_type == 'LOSERS_CONSOLATION_LADDER':
                 if is_consolation_over:
