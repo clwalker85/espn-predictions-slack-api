@@ -230,8 +230,17 @@ class Winnings(restful.Resource):
                 standings[third] += dues_per_member
 
         winnings_string = ''
-        for winner, money in sorted(standings.items(), key=lambda item: -item[1]):
-            winnings_string += winner + ': $' + str(money) + '\n'
+        for player, money in sorted(standings.items(), key=lambda item: -item[1]):
+            years_in_league = mongo.db.scores_per_matchup.distinct('year', { '$or': [ {'winner': player}, {'loser': player} ] })
+            dues = 0
+            for year in years_in_league:
+                if year > 2018:
+                    dues += 50
+                elif year > 2013:
+                    dues += 30
+                else:
+                    dues += 20
+            winnings_string += player + ': $' + str(money) + ' ($' + str(dues) + ' dues paid, $' + str(money - dues) + ' net winnings)\n'
 
         message['attachments'].append({ 'text': winnings_string })
         return message

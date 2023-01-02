@@ -148,8 +148,7 @@ class Scoreboard(restful.Resource):
                 score_result['third_place'] = False
 
             if is_finals and not score_result['consolation']:
-                #if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
-                if s.matchup_type == 'THIRD_PLACE_GAME':
+                if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                     score_result['championship'] = False
                     score_result['third_place'] = True
                 else:
