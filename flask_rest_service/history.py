@@ -227,13 +227,19 @@ class Winnings(restful.Resource):
                     standings[runner_up] += dues_per_member * 3
             elif m['third_place']:
                 third = m['winner']
-                standings[third] += dues_per_member
+                if m['year'] == 2022:
+                    fourth = m['loser']
+                    standings[third] += 25
+                    standings[fourth] += 25
+                else:
+                    standings[third] += dues_per_member
 
         winnings_string = ''
         for player, money in sorted(standings.items(), key=lambda item: -item[1]):
-            years_in_league = mongo.db.scores_per_matchup.distinct('year', { '$or': [ {'winner': player}, {'loser': player} ] })
+            years_in_league = mongo.db.league_metadata.distinct('year', { 'members': { '$elemMatch': { 'display_name': player } } })
             dues = 0
-            for year in years_in_league:
+            for y in years_in_league:
+                year = int(y)
                 if year > 2018:
                     dues += 50
                 elif year > 2013:

@@ -59,11 +59,10 @@ ESPN_S2 = os.environ.get('ESPN_S2')
 
 ### LEAGUE CONSTANTS (mostly data we need to abstract away from the business logic)
 
-# get the last inserted row in league_metadata (done by hand in the mlab website)
 # TODO - Find a way to fetch some of this through the ESPN API when teams are locked in
 # Might have to always manually link an ESPN user to their Slack user
 with app.app_context():
-    LEAGUE_METADATA = mongo.db.league_metadata.find_one(sort=[('_id', -1)])
+    LEAGUE_METADATA = mongo.db.league_metadata.find_one(sort=[('year', -1)])
 
 LEAGUE_ID = LEAGUE_METADATA['league_id']
 LEAGUE_YEAR = LEAGUE_METADATA['year']

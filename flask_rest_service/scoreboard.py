@@ -387,7 +387,7 @@ class Tiebreakers(restful.Resource):
                 if team['final_standing']:
                     rank = team['final_standing']
                     ordinal_suffix = ['th', 'st', 'nd', 'rd', 'th'][min(rank % 10, 4)]
-                    season_string += '(finished ' + str(rank) + ordinal_suffix + ')'
+                    season_string += ' (finished ' + str(rank) + ordinal_suffix + ')'
             season_string += '\n'
 
         message['attachments'].append({ 'text': season_string })
