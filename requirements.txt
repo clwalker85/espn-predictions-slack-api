@@ -9,4 +9,3 @@ slackclient==2.9.4
 python-dotenv==0.20.0
 pymongo[srv]==4.2.0
 espn_api==0.21.0
-
