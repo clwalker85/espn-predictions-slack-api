@@ -81,7 +81,7 @@ def add_styling_to_prediction_form(payload):
 
     # loop through each interactive message action, basically what changed
     for action in actions:
-        # find the prediction form element that matches the action name and style that bitch
+        # find the prediction form element that matches the action name and style it
         for a in message['attachments']:
             for element in a['actions']:
                 if action['name'] == element['name']:
@@ -120,6 +120,7 @@ def handle_dialog_submission(payload):
 
         score_button['text'] = ':heavy_check_mark: High score: ' + high_score + ', Low score: ' + low_score
         save_scores_to_database(payload, message, high_score, low_score)
+    # TODO - Catch explicit exceptions for Decimal parsing
     except:
         score_button['text'] = ':x: Type in valid decimal numbers next time. No score predictions currently saved.'
         save_scores_to_database(payload, message, None, None)
@@ -153,12 +154,12 @@ def save_form_to_database(payload):
     year, week = payload['callback_id'].split("-")
     database_key = { 'username': username, 'year': year, 'week': week }
 
+    # guarantee one record per user and year/week
     mongo.db.predictions.update_one(database_key, {
         '$set': {
             'message': message,
             'last_modified': datetime.now()
         },
-    # insert if you need to, and make sure to guarantee one record per user and year/week
     }, upsert=True)
 
 def save_scores_to_database(payload, message, high_score, low_score):
@@ -167,6 +168,7 @@ def save_scores_to_database(payload, message, high_score, low_score):
     year, week = payload['callback_id'].split("-")
     database_key = { 'username': username, 'year': year, 'week': week }
 
+    # guarantee one record per user and year/week
     mongo.db.predictions.update_one(database_key, {
         '$set': {
             'message': message,
@@ -174,7 +176,6 @@ def save_scores_to_database(payload, message, high_score, low_score):
             'low_score': low_score,
             'last_modified': datetime.now()
         },
-    # insert if you need to, and make sure to guarantee one record per user and year/week
     }, upsert=True)
 
 # This endpoint loops through any saved predictions for the current week and posts them
@@ -270,7 +271,7 @@ class SendPredictionForm(restful.Resource):
         if datetime.now() > DEADLINE_TIME:
             return Response('Prediction forms cannot be sent before the start of the next week.')
 
-        # if anyone has submitted a prediction for the week, that means we've sent a form already
+        # if anyone has submitted a prediction for the week, that means we've sent a form already;
         # block any second form (if it's really necessary, it'll require a programmer to circumvent)
         if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })):
             return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
@@ -371,8 +372,7 @@ class SendPredictionForm(restful.Resource):
 
         return
 
-# WARNING - I saved the most complicated code for the end. If you skipped the stuff above,
-# fucking stop and go reread that shit.
+# WARNING - I saved the most complicated code for the end. Don't skip the comment at the top!
 @api.route('/prediction/calculations/')
 class CalculatePredictions(restful.Resource):
     def post(self):
@@ -387,8 +387,8 @@ class CalculatePredictions(restful.Resource):
             'text': 'Prediction calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
             'attachments': []
         }
-        # TODO - I have to enter matchup results by hand each week when scoring is final on Tuesday;
-        # maybe we can make the scoreboard command load this table
+        # we currently store ESPN matchup results by triggering a Slack command;
+        # see scoreboard.py and the '/scoreboard/matchupresults/' endpoint for more details
         matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
         formula_by_user, prediction_winners, closest_to_pin_stats = build_prediction_stats(matchup_result)
 
@@ -483,8 +483,8 @@ def build_formula_string(formula_by_user):
 
 def build_standings_string():
     standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }).sort(
-        # sort this shit for ease of calculating waiver order standings
-        # TODO - factor in tiebreakers from ESPN standings data
+        # see scoreboard.py and the '/scoreboard/tiebreakers/' for a command
+        # that factors in tiebreakers when sorting waiver order standings
         [('total', -1)])
     standings_string = 'Draft selection standings for the season so far:\n'
     for prediction_record in standings:

@@ -121,9 +121,10 @@ def post_to_slack(payload):
     sc = WebClient(token=slack_token)
 
     for user_id in LEAGUE_USER_IDS:
-	# uncomment this line to send shit only to Walker
+	# uncomment this line to send messages only to Walker
         #if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.conversations_open(users=user_id)
+            # unwrap channel information
             channel = channel['channel']
 
             sc.chat_postMessage(

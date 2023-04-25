@@ -9,19 +9,9 @@ from decimal import Decimal
 from datetime import datetime
 from espn_api.football import League
 from flask import request, abort, Response
-#from flask.ext import restful
 import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
-
-# simple proof of concept that I could get Mongo working in Heroku
-@api.route('/')
-class Root(restful.Resource):
-    def get(self):
-        return {
-            'status': 'OK',
-            'mongo': str(mongo.db),
-        }
 
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
@@ -33,7 +23,7 @@ class Scoreboard(restful.Resource):
         #query_type = param[0]
 
         #if query_type == 'help':
-        #message['attachments'].append({ 'text': prediction_string })
+        #message['attachments'].append({ 'text': some_help_output_string })
 
         message = {
             'response_type': 'in_channel',
@@ -159,6 +149,7 @@ class Scoreboard(restful.Resource):
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': int(LEAGUE_YEAR), 'week': week }
+        # guarantee one record per year/week
         mongo.db.scores.update_one(database_key, {
             '$set': {
                 'year': int(LEAGUE_YEAR),
@@ -169,10 +160,8 @@ class Scoreboard(restful.Resource):
                 'semifinals': is_semifinals,
                 'finals': is_finals,
             },
-        # insert if you need to, and make sure to guarantee one record per year/week
         }, upsert=True)
 
-        #app.logger.debug("metadata")
         return message
     def get(self):
         return Scoreboard.post(self)
@@ -221,19 +210,16 @@ class MatchupResults(restful.Resource):
             if margin > biggest_margin:
                 biggest_margin = margin
                 blowout_matchup_winner = winner_name
-                # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
-                # this should not affect logic and only be for display purposes
                 blowout_matchup = winner_name + " versus " + loser_name
 
             if margin < smallest_margin:
                 smallest_margin = margin
                 closest_matchup_winner = winner_name
-                # HACK - would be a pain to make LAST_WEEK_MATCHUPS just to order the names right;
-                # this should not affect logic and only be for display purposes
                 closest_matchup = winner_name + " versus " + loser_name
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+        # guarantee one record per year/week
         mongo.db.matchup_results.update_one(database_key, {
             '$set': {
                 'winners': winners,
@@ -248,7 +234,6 @@ class MatchupResults(restful.Resource):
                 'year': LEAGUE_YEAR,
                 'week': LAST_LEAGUE_WEEK
             },
-        # insert if you need to, and make sure to guarantee one record per year/week
         }, upsert=True)
 
         results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
