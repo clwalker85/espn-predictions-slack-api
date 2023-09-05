@@ -4,7 +4,7 @@ import pprint
 import logging
 import types
 import pytz
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from flask import Flask, jsonify
 #from flask.ext import restful
 import flask_restful as restful
@@ -12,6 +12,7 @@ import flask_restful as restful
 from flask_pymongo import PyMongo
 from slack import WebClient
 from dotenv import load_dotenv
+from espn_api.football import League
 
 load_dotenv()
 
@@ -80,6 +81,62 @@ with app.app_context():
         'start_of_week_time': { '$lte': datetime.now() } }, sort=[('start_of_week_time', -1)])
     LAST_MATCHUP_METADATA = mongo.db.matchup_metadata.find_one({ 'year': LEAGUE_YEAR,
         'end_of_week_time': { '$lte': datetime.now() } }, sort=[('end_of_week_time', -1)])
+
+if not MATCHUP_METADATA:
+    next_tuesday_candidate = datetime.today()
+    # `1` represents Tuesday
+    while next_tuesday_candidate.weekday() != 1:
+        next_tuesday_candidate += timedelta(days=1)
+
+    eight_am = time(hour=8)
+    start_of_week_time = datetime.combine(next_tuesday_candidate, eight_am)
+    end_of_week_time = datetime.combine(start_of_week_time + timedelta(days=7), eight_am)
+
+    eight_twenty_pm = time(hour=20, minute=20)
+    deadline_time = datetime.combine(start_of_week_time + timedelta(days=2), eight_twenty_pm)
+
+    player_lookup_by_espn_name = {}
+    for p in mongo.db.player_metadata.find():
+        if p['espn_owner_name']:
+            player_lookup_by_espn_name[p['espn_owner_name']] = p
+
+    matchups = []
+    league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+    box_scores = league.box_scores(1)
+
+    # TODO - save these as ints instead
+    database_key = { 'year': LEAGUE_YEAR, 'week': '1' }
+
+    for s in box_scores:
+        if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
+            continue
+
+        home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
+        away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
+
+        matchup = {
+            'team_one': away_name,
+            'team_two': home_name,
+            # TODO - insert player IDs as well, for migration away from strings
+        }
+
+        matchups.append(matchup)
+
+    record = {
+        # TODO - save these as ints instead
+        'year': LEAGUE_YEAR,
+        'week': '1',
+        'matchups': matchups,
+        'start_of_week_time': start_of_week_time,
+        'deadline_time': deadline_time,
+        'end_of_week_time': end_of_week_time,
+    }
+    # guarantee one record per year/week
+    mongo.db.matchup_metadata.update_one(database_key, {
+        '$set': record,
+    }, upsert=True)
+
+    MATCHUP_METADATA = record
 
 LEAGUE_WEEK = MATCHUP_METADATA['week']
 # we won't find the last matchup in week one, so let's just avoid null pointers

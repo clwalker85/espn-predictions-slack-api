@@ -6,7 +6,7 @@ import pprint
 import random
 import requests
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, time, timedelta
 from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
@@ -379,4 +379,122 @@ class Tiebreakers(restful.Resource):
         return message
     def get(self):
         return Tiebreakers.post(self)
+
+@api.route('/scoreboard/schedule')
+class Schedule(restful.Resource):
+    def post(self):
+        if str(datetime.today().year) != LEAGUE_YEAR:
+            return Response("League metadata must be set before setting this year's schedule; see admin.")
+
+        week_param = request.form.get('text', None)
+        week_string = str(int(LEAGUE_WEEK) + 1)
+        if week_param:
+            week_string = week_param.strip()
+
+        next_tuesday_candidate = datetime.today()
+        # `1` represents Tuesday
+        while next_tuesday_candidate.weekday() != 1:
+            next_tuesday_candidate += timedelta(days=1)
+        if week_string != '1' and LAST_MATCHUP_METADATA:
+            next_tuesday_candidate = LAST_MATCHUP_METADATA['end_of_week_time']
+
+        eight_am = time(hour=8)
+        start_of_week_time = datetime.combine(next_tuesday_candidate, eight_am)
+        end_of_week_time = datetime.combine(start_of_week_time + timedelta(days=7), eight_am)
+
+        eight_twenty_pm = time(hour=20, minute=20)
+        deadline_time = datetime.combine(start_of_week_time + timedelta(days=2), eight_twenty_pm)
+        # Thanksgiving is fourth Thursday in November and uses a different deadline time
+        if deadline_time.month == 10 and deadline_time.day // 7 > 3:
+            twelve_thirty_pm = time(hour=12, minute=30)
+            deadline_time = datetime.combine(deadline_time, twelve_thirty_pm)
+
+        # if anyone has submitted a prediction for the week, that means we've set the schedule already;
+        # block any schedule overwrites (if it's really necessary, it'll require a programmer to circumvent)
+        if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': week_string })):
+            return Response('Matchup schedules cannot be set after a prediction has been submitted this week.')
+
+        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+        player_lookup_by_espn_name = {}
+        for p in mongo.db.player_metadata.find():
+            if p['espn_owner_name']:
+                player_lookup_by_espn_name[p['espn_owner_name']] = p
+
+        matchups = []
+        league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+        week = int(week_string)
+        box_scores = league.box_scores(week)
+
+        last_week_of_regular_season = league.settings.reg_season_count
+        number_of_teams_in_league = league.settings.team_count
+        number_of_playoff_teams = league.settings.playoff_team_count
+
+        is_round_one = last_week_of_regular_season + 1 == week
+        is_round_two = last_week_of_regular_season + 2 == week
+        is_round_three = last_week_of_regular_season + 3 == week
+        is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
+        is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
+        is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
+        is_consolation_over = is_round_three and not is_consolation_finals
+        index_for_round_two = last_week_of_regular_season + 2 - 1
+        index_for_round_one = last_week_of_regular_season + 1 - 1
+
+        # TODO - save these as ints instead
+        database_key = { 'year': LEAGUE_YEAR, 'week': week_string }
+
+        for s in box_scores:
+            if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
+                continue
+
+            round_two_home_game = s.home_team.outcomes[index_for_round_two]
+            round_two_away_game = s.away_team.outcomes[index_for_round_two]
+            round_one_home_game = s.home_team.outcomes[index_for_round_one]
+            round_one_away_game = s.away_team.outcomes[index_for_round_one]
+
+            if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
+                if is_round_three:
+                    # if either team won the last game, this isn't the third place game
+                    if round_two_home_game == 'W' or round_two_away_game == 'W':
+                        continue
+                else:
+                    continue
+
+            if s.matchup_type == 'LOSERS_CONSOLATION_LADDER':
+                if is_consolation_over:
+                   continue
+
+                # HACK - if they won any completed consolation game, ignore the box score
+                if is_round_three:
+                    if round_two_home_game == 'W' or round_two_away_game == 'W':
+                        continue
+
+                if not is_round_one:
+                    if round_one_home_game == 'W' or round_one_away_game == 'W':
+                        continue
+
+            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
+            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
+
+            matchup = {
+                'team_one': away_name,
+                'team_two': home_name,
+                # TODO - insert player IDs as well, for migration away from strings
+            }
+
+            matchups.append(matchup)
+
+        # guarantee one record per year/week
+        mongo.db.matchup_metadata.update_one(database_key, {
+            '$set': {
+                # TODO - save these as ints instead
+                'year': LEAGUE_YEAR,
+                'week': week_string,
+                'matchups': matchups,
+                'start_of_week_time': start_of_week_time,
+                'deadline_time': deadline_time,
+                'end_of_week_time': end_of_week_time,
+            },
+        }, upsert=True)
+
+        return Response('Week ' + week_string + ' schedule submitted successfully.')
 
