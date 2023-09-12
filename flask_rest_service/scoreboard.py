@@ -339,9 +339,6 @@ class Tiebreakers(restful.Resource):
                         'random': random.randint(0, 100)
                     })
 
-        if week_before == 0:
-            week_standings_grouped_by_total = copy.deepcopy(season_standings_grouped_by_total)
-
         if not is_finals:
             week_string = 'Week ' + LEAGUE_WEEK + ' Waiver Order:\n'
 
@@ -402,8 +399,8 @@ class Schedule(restful.Resource):
         start_of_week_time = datetime.combine(next_tuesday_candidate, eight_am)
         end_of_week_time = datetime.combine(start_of_week_time + timedelta(days=7), eight_am)
 
-        eight_twenty_pm = time(hour=20, minute=20)
-        deadline_time = datetime.combine(start_of_week_time + timedelta(days=2), eight_twenty_pm)
+        eight_fifteen_pm = time(hour=20, minute=15)
+        deadline_time = datetime.combine(start_of_week_time + timedelta(days=2), eight_fifteen_pm)
         # Thanksgiving is fourth Thursday in November and uses a different deadline time
         if deadline_time.month == 10 and deadline_time.day // 7 > 3:
             twelve_thirty_pm = time(hour=12, minute=30)
