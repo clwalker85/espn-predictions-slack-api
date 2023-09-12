@@ -11,7 +11,7 @@ from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
+from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, LAST_MATCHUP_METADATA, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
 
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
@@ -446,11 +446,6 @@ class Schedule(restful.Resource):
             if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
                 continue
 
-            round_two_home_game = s.home_team.outcomes[index_for_round_two]
-            round_two_away_game = s.away_team.outcomes[index_for_round_two]
-            round_one_home_game = s.home_team.outcomes[index_for_round_one]
-            round_one_away_game = s.away_team.outcomes[index_for_round_one]
-
             if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                 if is_round_three:
                     # if either team won the last game, this isn't the third place game
@@ -465,10 +460,16 @@ class Schedule(restful.Resource):
 
                 # HACK - if they won any completed consolation game, ignore the box score
                 if is_round_three:
+                    round_two_home_game = s.home_team.outcomes[index_for_round_two]
+                    round_two_away_game = s.away_team.outcomes[index_for_round_two]
+
                     if round_two_home_game == 'W' or round_two_away_game == 'W':
                         continue
 
                 if not is_round_one:
+                    round_one_home_game = s.home_team.outcomes[index_for_round_one]
+                    round_one_away_game = s.away_team.outcomes[index_for_round_one]
+
                     if round_one_home_game == 'W' or round_one_away_game == 'W':
                         continue
 
@@ -497,4 +498,6 @@ class Schedule(restful.Resource):
         }, upsert=True)
 
         return Response('Week ' + week_string + ' schedule submitted successfully.')
+    def get(self):
+        return Schedule.post(self)
 
