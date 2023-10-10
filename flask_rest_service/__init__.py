@@ -1,16 +1,12 @@
 import os
 import sys
-import pprint
 import logging
 import types
-import pytz
-from datetime import datetime, time, timedelta
 from flask import Flask, jsonify
 import flask_restful as restful
 from flask_pymongo import PyMongo
 from slack import WebClient
 from dotenv import load_dotenv
-from espn_api.football import League
 from facades.metadata import Metadata
 
 load_dotenv()
@@ -56,13 +52,14 @@ api.route = types.MethodType(api_route, api)
 metadata = Metadata(app, mongo)
 
 ### GENERAL PURPOSE METHODS (not API related) ###
+# TODO - move this into a utils/slack.py file
 
 # requires 'text' (string) and 'attachments' (JSON) to be defined in the payload
 def post_to_slack(payload):
     slack_token = os.environ['SLACK_API_TOKEN']
     sc = WebClient(token=slack_token)
 
-    for user_id in LEAGUE_USER_IDS:
+    for user_id in metadata.user_ids:
 	# uncomment this line to send messages only to Walker
         #if user_id in [ 'U3NE3S6CQ' ]:
             channel = sc.conversations_open(users=user_id)

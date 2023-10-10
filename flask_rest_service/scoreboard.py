@@ -7,16 +7,10 @@ import random
 import requests
 from decimal import Decimal
 from datetime import datetime, time, timedelta
-from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
-
-# TODO - encapsulate into facades/league.py
-import os
-ESPN_SWID = os.environ.get('ESPN_SWID')
-ESPN_S2 = os.environ.get('ESPN_S2')
 
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
@@ -41,19 +35,13 @@ class Scoreboard(restful.Resource):
         if datetime.now() > metadata.deadline_time:
             week_shown = metadata.league_week
 
-        player_lookup_by_espn_name = {}
-        for p in mongo.db.player_metadata.find():
-            if p['espn_owner_name']:
-                player_lookup_by_espn_name[p['espn_owner_name']] = p
-
         matchups = []
-        league = League(league_id=int(metadata.league_id), year=int(metadata.league_year), espn_s2=ESPN_S2, swid=ESPN_SWID)
         week = int(week_shown)
-        box_scores = league.box_scores(week)
+        box_scores = metadata.espn.box_scores(week)
 
-        last_week_of_regular_season = league.settings.reg_season_count
-        number_of_teams_in_league = league.settings.team_count
-        number_of_playoff_teams = league.settings.playoff_team_count
+        last_week_of_regular_season = metadata.espn.weeks_in_regular_season
+        number_of_teams_in_league = metadata.espn.number_of_teams
+        number_of_playoff_teams = metadata.espn.number_of_playoff_teams
 
         is_playoff = week > last_week_of_regular_season
         is_round_one = last_week_of_regular_season + 1 == week
@@ -69,15 +57,15 @@ class Scoreboard(restful.Resource):
             if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
                 continue
 
-            winner = player_lookup_by_espn_name[s.home_team.owner]['player_id']
-            loser = player_lookup_by_espn_name[s.away_team.owner]['player_id']
+            winner = metadata.player_lookup_by_espn_name[s.home_team.owner]['player_id']
+            loser = metadata.player_lookup_by_espn_name[s.away_team.owner]['player_id']
             winning_score = s.home_score
             losing_score = s.away_score
             winning_team = s.home_team
             losing_team = s.away_team
             if (s.away_score > s.home_score):
-                winner = player_lookup_by_espn_name[s.away_team.owner]['player_id']
-                loser = player_lookup_by_espn_name[s.home_team.owner]['player_id']
+                winner = metadata.player_lookup_by_espn_name[s.away_team.owner]['player_id']
+                loser = metadata.player_lookup_by_espn_name[s.home_team.owner]['player_id']
                 winning_score = s.away_score
                 losing_score = s.home_score
                 winning_team = s.away_team
@@ -113,12 +101,12 @@ class Scoreboard(restful.Resource):
                     if round_one_winners_game == 'W' or round_one_losers_game == 'W':
                         continue
 
-            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
+            home_name = metadata.player_lookup_by_espn_name[s.home_team.owner]['display_name']
             matchup_string = home_name + ' - ' + str(s.home_score)
             if (s.home_projected != -1 and not math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
                 matchup_string += ' (' + str(s.home_projected) + ')'
 
-            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
+            away_name = metadata.player_lookup_by_espn_name[s.away_team.owner]['display_name']
             matchup_string += ' versus ' + away_name + ' - ' + str(s.away_score)
             if (s.away_projected != -1 and not math.isclose(s.away_score, s.away_projected, abs_tol=0.01)):
                 matchup_string += ' (' + str(s.away_projected) + ')'
@@ -181,9 +169,6 @@ class MatchupResults(restful.Resource):
         # TODO - return error if no scores are found
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
         scores_result = mongo.db.scores.find_one({ 'year': int(metadata.league_year), 'week': int(metadata.last_league_week) })
-        player_lookup_by_id = {}
-        for p in mongo.db.player_metadata.find():
-            player_lookup_by_id[p['player_id']] = p
 
         winners = []
         blowout_matchup_winner, blowout_matchup = '', ''
@@ -194,8 +179,8 @@ class MatchupResults(restful.Resource):
 
         for matchup in scores_result['matchups']:
             margin = matchup['winning_score'] - matchup['losing_score']
-            winner_name = player_lookup_by_id[matchup['winner']]['display_name']
-            loser_name = player_lookup_by_id[matchup['loser']]['display_name']
+            winner_name = metadata.player_lookup_by_id[matchup['winner']]['display_name']
+            loser_name = metadata.player_lookup_by_id[matchup['loser']]['display_name']
 
             winners.append(winner_name)
 
@@ -267,23 +252,14 @@ class Tiebreakers(restful.Resource):
         previous_standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': str(week_before) }) if week_before > 0 else []
         # TODO - return error if no prediction standings are found
         current_standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': metadata.last_league_week })
-        player_lookup_by_username = {}
-        for p in mongo.db.player_metadata.find():
-            player_lookup_by_username[p['slack_username']] = p
 
-        league = League(league_id=int(metadata.league_id), year=int(metadata.league_year), espn_s2=ESPN_S2, swid=ESPN_SWID)
-
-        last_week_of_regular_season = league.settings.reg_season_count
-        number_of_playoff_teams = league.settings.playoff_team_count
+        last_week_of_regular_season = metadata.espn.weeks_in_regular_season
+        number_of_playoff_teams = metadata.espn.number_of_playoff_teams
 
         is_playoff = week > last_week_of_regular_season
         is_round_two = last_week_of_regular_season + 2 == week
         is_round_three = last_week_of_regular_season + 3 == week
         is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
-
-        team_lookup_by_espn_name = {}
-        for t in league.teams:
-            team_lookup_by_espn_name[t.owner] = t
 
         previous_standings_lookup_by_username = {}
         if week_before > 0:
@@ -295,8 +271,8 @@ class Tiebreakers(restful.Resource):
         for team in current_standings:
             total = team['total'] or 0
             username = team['username']
-            espn_owner_name = player_lookup_by_username[username]['espn_owner_name']
-            espn_team = team_lookup_by_espn_name[espn_owner_name]
+            espn_owner_name = metadata.player_lookup_by_username[username]['espn_owner_name']
+            espn_team = metadata.team_lookup_by_espn_name[espn_owner_name]
             team_wins = espn_team.wins
             team_points = espn_team.points_for
 

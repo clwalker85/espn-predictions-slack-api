@@ -6,7 +6,6 @@ import copy
 from decimal import Decimal
 from datetime import datetime
 from flask import request, abort, Response
-#from flask.ext import restful
 import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
@@ -373,6 +372,8 @@ class SendPredictionForm(restful.Resource):
         post_to_slack(message)
 
         return
+    def get(self):
+        return SendPredictionForm.post(self)
 
 # WARNING - I saved the most complicated code for the end. Don't skip the comment at the top!
 @api.route('/prediction/calculations/')

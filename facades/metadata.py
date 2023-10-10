@@ -1,10 +1,6 @@
 from functools import cached_property
 from datetime import datetime, time, timedelta
-from espn_api.football import League
-
-import os
-ESPN_SWID = os.environ.get('ESPN_SWID')
-ESPN_S2 = os.environ.get('ESPN_S2')
+from facades.espn import Espn
 
 class Metadata:
     def __init__(self, app, mongo):
@@ -37,6 +33,35 @@ class Metadata:
     @property
     def user_ids(self):
         return [m['slack_user_id'] for m in self.league['members']]
+
+    @cached_property
+    def players(self):
+        with self.app.app_context():
+            return self.mongo.db.player_metadata.find()
+
+    @cached_property
+    def player_lookup_by_espn_name(self):
+        lookup = {}
+        for p in self.players:
+            if p['espn_owner_name']:
+                lookup[p['espn_owner_name']] = p
+        return lookup
+
+    @cached_property
+    def player_lookup_by_id(self):
+        lookup = {}
+        for p in self.players:
+            if p['player_id']:
+                lookup[p['player_id']] = p
+        return lookup
+
+    @cached_property
+    def player_lookup_by_username(self):
+        lookup = {}
+        for p in self.players:
+            if p['slack_username']:
+                lookup[p['slack_username']] = p
+        return lookup
 
     # get the matchup data for the current week
     # IF IT DOESN'T EXIST FOR THIS WEEK, THIS API WILL COME TO A CRASHING HALT
@@ -90,13 +115,32 @@ class Metadata:
     def last_league_week(self):
         return self.last_matchup_data['week']
 
+    @cached_property
+    def espn(self):
+        return Espn(self.league_id, self.league_year)
+
+    @cached_property
+    def team_lookup_by_espn_name(self):
+        lookup = {}
+        for t in self.espn.teams:
+            lookup[t.owner] = t
+        return lookup
+
     def invalidate_cached_year(self):
         if "league" in self.__dict__:
             del self.__dict__["league"]
-        if "matchup_data" in self.__dict__:
-            del self.__dict__["matchup_data"]
-        if "last_matchup_data" in self.__dict__:
-            del self.__dict__["last_matchup_data"]
+        if "players" in self.__dict__:
+            del self.__dict__["players"]
+        if "player_lookup_by_espn_name" in self.__dict__:
+            del self.__dict__["player_lookup_by_espn_name"]
+        if "player_lookup_by_id" in self.__dict__:
+            del self.__dict__["player_lookup_by_id"]
+        if "player_lookup_by_username" in self.__dict__:
+            del self.__dict__["player_lookup_by_username"]
+        if "team_lookup_by_espn_name" in self.__dict__:
+            del self.__dict__["team_lookup_by_espn_name"]
+        self.espn.invalidate_cached_year()
+        self.invalidate_cached_week()
 
     def invalidate_cached_week(self):
         if "matchup_data" in self.__dict__:
@@ -130,20 +174,13 @@ class Metadata:
             twelve_thirty_pm = time(hour=12, minute=30)
             deadline_time = datetime.combine(deadline_time, twelve_thirty_pm)
 
-        # TODO - make player_metadata a cached_property
-        player_lookup_by_espn_name = {}
-        for p in self.mongo.db.player_metadata.find():
-            if p['espn_owner_name']:
-                player_lookup_by_espn_name[p['espn_owner_name']] = p
-
         matchups = []
-        league = League(league_id=int(self.league_id), year=int(self.league_year), espn_s2=ESPN_S2, swid=ESPN_SWID)
         week = int(week_string)
-        box_scores = league.box_scores(week)
+        box_scores = self.espn.box_scores(week)
 
-        last_week_of_regular_season = league.settings.reg_season_count
-        number_of_teams_in_league = league.settings.team_count
-        number_of_playoff_teams = league.settings.playoff_team_count
+        last_week_of_regular_season = self.espn.weeks_in_regular_season
+        number_of_teams_in_league = self.espn.number_of_teams
+        number_of_playoff_teams = self.espn.number_of_playoff_teams
 
         is_round_one = last_week_of_regular_season + 1 == week
         is_round_two = last_week_of_regular_season + 2 == week
@@ -189,8 +226,8 @@ class Metadata:
                     if round_one_home_game == 'W' or round_one_away_game == 'W':
                         continue
 
-            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
-            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
+            home_name = self.player_lookup_by_espn_name[s.home_team.owner]['display_name']
+            away_name = self.player_lookup_by_espn_name[s.away_team.owner]['display_name']
 
             matchup = {
                 'team_one': away_name,
