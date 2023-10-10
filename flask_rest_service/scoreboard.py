@@ -11,7 +11,12 @@ from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, LAST_MATCHUP_METADATA, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
+from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
+
+# TODO - encapsulate into facades/league.py
+import os
+ESPN_SWID = os.environ.get('ESPN_SWID')
+ESPN_S2 = os.environ.get('ESPN_S2')
 
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
@@ -32,18 +37,17 @@ class Scoreboard(restful.Resource):
         }
 
         # show last week until projections are due and week hasn't officially ended
-        week_shown = LAST_LEAGUE_WEEK
-        if datetime.now() > DEADLINE_TIME:
-            week_shown = LEAGUE_WEEK
+        week_shown = metadata.last_league_week
+        if datetime.now() > metadata.deadline_time:
+            week_shown = metadata.league_week
 
-        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
         player_lookup_by_espn_name = {}
         for p in mongo.db.player_metadata.find():
             if p['espn_owner_name']:
                 player_lookup_by_espn_name[p['espn_owner_name']] = p
 
         matchups = []
-        league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+        league = League(league_id=int(metadata.league_id), year=int(metadata.league_year), espn_s2=ESPN_S2, swid=ESPN_SWID)
         week = int(week_shown)
         box_scores = league.box_scores(week)
 
@@ -148,11 +152,11 @@ class Scoreboard(restful.Resource):
             matchups.append(score_result)
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        database_key = { 'year': int(LEAGUE_YEAR), 'week': week }
+        database_key = { 'year': int(metadata.league_year), 'week': week }
         # guarantee one record per year/week
         mongo.db.scores.update_one(database_key, {
             '$set': {
-                'year': int(LEAGUE_YEAR),
+                'year': int(metadata.league_year),
                 'week': week,
                 'matchups': matchups,
                 'playoffs': is_playoff,
@@ -169,18 +173,14 @@ class Scoreboard(restful.Resource):
 @api.route('/scoreboard/matchupresults/')
 class MatchupResults(restful.Resource):
     def post(self):
-        # previously, this only ran when the server started; now we can make sure week metadata is up to date here
-        refresh_week_constants()
-
         # can't calculate matchup results for the week before in the first week
         # in practice, __init__.py checks for the latest week to start
-        if LEAGUE_WEEK == '1':
+        if metadata.league_week == '1':
             return Response('Matchup result calculations are not available until the morning (8am) after Monday Night Football.')
 
         # TODO - return error if no scores are found
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        scores_result = mongo.db.scores.find_one({ 'year': int(LEAGUE_YEAR), 'week': int(LAST_LEAGUE_WEEK) })
-        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+        scores_result = mongo.db.scores.find_one({ 'year': int(metadata.league_year), 'week': int(metadata.last_league_week) })
         player_lookup_by_id = {}
         for p in mongo.db.player_metadata.find():
             player_lookup_by_id[p['player_id']] = p
@@ -218,7 +218,7 @@ class MatchupResults(restful.Resource):
                 closest_matchup = winner_name + " versus " + loser_name
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        database_key = { 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+        database_key = { 'year': metadata.league_year, 'week': metadata.last_league_week }
         # guarantee one record per year/week
         mongo.db.matchup_results.update_one(database_key, {
             '$set': {
@@ -231,12 +231,12 @@ class MatchupResults(restful.Resource):
                 'lowest': lowest_scorer,
                 'high_score': str(high_score),
                 'low_score': str(low_score),
-                'year': LEAGUE_YEAR,
-                'week': LAST_LEAGUE_WEEK
+                'year': metadata.league_year,
+                'week': metadata.last_league_week
             },
         }, upsert=True)
 
-        results_string = 'Matchup calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':\n'
+        results_string = 'Matchup calculations for week ' + metadata.last_league_week + ' of ' + metadata.league_year + ':\n'
         results_string += 'Winners: ' + ', '.join(winners) + '\n'
         results_string += 'Blowout: ' + blowout_matchup
         results_string += ' | Closest: ' + closest_matchup + '\n'
@@ -252,27 +252,26 @@ class Tiebreakers(restful.Resource):
     def post(self):
         message = {
             'response_type': 'in_channel',
-            'text': 'Tiebreaker calculations for week ' + LEAGUE_WEEK + ' (waivers by fewest wins/points, draft standings by most):',
+            'text': 'Tiebreaker calculations for week ' + metadata.league_week + ' (waivers by fewest wins/points, draft standings by most):',
             'attachments': []
         }
 
         # can't calculate tiebreakers for the week before in the first week
         # in practice, __init__.py checks for the latest week to start
-        if LEAGUE_WEEK == '1':
+        if metadata.league_week == '1':
             return Response('Tiebreaker calculations are not available until the morning (8am) after Monday Night Football.')
 
         # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
-        week = int(LAST_LEAGUE_WEEK)
+        week = int(metadata.last_league_week)
         week_before = week - 1
-        previous_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': str(week_before) }) if week_before > 0 else []
+        previous_standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': str(week_before) }) if week_before > 0 else []
         # TODO - return error if no prediction standings are found
-        current_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
-        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
+        current_standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': metadata.last_league_week })
         player_lookup_by_username = {}
         for p in mongo.db.player_metadata.find():
             player_lookup_by_username[p['slack_username']] = p
 
-        league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
+        league = League(league_id=int(metadata.league_id), year=int(metadata.league_year), espn_s2=ESPN_S2, swid=ESPN_SWID)
 
         last_week_of_regular_season = league.settings.reg_season_count
         number_of_playoff_teams = league.settings.playoff_team_count
@@ -340,7 +339,7 @@ class Tiebreakers(restful.Resource):
                     })
 
         if not is_finals:
-            week_string = 'Week ' + LEAGUE_WEEK + ' Waiver Order:\n'
+            week_string = 'Week ' + metadata.league_week + ' Waiver Order:\n'
 
             # break ties by least wins, then least points, then coin flip
             for team in sorted(week_standings_to_sort, key=lambda t: (-t['total'], t['wins'], t['points'], t['random'])):
@@ -361,7 +360,7 @@ class Tiebreakers(restful.Resource):
             message['attachments'].append({ 'text': week_string })
 
         season_string = 'Final ' if is_finals else ''
-        season_string += 'Draft Selection Standings for ' + LEAGUE_YEAR + ':\n'
+        season_string += 'Draft Selection Standings for ' + metadata.league_year + ':\n'
 
         for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], t['final_standing'])):
             season_string += str(team['total']) + ' - ' + team['username']
@@ -380,121 +379,25 @@ class Tiebreakers(restful.Resource):
 @api.route('/scoreboard/schedule')
 class Schedule(restful.Resource):
     def post(self):
-        if str(datetime.today().year) != LEAGUE_YEAR:
+        if str(datetime.today().year) != metadata.league_year:
             return Response("League metadata must be set before setting this year's schedule; see admin.")
 
         week_param = request.form.get('text', None)
-        week_string = str(int(LEAGUE_WEEK) + 1)
         if week_param:
-            week_string = week_param.strip()
-
-        next_tuesday_candidate = datetime.today()
-        # `1` represents Tuesday
-        while next_tuesday_candidate.weekday() != 1:
-            next_tuesday_candidate += timedelta(days=1)
-        if week_string != '1' and LAST_MATCHUP_METADATA:
-            next_tuesday_candidate = LAST_MATCHUP_METADATA['end_of_week_time']
-
-        eight_am = time(hour=8)
-        start_of_week_time = datetime.combine(next_tuesday_candidate, eight_am)
-        end_of_week_time = datetime.combine(start_of_week_time + timedelta(days=7), eight_am)
-
-        eight_fifteen_pm = time(hour=20, minute=15)
-        deadline_time = datetime.combine(start_of_week_time + timedelta(days=2), eight_fifteen_pm)
-        # Thanksgiving is fourth Thursday in November and uses a different deadline time
-        if deadline_time.month == 10 and deadline_time.day // 7 > 3:
-            twelve_thirty_pm = time(hour=12, minute=30)
-            deadline_time = datetime.combine(deadline_time, twelve_thirty_pm)
+            week_param = week_param.strip()
 
         # if anyone has submitted a prediction for the week, that means we've set the schedule already;
         # block any schedule overwrites (if it's really necessary, it'll require a programmer to circumvent)
-        if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': week_string })):
+        if list(mongo.db.predictions.find({ 'year': metadata.league_year, 'week': week_param })):
             return Response('Matchup schedules cannot be set after a prediction has been submitted this week.')
 
-        # TODO - prefetch player_metadata in __init__.py (like MATCHUPS)
-        player_lookup_by_espn_name = {}
-        for p in mongo.db.player_metadata.find():
-            if p['espn_owner_name']:
-                player_lookup_by_espn_name[p['espn_owner_name']] = p
+        if week_param:
+            metadata.insert_matchup_data(int(week_param))
+            return Response('Week ' + week_param + ' schedule submitted successfully.')
 
-        matchups = []
-        league = League(league_id=int(LEAGUE_ID), year=int(LEAGUE_YEAR), espn_s2=ESPN_S2, swid=ESPN_SWID)
-        week = int(week_string)
-        box_scores = league.box_scores(week)
+        metadata.insert_matchup_data()
+        return Response("Next week's schedule submitted successfully.")
 
-        last_week_of_regular_season = league.settings.reg_season_count
-        number_of_teams_in_league = league.settings.team_count
-        number_of_playoff_teams = league.settings.playoff_team_count
-
-        is_round_one = last_week_of_regular_season + 1 == week
-        is_round_two = last_week_of_regular_season + 2 == week
-        is_round_three = last_week_of_regular_season + 3 == week
-        is_semifinals = is_round_two if (number_of_playoff_teams > 4) else is_round_one
-        is_finals = is_round_three if (number_of_playoff_teams > 4) else is_round_two
-        is_consolation_finals = is_semifinals if (number_of_teams_in_league < 12 and number_of_playoff_teams > 4) else is_finals
-        is_consolation_over = is_round_three and not is_consolation_finals
-        index_for_round_two = last_week_of_regular_season + 2 - 1
-        index_for_round_one = last_week_of_regular_season + 1 - 1
-
-        # TODO - save these as ints instead
-        database_key = { 'year': LEAGUE_YEAR, 'week': week_string }
-
-        for s in box_scores:
-            if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
-                continue
-
-            if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
-                if is_round_three:
-                    # if either team won the last game, this isn't the third place game
-                    if round_two_home_game == 'W' or round_two_away_game == 'W':
-                        continue
-                else:
-                    continue
-
-            if s.matchup_type == 'LOSERS_CONSOLATION_LADDER':
-                if is_consolation_over:
-                   continue
-
-                # HACK - if they won any completed consolation game, ignore the box score
-                if is_round_three:
-                    round_two_home_game = s.home_team.outcomes[index_for_round_two]
-                    round_two_away_game = s.away_team.outcomes[index_for_round_two]
-
-                    if round_two_home_game == 'W' or round_two_away_game == 'W':
-                        continue
-
-                if not is_round_one:
-                    round_one_home_game = s.home_team.outcomes[index_for_round_one]
-                    round_one_away_game = s.away_team.outcomes[index_for_round_one]
-
-                    if round_one_home_game == 'W' or round_one_away_game == 'W':
-                        continue
-
-            home_name = player_lookup_by_espn_name[s.home_team.owner]['display_name']
-            away_name = player_lookup_by_espn_name[s.away_team.owner]['display_name']
-
-            matchup = {
-                'team_one': away_name,
-                'team_two': home_name,
-                # TODO - insert player IDs as well, for migration away from strings
-            }
-
-            matchups.append(matchup)
-
-        # guarantee one record per year/week
-        mongo.db.matchup_metadata.update_one(database_key, {
-            '$set': {
-                # TODO - save these as ints instead
-                'year': LEAGUE_YEAR,
-                'week': week_string,
-                'matchups': matchups,
-                'start_of_week_time': start_of_week_time,
-                'deadline_time': deadline_time,
-                'end_of_week_time': end_of_week_time,
-            },
-        }, upsert=True)
-
-        return Response('Week ' + week_string + ' schedule submitted successfully.')
     def get(self):
         return Schedule.post(self)
 

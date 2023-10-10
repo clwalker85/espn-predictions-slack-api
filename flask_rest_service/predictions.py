@@ -9,7 +9,7 @@ from flask import request, abort, Response
 #from flask.ext import restful
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS
+from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
 
 # we gotta reuse this formula in several spots, so defining it here
 PREDICTION_FORMULA = lambda x: x['matchup_total'] + x['blowout_bonus'] + x['closest_bonus'] + x['highest_bonus'] + x['lowest_bonus']
@@ -42,7 +42,7 @@ class SavePredictionFromSlack(restful.Resource):
         # block the prediction submission if it's after the deadline
         # an empty response to an interactive message action will make sure
         # the original message is unchanged, so it'll appear the form is unresponsive
-        if year != LEAGUE_YEAR or week != LEAGUE_WEEK or datetime.now() > DEADLINE_TIME:
+        if year != metadata.league_year or week != metadata.league_week or datetime.now() > metadata.deadline_time:
             return Response()
 
         message_type = payload['type']
@@ -184,18 +184,20 @@ def save_scores_to_database(payload, message, high_score, low_score):
 @api.route('/prediction/submissions/')
 class GetSubmittedPredictions(restful.Resource):
     def post(self):
+        metadata.invalidate_cached_week()
+
         # since it's a direct Slack command, you'll need to respond with an error message
-        if datetime.now() < DEADLINE_TIME:
+        if datetime.now() < metadata.deadline_time:
             return Response('Submitted predictions are not visible until the submission deadline has passed.')
 
         message = {
             'response_type': 'in_channel',
-            'text': 'Predictions submitted for week ' + LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'text': 'Predictions submitted for week ' + metadata.league_week + ' of ' + metadata.league_year + ':',
             'attachments': []
         }
 
         # for each submitted prediction that week
-        for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK }):
+        for prediction in mongo.db.predictions.find({ 'year': metadata.league_year, 'week': metadata.league_week }):
             username = prediction['username']
             form_groups = prediction['message']['attachments']
             prediction_string = username + ' picks: '
@@ -268,22 +270,22 @@ def build_dialog(payload):
 class SendPredictionForm(restful.Resource):
     def post(self):
         # since it's a direct Slack command, you'll need to respond with an error message
-        if datetime.now() > DEADLINE_TIME:
+        if datetime.now() > metadata.deadline_time:
             return Response('Prediction forms cannot be sent before the start of the next week.')
 
         # if anyone has submitted a prediction for the week, that means we've sent a form already;
         # block any second form (if it's really necessary, it'll require a programmer to circumvent)
-        if list(mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LEAGUE_WEEK })):
+        if list(mongo.db.predictions.find({ 'year': metadata.league_year, 'week': metadata.league_week })):
             return Response('Prediction forms cannot be sent after a prediction has been submitted this week.')
 
         message = {
-            'text': 'Make your predictions for week ' + LEAGUE_WEEK + ' matchups below by ' + DEADLINE_STRING + ':',
+            'text': 'Make your predictions for week ' + metadata.league_week + ' matchups below by ' + metadata.deadline_string + ':',
             'attachments': []
         }
         # seemed like the best way to store the year and week inside the prediction form
-        callback_id = LEAGUE_YEAR + '-' + LEAGUE_WEEK
+        callback_id = metadata.league_year + '-' + metadata.league_week
 
-        for index, matchup in enumerate(MATCHUPS):
+        for index, matchup in enumerate(metadata.matchups):
             message['attachments'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'attachment_type': 'default',
@@ -322,7 +324,7 @@ class SendPredictionForm(restful.Resource):
                 }
             ]
         }
-        for matchup in MATCHUPS:
+        for matchup in metadata.matchups:
             matchup_dropdown_template['actions'][0]['options'].append({
                 'text': matchup['team_one'] + ' versus ' + matchup['team_two'],
                 'value': matchup['team_one'] + ' versus ' + matchup['team_two']
@@ -339,7 +341,7 @@ class SendPredictionForm(restful.Resource):
         # highest/lowest dropdowns should list teams, not matchups
         member_dropdown_template = copy.deepcopy(matchup_dropdown_template)
         member_dropdown_template['actions'][0]['text'] = 'Pick a team...'
-        member_dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in PREDICTION_ELIGIBLE_MEMBERS ]
+        member_dropdown_template['actions'][0]['options'] = [ { 'text': name, 'value': name } for name in metadata.prediction_eligible_members ]
 
         dropdown = copy.deepcopy(member_dropdown_template)
         dropdown['text'] = 'Who will be the highest scorer?'
@@ -376,20 +378,22 @@ class SendPredictionForm(restful.Resource):
 @api.route('/prediction/calculations/')
 class CalculatePredictions(restful.Resource):
     def post(self):
+        metadata.invalidate_cached_week()
+
         # since it's a direct Slack command, you'll need to respond with an error message
         # can't calculate predictions for the week before in the first week
         # in practice, __init__.py checks for the latest week to start
-        if LEAGUE_WEEK == '1':
+        if metadata.league_week == '1':
             return Response('Prediction calculations are not available until the morning (8am) after Monday Night Football.')
 
         message = {
             'response_type': 'in_channel',
-            'text': 'Prediction calculations for week ' + LAST_LEAGUE_WEEK + ' of ' + LEAGUE_YEAR + ':',
+            'text': 'Prediction calculations for week ' + metadata.last_league_week + ' of ' + metadata.league_year + ':',
             'attachments': []
         }
         # we currently store ESPN matchup results by triggering a Slack command;
         # see scoreboard.py and the '/scoreboard/matchupresults/' endpoint for more details
-        matchup_result = mongo.db.matchup_results.find_one({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK })
+        matchup_result = mongo.db.matchup_results.find_one({ 'year': metadata.league_year, 'week': metadata.last_league_week })
         formula_by_user, prediction_winners, closest_to_pin_stats = build_prediction_stats(matchup_result)
 
         message['attachments'].append({ 'text': build_results_string(matchup_result, closest_to_pin_stats) })
@@ -482,7 +486,7 @@ def build_formula_string(formula_by_user):
     return formula_string
 
 def build_standings_string():
-    standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }).sort(
+    standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': metadata.last_league_week }).sort(
         # see scoreboard.py and the '/scoreboard/tiebreakers/' for a command
         # that factors in tiebreakers when sorting waiver order standings
         [('total', -1)])
@@ -511,7 +515,7 @@ def build_prediction_stats(result):
         'lowest_within_one_point': []
     }
     actual_winners = result['winners']
-    for prediction in mongo.db.predictions.find({ 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }):
+    for prediction in mongo.db.predictions.find({ 'year': metadata.league_year, 'week': metadata.last_league_week }):
         username = prediction['username']
         form_groups = prediction['message']['attachments']
         user_formula = {
@@ -623,12 +627,12 @@ def set_closest_to_pin_variables(candidate_winner, candidate_score, actual_score
     return ([candidate_winner], candidate_score, current_winners_within_one_point)
 
 def update_prediction_standings(formula_by_user):
-    if int(LAST_LEAGUE_WEEK) == 1:
+    if int(metadata.last_league_week) == 1:
         # put zeroes there for anyone who missed the first prediction
         # VERY IMPORTANT, cause we assume every league member has a row in this table
-        users_without_predictions = list(set(LEAGUE_USERNAMES) - set(formula_by_user.keys()))
+        users_without_predictions = list(set(metadata.usernames) - set(formula_by_user.keys()))
         for username in users_without_predictions:
-            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+            database_key = { 'username': username, 'year': metadata.league_year, 'week': metadata.last_league_week }
             mongo.db.prediction_standings.update_one(database_key, {
                 '$set': {
                     'total': 0
@@ -637,7 +641,7 @@ def update_prediction_standings(formula_by_user):
         # loop through everyone who submitted a prediction this week
         for user_formula in formula_by_user.values():
             formula_total = PREDICTION_FORMULA(user_formula)
-            database_key = { 'username': user_formula['username'], 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+            database_key = { 'username': user_formula['username'], 'year': metadata.league_year, 'week': metadata.last_league_week }
             # standings on the first week is trivial and exactly the same as waiver order standings
             mongo.db.prediction_standings.update_one(database_key, {
                 '$set': {
@@ -645,12 +649,12 @@ def update_prediction_standings(formula_by_user):
                 },
             }, upsert=True)
 
-    if int(LAST_LEAGUE_WEEK) > 1:
-        week_before = str(int(LAST_LEAGUE_WEEK) - 1)
-        week_before_standings = mongo.db.prediction_standings.find({ 'year': LEAGUE_YEAR, 'week': week_before })
+    if int(metadata.last_league_week) > 1:
+        week_before = str(int(metadata.last_league_week) - 1)
+        week_before_standings = mongo.db.prediction_standings.find({ 'year': metadata.league_year, 'week': week_before })
         for prediction_record in week_before_standings:
             username = prediction_record['username']
-            database_key = { 'username': username, 'year': LEAGUE_YEAR, 'week': LAST_LEAGUE_WEEK }
+            database_key = { 'username': username, 'year': metadata.league_year, 'week': metadata.last_league_week }
 
             if username in formula_by_user:
                 formula_total = PREDICTION_FORMULA(formula_by_user[username])

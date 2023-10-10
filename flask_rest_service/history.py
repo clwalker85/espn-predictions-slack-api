@@ -12,18 +12,18 @@ from espn_api.football import League
 from flask import request, abort, Response
 import flask_restful as restful
 # see __init__.py for these definitions
-from flask_rest_service import app, api, mongo, refresh_week_constants, post_to_slack, open_dialog, update_message, LEAGUE_ID, LEAGUE_MEMBERS, LEAGUE_USERNAMES, LEAGUE_YEAR, LEAGUE_WEEK, LAST_LEAGUE_WEEK, DEADLINE_STRING, DEADLINE_TIME, MATCHUPS, PREDICTION_ELIGIBLE_MEMBERS, ESPN_SWID, ESPN_S2
+from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
 
 @api.route('/history/headtohead/')
 class HeadToHeadHistory(restful.Resource):
     def post(self):
         message = {
             'response_type': 'in_channel',
-            'text': 'All-time head-to-head history for week ' + LEAGUE_WEEK + ' matchups:',
+            'text': 'All-time head-to-head history for week ' + metadata.league_week + ' matchups:',
             'attachments': []
         }
 
-        for index, matchup in enumerate(MATCHUPS):
+        for index, matchup in enumerate(metadata.matchups):
             manager_one = matchup['team_one']
             manager_two = matchup['team_two']
 
