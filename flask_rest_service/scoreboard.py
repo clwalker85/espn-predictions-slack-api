@@ -314,7 +314,20 @@ class Tiebreakers(restful.Resource):
                         'random': random.randint(0, 100)
                     })
 
-        if not is_finals:
+        if is_finals:
+            season_string = 'Final Draft Selection Standings for ' + metadata.league_year + ':\n'
+
+            for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], t['final_standing'])):
+                season_string += str(team['total']) + ' - ' + team['username']
+                if sum(t['total'] == team['total'] for t in season_standings_to_sort) > 1:
+                    if team['final_standing']:
+                        rank = team['final_standing']
+                        ordinal_suffix = ['th', 'st', 'nd', 'rd', 'th'][min(rank % 10, 4)]
+                        season_string += ' (finished ' + str(rank) + ordinal_suffix + ')'
+                season_string += '\n'
+
+            message['attachments'].append({ 'text': season_string })
+        else:
             week_string = 'Week ' + metadata.league_week + ' Waiver Order:\n'
 
             # break ties by least wins, then least points, then coin flip
@@ -335,19 +348,6 @@ class Tiebreakers(restful.Resource):
 
             message['attachments'].append({ 'text': week_string })
 
-        season_string = 'Final ' if is_finals else ''
-        season_string += 'Draft Selection Standings for ' + metadata.league_year + ':\n'
-
-        for team in sorted(season_standings_to_sort, key=lambda t: (-t['total'], t['final_standing'])):
-            season_string += str(team['total']) + ' - ' + team['username']
-            if sum(t['total'] == team['total'] for t in season_standings_to_sort) > 1:
-                if team['final_standing']:
-                    rank = team['final_standing']
-                    ordinal_suffix = ['th', 'st', 'nd', 'rd', 'th'][min(rank % 10, 4)]
-                    season_string += ' (finished ' + str(rank) + ordinal_suffix + ')'
-            season_string += '\n'
-
-        message['attachments'].append({ 'text': season_string })
         return message
     def get(self):
         return Tiebreakers.post(self)
