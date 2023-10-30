@@ -12,6 +12,8 @@ import flask_restful as restful
 # see __init__.py for these definitions
 from flask_rest_service import app, api, mongo, metadata, post_to_slack, open_dialog, update_message
 
+# These endpoints encapsulate interactions with the ESPN API:
+# https://github.com/cwendt94/espn-api/wiki/Football-Intro
 @api.route('/scoreboard/')
 class Scoreboard(restful.Resource):
     def post(self):
@@ -54,18 +56,21 @@ class Scoreboard(restful.Resource):
         is_consolation_over = is_round_three and not is_consolation_finals
 
         for s in box_scores:
-            if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
+            if not hasattr(s.home_team, 'owners') or not hasattr(s.away_team, 'owners'):
                 continue
 
-            winner = metadata.player_lookup_by_espn_name[s.home_team.owner]['player_id']
-            loser = metadata.player_lookup_by_espn_name[s.away_team.owner]['player_id']
+            # TODO - This should support inserting co-owners
+            home_espn_id = s.home_team.owners[0]
+            winner = metadata.player_lookup_by_espn_owner_id[home_espn_id]['player_id']
+            away_espn_id = s.away_team.owners[0]
+            loser = metadata.player_lookup_by_espn_owner_id[away_espn_id]['player_id']
             winning_score = s.home_score
             losing_score = s.away_score
             winning_team = s.home_team
             losing_team = s.away_team
             if (s.away_score > s.home_score):
-                winner = metadata.player_lookup_by_espn_name[s.away_team.owner]['player_id']
-                loser = metadata.player_lookup_by_espn_name[s.home_team.owner]['player_id']
+                winner = metadata.player_lookup_by_espn_owner_id[away_espn_id]['player_id']
+                loser = metadata.player_lookup_by_espn_owner_id[home_espn_id]['player_id']
                 winning_score = s.away_score
                 losing_score = s.home_score
                 winning_team = s.away_team
@@ -101,12 +106,12 @@ class Scoreboard(restful.Resource):
                     if round_one_winners_game == 'W' or round_one_losers_game == 'W':
                         continue
 
-            home_name = metadata.player_lookup_by_espn_name[s.home_team.owner]['display_name']
+            home_name = metadata.player_lookup_by_espn_owner_id[home_espn_id]['display_name']
             matchup_string = home_name + ' - ' + str(s.home_score)
             if (s.home_projected != -1 and not math.isclose(s.home_score, s.home_projected, abs_tol=0.01)):
                 matchup_string += ' (' + str(s.home_projected) + ')'
 
-            away_name = metadata.player_lookup_by_espn_name[s.away_team.owner]['display_name']
+            away_name = metadata.player_lookup_by_espn_owner_id[away_espn_id]['display_name']
             matchup_string += ' versus ' + away_name + ' - ' + str(s.away_score)
             if (s.away_projected != -1 and not math.isclose(s.away_score, s.away_projected, abs_tol=0.01)):
                 matchup_string += ' (' + str(s.away_projected) + ')'
@@ -376,4 +381,22 @@ class Schedule(restful.Resource):
 
     def get(self):
         return Schedule.post(self)
+
+@api.route('/scoreboard/invalidate/week')
+class InvalidateWeek(restful.Resource):
+    def post(self):
+        metadata.invalidate_cached_week()
+        return Response("Next week's schedule submitted successfully.")
+
+    def get(self):
+        return InvalidateWeek.post(self)
+
+@api.route('/scoreboard/invalidate/year')
+class InvalidateYear(restful.Resource):
+    def post(self):
+        metadata.invalidate_cached_year()
+        return Response("Next week's schedule submitted successfully.")
+
+    def get(self):
+        return InvalidateYear.post(self)
 

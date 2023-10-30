@@ -28,30 +28,22 @@ class HeadToHeadHistory(restful.Resource):
             manager_two = matchup['team_two']
 
             # this matches co-owners stored as an array, too
-            manager_one_reg_season_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_one, 'loser': manager_two, 'playoffs': False })
-            manager_one_reg_season_list = list(manager_one_reg_season_query)
+            manager_one_query = mongo.db.scores_per_matchup.find({ 'winner': manager_one, 'loser': manager_two })
+            manager_one_list = list(manager_one_query)
+            manager_one_reg_season_list = [m for m in manager_one_list if not m['playoffs']]
             manager_one_reg_season_wins = len(manager_one_reg_season_list)
-            manager_one_playoff_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_one, 'loser': manager_two, 'playoffs': True, 'consolation': False })
-            manager_one_playoff_list = list(manager_one_playoff_query)
+            manager_one_playoff_list = [m for m in manager_one_list if m['playoffs'] and not m['consolation']]
             manager_one_playoff_wins = len(manager_one_playoff_list)
-            manager_one_consolation_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_one, 'loser': manager_two, 'playoffs': True, 'consolation': True })
-            manager_one_consolation_list = list(manager_one_consolation_query)
+            manager_one_consolation_list = [m for m in manager_one_list if m['playoffs'] and m['consolation']]
             manager_one_consolation_wins = len(manager_one_consolation_list)
 
-            manager_two_reg_season_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_two, 'loser': manager_one, 'playoffs': False })
-            manager_two_reg_season_list = list(manager_two_reg_season_query)
+            manager_two_query = mongo.db.scores_per_matchup.find({ 'winner': manager_two, 'loser': manager_one })
+            manager_two_list = list(manager_two_query)
+            manager_two_reg_season_list = [m for m in manager_two_list if not m['playoffs']]
             manager_two_reg_season_wins = len(manager_two_reg_season_list)
-            manager_two_playoff_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_two, 'loser': manager_one, 'playoffs': True, 'consolation': False })
-            manager_two_playoff_list = list(manager_two_playoff_query)
+            manager_two_playoff_list = [m for m in manager_two_list if m['playoffs'] and not m['consolation']]
             manager_two_playoff_wins = len(manager_two_playoff_list)
-            manager_two_consolation_query = mongo.db.scores_per_matchup.find(
-                { 'winner': manager_two, 'loser': manager_one, 'playoffs': True, 'consolation': True })
-            manager_two_consolation_list = list(manager_two_consolation_query)
+            manager_two_consolation_list = [m for m in manager_two_list if m['playoffs'] and m['consolation']]
             manager_two_consolation_wins = len(manager_two_consolation_list)
 
             matchup_string = ''

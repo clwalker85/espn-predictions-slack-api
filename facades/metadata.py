@@ -48,6 +48,14 @@ class Metadata:
         return lookup
 
     @cached_property
+    def player_lookup_by_espn_owner_id(self):
+        lookup = {}
+        for p in self.players:
+            if p['espn_owner_id']:
+                lookup[p['espn_owner_id']] = p
+        return lookup
+
+    @cached_property
     def player_lookup_by_id(self):
         lookup = {}
         for p in self.players:
