@@ -128,10 +128,11 @@ class Metadata:
         return Espn(self.league_id, self.league_year)
 
     @cached_property
-    def team_lookup_by_espn_name(self):
+    def team_lookup_by_espn_owner_id(self):
         lookup = {}
+        # TODO - this should support co-owners
         for t in self.espn.teams:
-            lookup[t.owner] = t
+            lookup[t.owners[0]] = t
         return lookup
 
     def invalidate_cached_year(self):
@@ -145,8 +146,8 @@ class Metadata:
             del self.__dict__["player_lookup_by_id"]
         if "player_lookup_by_username" in self.__dict__:
             del self.__dict__["player_lookup_by_username"]
-        if "team_lookup_by_espn_name" in self.__dict__:
-            del self.__dict__["team_lookup_by_espn_name"]
+        if "team_lookup_by_espn_owner_id" in self.__dict__:
+            del self.__dict__["team_lookup_by_espn_owner_id"]
         self.espn.invalidate_cached_year()
         self.invalidate_cached_week()
 
@@ -204,8 +205,12 @@ class Metadata:
         database_key = { 'year': self.league_year, 'week': week_string }
 
         for s in box_scores:
-            if not hasattr(s.home_team, 'owner') or not hasattr(s.away_team, 'owner'):
+            if not hasattr(s.home_team, 'owners') or not hasattr(s.away_team, 'owners'):
                 continue
+
+            # TODO - This should support inserting co-owners
+            home_espn_id = s.home_team.owners[0]
+            away_espn_id = s.away_team.owners[0]
 
             if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                 if is_round_three:
@@ -234,8 +239,8 @@ class Metadata:
                     if round_one_home_game == 'W' or round_one_away_game == 'W':
                         continue
 
-            home_name = self.player_lookup_by_espn_name[s.home_team.owner]['display_name']
-            away_name = self.player_lookup_by_espn_name[s.away_team.owner]['display_name']
+            home_name = self.player_lookup_by_espn_owner_id[home_espn_id]['display_name']
+            away_name = self.player_lookup_by_espn_owner_id[away_espn_id]['display_name']
 
             matchup = {
                 'team_one': away_name,

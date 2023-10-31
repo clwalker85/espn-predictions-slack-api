@@ -276,8 +276,8 @@ class Tiebreakers(restful.Resource):
         for team in current_standings:
             total = team['total'] or 0
             username = team['username']
-            espn_owner_name = metadata.player_lookup_by_username[username]['espn_owner_name']
-            espn_team = metadata.team_lookup_by_espn_name[espn_owner_name]
+            espn_owner_id = metadata.player_lookup_by_username[username]['espn_owner_id']
+            espn_team = metadata.team_lookup_by_espn_owner_id[espn_owner_id]
             team_wins = espn_team.wins
             team_points = espn_team.points_for
 
@@ -386,7 +386,7 @@ class Schedule(restful.Resource):
 class InvalidateWeek(restful.Resource):
     def post(self):
         metadata.invalidate_cached_week()
-        return Response("Next week's schedule submitted successfully.")
+        return Response("League week cache successfully invalidated.")
 
     def get(self):
         return InvalidateWeek.post(self)
@@ -395,7 +395,7 @@ class InvalidateWeek(restful.Resource):
 class InvalidateYear(restful.Resource):
     def post(self):
         metadata.invalidate_cached_year()
-        return Response("Next week's schedule submitted successfully.")
+        return Response("League year cache successfully invalidated.")
 
     def get(self):
         return InvalidateYear.post(self)
