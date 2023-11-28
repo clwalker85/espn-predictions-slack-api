@@ -163,8 +163,8 @@ class Metadata:
             week_string = str(int(self.league_week) + 1)
 
         next_tuesday_candidate = datetime.today()
-        if week_string != '1' and self.last_matchup_data:
-            next_tuesday_candidate = self.last_matchup_data['end_of_week_time']
+        if week_string != '1' and self.matchup_data:
+            next_tuesday_candidate = self.matchup_data['end_of_week_time']
         # `1` represents Tuesday
         elif next_tuesday_candidate.weekday() == 1:
             next_tuesday_candidate += timedelta(days=7)
