@@ -37,9 +37,9 @@ class Metadata:
     @cached_property
     def players(self):
         with self.app.app_context():
-            return self.mongo.db.player_metadata.find()
+            return list(self.mongo.db.player_metadata.find())
 
-    @cached_property
+    @property
     def player_lookup_by_espn_name(self):
         lookup = {}
         for p in self.players:
@@ -47,7 +47,7 @@ class Metadata:
                 lookup[p['espn_owner_name']] = p
         return lookup
 
-    @cached_property
+    @property
     def player_lookup_by_espn_owner_id(self):
         lookup = {}
         for p in self.players:
@@ -55,7 +55,7 @@ class Metadata:
                 lookup[p['espn_owner_id']] = p
         return lookup
 
-    @cached_property
+    @property
     def player_lookup_by_id(self):
         lookup = {}
         for p in self.players:
@@ -63,7 +63,7 @@ class Metadata:
                 lookup[p['player_id']] = p
         return lookup
 
-    @cached_property
+    @property
     def player_lookup_by_username(self):
         lookup = {}
         for p in self.players:
