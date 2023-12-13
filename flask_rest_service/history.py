@@ -56,7 +56,7 @@ class HeadToHeadHistory(restful.Resource):
             # loop backwards through time to track winning streak
             if (manager_one_reg_season_wins + manager_two_reg_season_wins) > 0:
                 reg_season_list = manager_one_reg_season_list + manager_two_reg_season_list
-                reg_season_list.sort(key=lambda x: x['year'], reverse=True)
+                reg_season_list.sort(key=lambda x: (x['year'], x['week']), reverse=True)
 
                 last_manager_to_win = None
                 number_of_wins_in_streak = 0

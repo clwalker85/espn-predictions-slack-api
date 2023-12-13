@@ -357,6 +357,65 @@ class Tiebreakers(restful.Resource):
     def get(self):
         return Tiebreakers.post(self)
 
+@api.route('/scoreboard/tiebreakers/playoffs')
+class PlayoffTiebreakers(restful.Resource):
+    def post(self):
+        message = {
+            'response_type': 'in_channel',
+            'text': 'Playoff tiebreaker calculatiions (clear H2H winner, then most points, then coin flip):',
+            'attachments': []
+        }
+
+        # can't calculate tiebreakers for the week before in the first week
+        # in practice, __init__.py checks for the latest week to start
+        if metadata.league_week == '1':
+            return Response('Tiebreaker calculations are not available until the morning (8am) after Monday Night Football.')
+
+        # TODO - there's a mix of string and int types stored for years and weeks, pick one (probably int)
+        week = int(metadata.last_league_week)
+        last_week_of_regular_season = metadata.espn.weeks_in_regular_season
+
+        if week > last_week_of_regular_season:
+            return Response('Playoff tiebreaker calculations are not available after playoffs start.')
+
+        standings_to_sort = []
+        for username in metadata.usernames:
+            espn_owner_id = metadata.player_lookup_by_username[username]['espn_owner_id']
+            espn_team = metadata.team_lookup_by_espn_owner_id[espn_owner_id]
+            team_wins = espn_team.wins
+            team_points = espn_team.points_for
+
+            standings_to_sort.append({
+                    'username': username,
+                    'wins': team_wins,
+                    'points': Decimal(team_points),
+                    'random': random.randint(0, 100)
+                })
+
+        week_string = ''
+
+        # break ties by least wins, then least points, then coin flip
+        for team in sorted(standings_to_sort, key=lambda t: (-t['wins'], -t['points'], t['random'])):
+            week_string += str(team['wins']) + ' - ' + team['username']
+            if sum(t['wins'] == team['wins'] for t in standings_to_sort) > 1:
+                week_string += ' (' + str(team['wins']) + ' wins'
+
+                if sum((t['wins'], t['wins']) == (team['wins'], team['wins']) for t in standings_to_sort) > 1:
+                    week_string += ', ' + str(round(team['points'], 2)) + ' points'
+
+                week_string += ')'
+
+                number_of_remaining_teams = sum((t['wins'], t['wins'], t['points']) == (team['wins'], team['wins'], team['points']) for t in standings_to_sort)
+                if number_of_remaining_teams > 1:
+                    week_string += '\n' + '***COIN FLIP TIEBREAKER APPLIED WITH RANDOM NUMBER***'
+            week_string += '\n'
+
+        message['attachments'].append({ 'text': week_string })
+
+        return message
+    def get(self):
+        return PlayoffTiebreakers.post(self)
+
 @api.route('/scoreboard/schedule')
 class Schedule(restful.Resource):
     def post(self):
