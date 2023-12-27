@@ -214,6 +214,9 @@ class Metadata:
 
             if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                 if is_round_three:
+                    round_two_home_game = s.home_team.outcomes[index_for_round_two]
+                    round_two_away_game = s.away_team.outcomes[index_for_round_two]
+
                     # if either team won the last game, this isn't the third place game
                     if round_two_home_game == 'W' or round_two_away_game == 'W':
                         continue
