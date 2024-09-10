@@ -60,9 +60,9 @@ class Scoreboard(restful.Resource):
                 continue
 
             # TODO - This should support inserting co-owners
-            home_espn_id = s.home_team.owners[0]
+            home_espn_id = s.home_team.owners[0]['id']
             winner = metadata.player_lookup_by_espn_owner_id[home_espn_id]['player_id']
-            away_espn_id = s.away_team.owners[0]
+            away_espn_id = s.away_team.owners[0]['id']
             loser = metadata.player_lookup_by_espn_owner_id[away_espn_id]['player_id']
             winning_score = s.home_score
             losing_score = s.away_score
