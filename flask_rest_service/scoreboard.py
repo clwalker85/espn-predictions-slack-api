@@ -318,6 +318,14 @@ class Tiebreakers(restful.Resource):
                         'points': Decimal(team_points),
                         'random': random.randint(0, 100)
                     })
+            else:
+                week_standings_to_sort.append({
+                        'username': username,
+                        'total': total,
+                        'wins': team_wins,
+                        'points': Decimal(team_points),
+                        'random': random.randint(0, 100)
+                    })
 
         if is_finals:
             season_string = 'Final Draft Selection Standings for ' + metadata.league_year + ':\n'

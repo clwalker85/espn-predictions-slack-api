@@ -133,7 +133,7 @@ class Metadata:
         lookup = {}
         # TODO - this should support co-owners
         for t in self.espn.teams:
-            lookup[t.owners[0]] = t
+            lookup[t.owners[0]['id']] = t
         return lookup
 
     def invalidate_cached_year(self):
@@ -210,8 +210,8 @@ class Metadata:
                 continue
 
             # TODO - This should support inserting co-owners
-            home_espn_id = s.home_team.owners[0]
-            away_espn_id = s.away_team.owners[0]
+            home_espn_id = s.home_team.owners[0]['id']
+            away_espn_id = s.away_team.owners[0]['id']
 
             if s.matchup_type == 'WINNERS_CONSOLATION_LADDER':
                 if is_round_three:
